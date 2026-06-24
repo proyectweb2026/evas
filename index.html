@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruben Sierra · Ecosistemas digitales</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #0b0d11;
+      color: #b0b8c5;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ===== ANIMATED BACKGROUND ===== */
+    .bg-animated {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(88, 130, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 88, 150, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(0, 255, 200, 0.04) 0%, transparent 40%);
+      animation: bgPulse 15s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgPulse {
+      0% {
+        transform: scale(1) rotate(0deg);
+      }
+      100% {
+        transform: scale(1.1) rotate(3deg);
+      }
+    }
+
+    /* ===== FLOATING PARTICLES ===== */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh) scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* ===== CONTENT WRAPPER ===== */
+    .content {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ===== HEADER / NAV ===== */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #f0f4ff, #7b8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #8892a8;
+    }
+
+    .nav-links a {
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #e6edff;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 4rem 0 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 100px;
+      padding: 0.3rem 1.2rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7b8cff;
+      width: fit-content;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 10vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: #f0f4ff;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #7b8cff, #ff7b9c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      max-width: 560px;
+      font-size: 1.1rem;
+      color: #8892a8;
+      margin-top: 0.5rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.7rem 2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #f0f4ff;
+    }
+
+    .btn-primary {
+      background: #7b8cff;
+      color: #0b0d11;
+      box-shadow: 0 4px 20px rgba(123, 140, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(123, 140, 255, 0.35);
+    }
+
+    .btn-outline {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #b0b8c5;
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #f0f4ff;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* ===== SECTION TITLE ===== */
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f4ff;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      color: #8892a8;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ===== ABOUT ===== */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      padding: 3rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      margin-top: 2rem;
+    }
+
+    .about-text p {
+      margin-bottom: 1.2rem;
+      font-size: 1rem;
+      color: #b0b8c5;
+    }
+
+    .about-highlight {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .about-highlight-item {
+      flex: 1 1 120px;
+      border-left: 2px solid #7b8cff;
+      padding-left: 1rem;
+    }
+
+    .about-highlight-item .number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f0f4ff;
+      line-height: 1;
+    }
+
+    .about-highlight-item .label {
+      font-size: 0.8rem;
+      color: #8892a8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== REPOSITORIES ===== */
+    .repos {
+      padding: 3rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      margin-top: 1rem;
+    }
+
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .repo-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      padding: 2rem 1.8rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .repo-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, rgba(123, 140, 255, 0.06), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.6s;
+      pointer-events: none;
+    }
+
+    .repo-card:hover::before {
+      opacity: 1;
+    }
+
+    .repo-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(123, 140, 255, 0.25);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .repo-icon {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .repo-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #f0f4ff;
+      margin-bottom: 0.5rem;
+    }
+
+    .repo-card .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.8rem;
+      border-radius: 20px;
+      background: rgba(123, 140, 255, 0.12);
+      color: #7b8cff;
+      margin-bottom: 0.8rem;
+    }
+
+    .repo-card p {
+      color: #8892a8;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .repo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      color: #7b8cff;
+      transition: gap 0.3s;
+    }
+
+    .repo-link:hover {
+      gap: 1rem;
+    }
+
+    .repo-link svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 2rem;
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 1.2rem;
+    }
+
+    .footer-socials a {
+      color: #8892a8;
+      transition: color 0.3s;
+      font-size: 0.9rem;
+    }
+
+    .footer-socials a:hover {
+      color: #f0f4ff;
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: #5a6378;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .about {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+        font-size: 0.8rem;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.2rem, 10vw, 3.5rem);
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .btn {
+        padding: 0.6rem 1.4rem;
+        font-size: 0.8rem;
+      }
+
+      .repo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: flex-start;
+      }
+
+      .hero {
+        padding: 2rem 0;
+      }
+
+      .footer-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== ANIMATED BACKGROUND ===== -->
+  <div class="bg-animated"></div>
+
+  <!-- ===== PARTICLES ===== -->
+  <div class="particles" id="particles"></div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="content">
+
+    <!-- NAV -->
+    <nav class="nav">
+      <span class="logo">R.S.C</span>
+      <div class="nav-links">
+        <a href="#about">Sobre mí</a>
+        <a href="#repos">Repositorios</a>
+        <a href="#contact">Contacto</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <span class="hero-badge">✦ Ingeniero de Sistemas · Magíster en TIC educativas</span>
+      <h1>
+        Ruben <span>Sierra</span> Carrascal
+      </h1>
+      <p>
+        Construyo ecosistemas digitales para el aprendizaje, combinando
+        tecnología, pedagogía y diseño centrado en las personas.
+      </p>
+      <div class="hero-cta">
+        <a href="#repos" class="btn btn-primary">
+          Explorar repositorios
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#about" class="btn btn-outline">Más sobre mí</a>
+      </div>
+    </header>
+
+    <!-- ABOUT -->
+    <section id="about" class="about">
+      <div class="about-text">
+        <h2 class="section-title">Sobre mí</h2>
+        <p>
+          Soy Ruben Sierra Carrascal, ingeniero de sistemas con una profunda
+          pasión por la educación y la tecnología. Mi trabajo se enfoca en
+          diseñar entornos virtuales de aprendizaje que sean accesibles,
+          escalables y significativos.
+        </p>
+        <p>
+          Como magíster en proyectos educativos mediados por TIC, he
+          desarrollado objetos virtuales de aprendizaje (OVA), recursos
+          educativos digitales (RED) y plataformas LMS que potencian la
+          experiencia educativa en diversos contextos.
+        </p>
+        <div class="about-highlight">
+          <div class="about-highlight-item">
+            <div class="number">7+</div>
+            <div class="label">Años de experiencia</div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="number">15+</div>
+            <div class="label">Proyectos educativos</div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="number">3</div>
+            <div class="label">Líneas de investigación</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center;">
+        <div style="width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(135deg, #7b8cff, #ff7b9c); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #0b0d11; font-weight: 700; box-shadow: 0 20px 60px rgba(123,140,255,0.2);">
+          RS
+        </div>
+      </div>
+    </section>
+
+    <!-- REPOSITORIOS -->
+    <section id="repos" class="repos">
+      <h2 class="section-title">Ecosistemas digitales</h2>
+      <p class="section-sub">
+        Tres pilares fundamentales para la transformación educativa.
+      </p>
+
+      <div class="repo-grid">
+
+        <!-- EVA -->
+        <div class="repo-card">
+          <span class="repo-icon">🌐</span>
+          <span class="tag">EVA</span>
+          <h3>Entornos Virtuales</h3>
+          <p>
+            Arquitecturas LMS y plataformas de gestión del conocimiento,
+            diseñadas para la escalabilidad pedagógica y la experiencia
+            de usuario.
+          </p>
+          <a href="#" class="repo-link" data-toast="Repositorio EVA en construcción">
+            Ver repositorio
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <!-- OVA -->
+        <div class="repo-card">
+          <span class="repo-icon">🧩</span>
+          <span class="tag">OVA</span>
+          <h3>Objetos Virtuales</h3>
+          <p>
+            Recursos interactivos estandarizados que optimizan la carga
+            cognitiva y fomentan el aprendizaje activo y autónomo.
+          </p>
+          <a href="#" class="repo-link" data-toast="Repositorio OVA en construcción">
+            Ver repositorio
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <!-- RED -->
+        <div class="repo-card">
+          <span class="repo-icon">📚</span>
+          <span class="tag">RED</span>
+          <h3>Recursos Digitales</h3>
+          <p>
+            Material educativo curado y accesible, pensado para entornos
+            con baja conectividad, garantizando equidad en el aprendizaje.
+          </p>
+          <a href="#" class="repo-link" data-toast="Repositorio RED en construcción">
+            Ver repositorio
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer" id="contact">
+      <div class="footer-top">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #7b8cff;"></span>
+          <span style="color: #f0f4ff; font-weight: 500;">Ruben Sierra Carrascal</span>
+        </div>
+        <div class="footer-socials">
+          <a href="#" aria-label="GitHub">GitHub</a>
+          <a href="#" aria-label="LinkedIn">LinkedIn</a>
+          <a href="#" aria-label="Twitter">Twitter</a>
+          <a href="#" aria-label="Email">Email</a>
+        </div>
+      </div>
+      <div class="footer-copy">
+        © 2026 · Creative Commons BY-NC-SA 4.0
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // ===== PARTICLES =====
+    (function() {
+      const container = document.getElementById('particles');
+      const count = window.innerWidth < 600 ? 20 : 40;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        const left = Math.random() * 100;
+        const duration = Math.random() * 15 + 10;
+        const delay = Math.random() * 20;
+        p.style.cssText = `
+              width: ${size}px;
+              height: ${size}px;
+              left: ${left}%;
+              animation-duration: ${duration}s;
+              animation-delay: ${delay}s;
+              opacity: ${Math.random() * 0.5 + 0.1};
+            `;
+        container.appendChild(p);
+      }
+    })();
+
+    // ===== TOAST =====
+    document.querySelectorAll('[data-toast]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const msg = this.getAttribute('data-toast');
+        const old = document.querySelector('.toast-msg');
+        if (old) old.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.textContent = msg;
+        Object.assign(toast.style, {
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%) translateY(20px)',
+          background: 'rgba(11,13,17,0.9)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderLeft: '3px solid #7b8cff',
+          borderRadius: '12px',
+          padding: '0.75rem 1.8rem',
+          fontSize: '0.9rem',
+          color: '#e6edff',
+          zIndex: '9999',
+          opacity: '0',
+          transition: 'opacity 0.4s, transform 0.4s cubic-bezier(0.16,1,0.3,1)',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+          pointerEvents: 'none',
+          fontFamily: 'Space Grotesk, sans-serif'
+        });
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+          });
+        });
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(-50%) translateY(20px)';
+          setTimeout(() => toast.remove(), 450);
+        }, 2800);
+      });
+    });
+
+    // ===== SMOOTH SCROLL =====
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
