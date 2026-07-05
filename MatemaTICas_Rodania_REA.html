@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MatemáTICas Rodania — REA</title>
+<meta name="description" content="Recurso Educativo Abierto para fortalecer las competencias matemáticas de grado sexto. I.E. Rodania, Sahagún, Córdoba. Licencia CC BY-SA 4.0.">
+<style>
+:root{
+  --pasto:#1F6B3C; --pasto-osc:#14522C; --pasto-cl:#E4F2E4;
+  --leche:#FDFBF2; --crema:#F6F0DC;
+  --cielo:#2E86C1; --cielo-cl:#DDF0FB;
+  --corral:#7A4E2D; --corral-cl:#F0E4D7;
+  --sol:#F5B301; --sol-cl:#FFF3CC;
+  --tinta:#26332B; --gris:#6C7A70;
+  --rojo:#C0442B; --rojo-cl:#FBE4DE;
+  --radius:18px;
+  --sombra:0 3px 10px rgba(38,51,43,.12);
+  --f-display:'Trebuchet MS','Segoe UI',Verdana,sans-serif;
+  --f-relato:Georgia,'Times New Roman',serif;
+  --f-ui:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--f-ui);background:var(--leche);color:var(--tinta);line-height:1.55;min-height:100vh}
+button{font-family:var(--f-ui);cursor:pointer;border:none}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ====== CABECERA ESCÉNICA ====== */
+header.escena{position:relative;background:linear-gradient(#BFE3F5 0%,#DDF0FB 55%,transparent 55.1%);padding:0;overflow:hidden}
+.escena svg{display:block;width:100%;height:auto}
+.marca{position:absolute;top:12px;left:0;right:0;text-align:center;padding:0 14px;pointer-events:none}
+.marca h1{font-family:var(--f-display);font-size:clamp(1.5rem,5.2vw,2.9rem);letter-spacing:.5px;color:var(--pasto-osc);text-shadow:0 2px 0 rgba(255,255,255,.75)}
+.marca h1 .tic{color:var(--cielo)}
+.marca p{font-size:clamp(.8rem,2.4vw,1.05rem);color:var(--corral);font-weight:600}
+
+/* ====== LAYOUT ====== */
+main{max-width:980px;margin:0 auto;padding:18px 14px 90px}
+.pantalla{display:none;animation:aparecer .35s ease}
+.pantalla.activa{display:block}
+@keyframes aparecer{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h2.titulo-seccion{font-family:var(--f-display);color:var(--pasto-osc);font-size:clamp(1.35rem,4vw,1.9rem);margin:10px 0 4px}
+.sub{color:var(--gris);margin-bottom:16px}
+
+/* ====== TARJETAS ====== */
+.tarjeta{background:#fff;border-radius:var(--radius);box-shadow:var(--sombra);padding:18px;margin-bottom:16px;border:2px solid transparent}
+.tarjeta.caso{cursor:pointer;transition:transform .15s ease, border-color .15s ease;display:flex;gap:14px;align-items:center;text-align:left;width:100%}
+.tarjeta.caso:hover{transform:translateY(-3px);border-color:var(--pasto)}
+.tarjeta.caso .icono{flex:0 0 74px;height:74px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2.2rem}
+.tarjeta.caso h3{font-family:var(--f-display);font-size:1.15rem;margin-bottom:2px}
+.tarjeta.caso .estado{margin-top:6px;font-size:.85rem;font-weight:700}
+.c1 .icono{background:var(--pasto-cl)} .c2 .icono{background:var(--sol-cl)} .c3 .icono{background:var(--cielo-cl)}
+.candado{opacity:.55}
+.chip{display:inline-block;background:var(--crema);border-radius:99px;padding:2px 12px;font-size:.78rem;font-weight:700;color:var(--corral)}
+
+/* ====== BARRA SUPERIOR EN CASO ====== */
+.barra-caso{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.btn-volver{background:var(--crema);border-radius:12px;padding:8px 14px;font-weight:700;color:var(--corral)}
+.migas{font-size:.85rem;color:var(--gris)}
+
+/* ====== ETAPAS (pestañas ABC) ====== */
+.etapas{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+.etapa-btn{flex:1 0 auto;background:#fff;border:2px solid var(--pasto-cl);border-radius:14px;padding:9px 13px;font-weight:700;font-size:.86rem;color:var(--gris);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.etapa-btn.activa{background:var(--pasto);border-color:var(--pasto);color:#fff}
+.etapa-btn.hecha{border-color:var(--pasto);color:var(--pasto)}
+.etapa-btn .num{background:rgba(0,0,0,.08);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem}
+.etapa-btn.activa .num{background:rgba(255,255,255,.25)}
+
+/* ====== RELATO DEL CASO ====== */
+.relato{font-family:var(--f-relato);font-size:1.06rem;background:var(--crema);border-left:6px solid var(--corral);border-radius:0 var(--radius) var(--radius) 0;padding:16px 18px;margin:12px 0}
+.relato p+p{margin-top:10px}
+.acuerdos{background:var(--cielo-cl);border-radius:var(--radius);padding:14px 18px;margin:12px 0}
+.acuerdos ul{margin:8px 0 0 20px}
+.acuerdos li{margin-bottom:5px}
+
+/* ====== ACTIVIDADES ====== */
+.actividad{border:2px solid var(--pasto-cl);border-radius:var(--radius);padding:16px;margin-bottom:18px;background:#fff}
+.actividad.hecha{border-color:var(--pasto)}
+.act-cab{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
+.act-cab h4{font-family:var(--f-display);font-size:1.02rem;color:var(--pasto-osc)}
+.competencia{font-size:.72rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-radius:99px;padding:3px 10px}
+.comp-int{background:var(--cielo-cl);color:var(--cielo)}
+.comp-for{background:var(--sol-cl);color:#8a6a00}
+.comp-arg{background:var(--rojo-cl);color:var(--rojo)}
+.enunciado{background:var(--leche);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:1rem}
+.estrellas{font-size:1rem;letter-spacing:2px}
+
+.botonera{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{border-radius:14px;padding:10px 18px;font-weight:800;font-size:.95rem;transition:transform .1s ease}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--pasto);color:#fff}
+.btn-s{background:var(--crema);color:var(--corral)}
+.btn-audio{background:var(--cielo-cl);color:var(--cielo);display:inline-flex;gap:6px;align-items:center}
+.btn-pista{background:var(--sol-cl);color:#8a6a00}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* opciones múltiples */
+.opciones{display:grid;gap:8px;margin-top:10px}
+.opcion{background:var(--leche);border:2px solid var(--pasto-cl);border-radius:12px;padding:11px 14px;text-align:left;font-size:.98rem;display:flex;gap:10px;align-items:center}
+.opcion .letra{background:var(--pasto-cl);color:var(--pasto-osc);font-weight:800;border-radius:8px;min-width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center}
+.opcion:hover{border-color:var(--cielo)}
+.opcion.sel{border-color:var(--cielo);background:var(--cielo-cl)}
+.opcion.ok{border-color:var(--pasto);background:var(--pasto-cl)}
+.opcion.mal{border-color:var(--rojo);background:var(--rojo-cl)}
+
+/* clasificador sé/busco */
+.clasificador{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+@media(min-width:640px){.clasificador{grid-template-columns:1fr 1fr}}
+.fichas{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.ficha{background:#fff;border:2px dashed var(--corral);color:var(--corral);border-radius:99px;padding:7px 14px;font-weight:700;font-size:.9rem}
+.ficha.sel{background:var(--corral);color:#fff;border-style:solid}
+.zona{border:2px dashed var(--gris);border-radius:14px;min-height:86px;padding:10px}
+.zona h5{font-size:.83rem;text-transform:uppercase;letter-spacing:.5px;color:var(--gris);margin-bottom:6px}
+.zona .ficha{border-style:solid;cursor:pointer}
+.zona.se{border-color:var(--pasto);background:var(--pasto-cl)}
+.zona.busco{border-color:var(--cielo);background:var(--cielo-cl)}
+.zona.sobra{border-color:var(--rojo);background:var(--rojo-cl)}
+
+/* recta numérica */
+.recta-cont{overflow-x:auto;padding:22px 4px 6px}
+.recta{position:relative;height:74px;min-width:560px}
+.recta .linea{position:absolute;top:36px;left:0;right:0;height:4px;background:var(--tinta);border-radius:2px}
+.recta .marca-n{position:absolute;top:22px;width:2px;height:16px;background:var(--tinta)}
+.recta .num{position:absolute;top:44px;transform:translateX(-50%);font-size:.82rem;font-weight:700}
+.recta .punto{position:absolute;top:24px;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--cielo);transform:translate(-50%,0);font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--cielo)}
+.recta .punto:hover{background:var(--cielo-cl)}
+.recta .punto.ok{border-color:var(--pasto);background:var(--pasto-cl);color:var(--pasto)}
+.recta .punto.mal{border-color:var(--rojo);background:var(--rojo-cl);color:var(--rojo)}
+
+/* queso de fracciones */
+.queso-wrap{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.queso-wrap svg{flex:0 0 190px}
+.tajada{fill:var(--sol-cl);stroke:var(--corral);stroke-width:2;cursor:pointer;transition:fill .12s}
+.tajada:hover{fill:var(--sol)}
+.tajada.vendida{fill:#fff;stroke-dasharray:4 4;cursor:not-allowed}
+.tajada.sel{fill:var(--sol)}
+.marcador-frac{font-family:var(--f-display);font-size:1.4rem;font-weight:800;color:var(--corral)}
+
+/* tabla proporcional */
+.tabla-prop{border-collapse:collapse;margin-top:10px;width:100%;max-width:460px}
+.tabla-prop th,.tabla-prop td{border:2px solid var(--pasto-cl);padding:9px 12px;text-align:center;font-size:1rem}
+.tabla-prop th{background:var(--pasto-cl);font-family:var(--f-display)}
+.tabla-prop input{width:74px;padding:6px;border:2px solid var(--cielo);border-radius:8px;text-align:center;font-size:1rem;font-weight:700}
+
+input.num-resp{width:130px;padding:10px;border:2px solid var(--pasto-cl);border-radius:12px;font-size:1.05rem;font-weight:700;text-align:center}
+textarea.texto-resp{width:100%;min-height:88px;padding:12px;border:2px solid var(--pasto-cl);border-radius:12px;font-size:1rem;font-family:var(--f-ui);resize:vertical}
+
+/* retro */
+.retro{border-radius:12px;padding:12px 14px;margin-top:10px;font-weight:600;display:none}
+.retro.ok{display:block;background:var(--pasto-cl);color:var(--pasto-osc)}
+.retro.mal{display:block;background:var(--rojo-cl);color:var(--rojo)}
+.retro.info{display:block;background:var(--cielo-cl);color:#155a80}
+
+/* Lola y pistas */
+.pista-caja{display:none;background:var(--sol-cl);border:2px solid var(--sol);border-radius:var(--radius);padding:12px 14px;margin-top:10px;gap:12px;align-items:flex-start}
+.pista-caja.visible{display:flex}
+.pista-caja svg{flex:0 0 54px}
+.pista-caja .nivel{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#8a6a00}
+
+/* cantina de progreso */
+.tablero{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.cantina{flex:0 0 84px}
+.insignias{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.insignia{width:104px;text-align:center;background:#fff;border-radius:14px;padding:10px 6px;border:2px solid var(--crema)}
+.insignia .medalla{font-size:1.9rem;filter:grayscale(1);opacity:.35}
+.insignia.ganada{border-color:var(--sol)}
+.insignia.ganada .medalla{filter:none;opacity:1}
+.insignia p{font-size:.72rem;font-weight:700;margin-top:4px;color:var(--gris)}
+.insignia.ganada p{color:var(--corral)}
+
+/* metacognición */
+.meta-preg{margin:14px 0}
+.escala{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.escala button{font-size:1.5rem;background:var(--leche);border:2px solid var(--pasto-cl);border-radius:12px;padding:8px 12px}
+.escala button.sel{border-color:var(--pasto);background:var(--pasto-cl)}
+
+/* recursos */
+.recurso{display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--crema);padding:12px 2px}
+.recurso:last-child{border-bottom:none}
+.recurso .tipo{flex:0 0 44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:var(--cielo-cl)}
+.recurso a{color:var(--cielo);font-weight:700;word-break:break-word}
+.aviso-red{background:var(--sol-cl);border-radius:12px;padding:10px 14px;font-size:.9rem;margin-bottom:12px}
+
+/* panel docente */
+.tabla-obs{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:10px}
+.tabla-obs th,.tabla-obs td{border:1px solid var(--crema);padding:6px 8px;text-align:left}
+.tabla-obs th{background:var(--pasto-cl);position:sticky;top:0}
+.scroll-tabla{max-height:380px;overflow:auto;border-radius:12px;border:2px solid var(--crema)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}
+.kpi{background:#fff;border-radius:14px;padding:12px;text-align:center;box-shadow:var(--sombra)}
+.kpi b{font-family:var(--f-display);font-size:1.5rem;color:var(--pasto-osc);display:block}
+.kpi span{font-size:.78rem;color:var(--gris)}
+
+/* modal insignia */
+.modal-fondo{position:fixed;inset:0;background:rgba(38,51,43,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal-fondo.visible{display:flex}
+.modal{background:#fff;border-radius:22px;padding:26px;max-width:340px;text-align:center;animation:aparecer .3s ease}
+.modal .medallon{font-size:3.4rem}
+.modal h3{font-family:var(--f-display);color:var(--pasto-osc);margin:8px 0 4px}
+
+/* pie */
+footer{background:var(--pasto-osc);color:#DCEEDC;padding:26px 16px;text-align:center;font-size:.84rem;margin-top:30px}
+footer a{color:var(--sol)}
+.registro-form{max-width:430px;margin:0 auto;text-align:center}
+.registro-form input{width:100%;padding:13px;border:2px solid var(--pasto-cl);border-radius:14px;font-size:1.05rem;margin:10px 0;text-align:center}
+.perfiles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.perfil-btn{background:var(--crema);border-radius:99px;padding:8px 16px;font-weight:700;color:var(--corral)}
+.nav-flotante{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#fff;border-radius:99px;box-shadow:0 4px 18px rgba(38,51,43,.25);display:none;gap:4px;padding:6px;z-index:40}
+.nav-flotante.visible{display:flex}
+.nav-flotante button{border-radius:99px;padding:9px 15px;font-weight:800;font-size:.83rem;background:transparent;color:var(--gris);display:flex;gap:5px;align-items:center}
+.nav-flotante button.activa{background:var(--pasto);color:#fff}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<header class="escena" role="banner">
+  <div class="marca">
+    <h1>Matemá<span class="tic">TIC</span>as Rodania</h1>
+    <p>Aprendemos matemáticas con la vida de nuestra finca 🐄</p>
+  </div>
+  <svg viewBox="0 0 1000 240" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <circle cx="850" cy="52" r="30" fill="#F5B301"/>
+    <circle cx="850" cy="52" r="40" fill="#F5B301" opacity=".25"/>
+    <ellipse cx="180" cy="60" rx="55" ry="18" fill="#fff" opacity=".85"/>
+    <ellipse cx="240" cy="52" rx="40" ry="14" fill="#fff" opacity=".7"/>
+    <ellipse cx="560" cy="40" rx="50" ry="15" fill="#fff" opacity=".8"/>
+    <path d="M0,150 Q250,88 520,138 T1000,128 V240 H0 Z" fill="#2E8B4F"/>
+    <path d="M0,180 Q300,128 640,170 T1000,168 V240 H0 Z" fill="#1F6B3C"/>
+    <!-- corral -->
+    <g stroke="#7A4E2D" stroke-width="7" stroke-linecap="round">
+      <line x1="640" y1="150" x2="640" y2="196"/><line x1="700" y1="146" x2="700" y2="192"/>
+      <line x1="760" y1="148" x2="760" y2="194"/><line x1="632" y1="162" x2="768" y2="158"/>
+      <line x1="632" y1="182" x2="768" y2="178"/>
+    </g>
+    <!-- vaca Lola -->
+    <g id="vaca-header">
+      <ellipse cx="380" cy="180" rx="52" ry="30" fill="#fff" stroke="#26332B" stroke-width="3"/>
+      <path d="M355,162 q14,-12 30,2 q-6,14 -18,12 q-12,-2 -12,-14" fill="#26332B"/>
+      <ellipse cx="408" cy="196" rx="14" ry="10" fill="#26332B" opacity=".9"/>
+      <circle cx="330" cy="160" r="20" fill="#fff" stroke="#26332B" stroke-width="3"/>
+      <path d="M314,148 q-8,-10 2,-14 q8,-2 8,8" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/>
+      <path d="M344,146 q10,-8 12,0 q0,8 -10,8" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/>
+      <circle cx="324" cy="158" r="3" fill="#26332B"/><circle cx="337" cy="158" r="3" fill="#26332B"/>
+      <ellipse cx="330" cy="172" rx="11" ry="7" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/>
+      <circle cx="326" cy="171" r="1.6" fill="#26332B"/><circle cx="334" cy="171" r="1.6" fill="#26332B"/>
+      <line x1="352" y1="204" x2="352" y2="228" stroke="#26332B" stroke-width="5" stroke-linecap="round"/>
+      <line x1="372" y1="208" x2="372" y2="230" stroke="#26332B" stroke-width="5" stroke-linecap="round"/>
+      <line x1="396" y1="208" x2="396" y2="230" stroke="#26332B" stroke-width="5" stroke-linecap="round"/>
+      <line x1="414" y1="204" x2="414" y2="228" stroke="#26332B" stroke-width="5" stroke-linecap="round"/>
+      <path d="M430,176 q14,4 10,20" stroke="#26332B" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- cantina de leche -->
+    <g transform="translate(520,158)">
+      <path d="M4,14 q0,-10 12,-10 h18 q12,0 12,10 v40 q0,8 -8,8 H12 q-8,0 -8,-8 Z" fill="#B9C6CE" stroke="#26332B" stroke-width="3"/>
+      <rect x="8" y="0" width="34" height="8" rx="4" fill="#8FA1AB" stroke="#26332B" stroke-width="3"/>
+      <path d="M2,26 h46" stroke="#26332B" stroke-width="3"/>
+    </g>
+  </svg>
+</header>
+
+<main>
+  <!-- ============ PANTALLA: REGISTRO ============ -->
+  <section id="p-registro" class="pantalla activa" aria-label="Registro de estudiante">
+    <div class="tarjeta registro-form">
+      <h2 class="titulo-seccion">¡Bienvenido a la finca!</h2>
+      <p class="sub">Escribe tu nombre para guardar tu progreso en este equipo.</p>
+      <input type="text" id="nombre-est" maxlength="40" placeholder="Tu nombre y apellido" autocomplete="off">
+      <button class="btn btn-p" id="btn-entrar">Entrar a la finca 🚜</button>
+      <div id="perfiles-previos" class="perfiles"></div>
+      <p style="margin-top:14px;font-size:.8rem;color:var(--gris)">Tu avance se guarda solo en este computador o celular, sin internet.</p>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA: MAPA ============ -->
+  <section id="p-mapa" class="pantalla" aria-label="Mapa de casos">
+    <h2 class="titulo-seccion">Hola, <span id="saludo-nombre"></span> 👋</h2>
+    <p class="sub">Este es el camino del tercer periodo: tres casos de nuestra vereda. Termina uno para abrir el siguiente.</p>
+
+    <div class="tarjeta">
+      <div class="tablero">
+        <svg class="cantina" viewBox="0 0 60 84" aria-hidden="true">
+          <defs><clipPath id="clip-cant"><path d="M8,22 q0,-12 14,-12 h16 q14,0 14,12 v48 q0,10 -10,10 H18 q-10,0 -10,-10 Z"/></clipPath></defs>
+          <path d="M8,22 q0,-12 14,-12 h16 q14,0 14,12 v48 q0,10 -10,10 H18 q-10,0 -10,-10 Z" fill="#EDF2F5" stroke="#26332B" stroke-width="3"/>
+          <rect id="leche-nivel" x="8" y="80" width="44" height="0" fill="#FDFBF2" stroke="none" clip-path="url(#clip-cant)"/>
+          <path d="M8,22 q0,-12 14,-12 h16 q14,0 14,12 v48 q0,10 -10,10 H18 q-10,0 -10,-10 Z" fill="none" stroke="#26332B" stroke-width="3"/>
+          <rect x="14" y="4" width="32" height="8" rx="4" fill="#8FA1AB" stroke="#26332B" stroke-width="3"/>
+          <path d="M6,34 h48" stroke="#26332B" stroke-width="2.5"/>
+        </svg>
+        <div>
+          <b style="font-family:var(--f-display);font-size:1.3rem"><span id="progreso-pct">0</span>% de la cantina llena</b>
+          <p style="color:var(--gris);font-size:.9rem">Cada actividad terminada agrega leche a tu cantina.</p>
+          <p style="margin-top:4px"><span class="chip">⭐ <span id="total-estrellas">0</span> estrellas</span> <span class="chip">🏅 <span id="total-insignias">0</span>/7 insignias</span></p>
+        </div>
+      </div>
+      <div class="insignias" id="fila-insignias"></div>
+    </div>
+
+    <div id="lista-casos"></div>
+
+    <button class="tarjeta caso" id="btn-recursos" style="border-color:var(--cielo-cl)">
+      <div class="icono" style="background:var(--cielo-cl)">📚</div>
+      <div><h3>Rincón de recursos</h3><p style="color:var(--gris);font-size:.9rem">Videos y páginas para aprender más (necesitan internet).</p></div>
+    </button>
+    <button class="tarjeta caso" id="btn-docente" style="border-color:var(--corral-cl)">
+      <div class="icono" style="background:var(--corral-cl)">🧑‍🏫</div>
+      <div><h3>Panel del docente</h3><p style="color:var(--gris);font-size:.9rem">Registro de evidencias (DCE) y exportación de datos.</p></div>
+    </button>
+  </section>
+
+  <!-- ============ PANTALLA: CASO ============ -->
+  <section id="p-caso" class="pantalla" aria-label="Caso de enseñanza">
+    <div class="barra-caso">
+      <button class="btn-volver" onclick="irMapa()">← Finca</button>
+      <div><h2 class="titulo-seccion" id="caso-titulo" style="margin:0"></h2><p class="migas" id="caso-miga"></p></div>
+    </div>
+    <div class="etapas" id="caso-etapas" role="tablist"></div>
+    <div id="caso-contenido"></div>
+  </section>
+
+  <!-- ============ PANTALLA: RECURSOS ============ -->
+  <section id="p-recursos" class="pantalla" aria-label="Recursos externos">
+    <div class="barra-caso"><button class="btn-volver" onclick="irMapa()">← Finca</button><h2 class="titulo-seccion" style="margin:0">Rincón de recursos</h2></div>
+    <div class="aviso-red">🌐 Estos enlaces necesitan internet. Puedes abrirlos cuando haya señal, en el punto digital o en el pueblo. ¡El resto del recurso funciona sin conexión!</div>
+    <div class="tarjeta" id="lista-recursos"></div>
+  </section>
+
+  <!-- ============ PANTALLA: DOCENTE ============ -->
+  <section id="p-docente" class="pantalla" aria-label="Panel del docente">
+    <div class="barra-caso"><button class="btn-volver" onclick="irMapa()">← Finca</button><h2 class="titulo-seccion" style="margin:0">Panel del docente</h2></div>
+    <div class="tarjeta" id="docente-login">
+      <p>Este panel registra los observables del Diseño Centrado en Evidencias. Escribe la clave del docente:</p>
+      <div class="botonera"><input type="password" id="clave-doc" class="num-resp" style="width:190px" placeholder="Clave"><button class="btn btn-p" id="btn-clave">Entrar</button></div>
+      <p style="font-size:.78rem;color:var(--gris);margin-top:8px">Clave inicial: <b>rodania2026</b> (puede cambiarse en el código).</p>
+    </div>
+    <div id="docente-panel" class="oculto">
+      <div class="kpis" id="doc-kpis"></div>
+      <div class="tarjeta">
+        <div class="botonera" style="margin:0 0 6px">
+          <button class="btn btn-p" id="btn-csv">⬇️ Exportar CSV</button>
+          <button class="btn btn-s" id="btn-json">⬇️ Exportar JSON</button>
+          <button class="btn btn-s" id="btn-borrar" style="color:var(--rojo)">🗑️ Borrar datos del equipo</button>
+        </div>
+        <p style="font-size:.82rem;color:var(--gris)">Cada fila es un observable registrado: estudiante, caso, actividad, competencia, evidencia, intentos, pistas usadas y respuesta.</p>
+        <div class="scroll-tabla"><table class="tabla-obs" id="tabla-observables"><thead><tr><th>Fecha</th><th>Estudiante</th><th>Caso</th><th>Actividad</th><th>Competencia</th><th>Observable</th><th>Resultado</th><th>Int.</th><th>Pistas</th><th>Respuesta</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="nav-flotante" id="nav-flotante" aria-label="Navegación">
+  <button id="nf-mapa" class="activa" onclick="irMapa()">🏡 Finca</button>
+  <button id="nf-recursos" onclick="irRecursos()">📚 Recursos</button>
+</nav>
+
+<div class="modal-fondo" id="modal-insignia" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="medallon" id="modal-icono">🏅</div>
+    <h3 id="modal-titulo">¡Nueva insignia!</h3>
+    <p id="modal-texto"></p>
+    <button class="btn btn-p" style="margin-top:14px" onclick="cerrarModal()">¡Genial!</button>
+  </div>
+</div>
+
+<footer>
+  <p><b>MatemáTICas Rodania</b> — Recurso Educativo Abierto · Institución Educativa Rodania, zona rural de Sahagún, Córdoba (Colombia).</p>
+  <p style="margin-top:6px">Fundamentado en el Diseño Centrado en Evidencias y el Aprendizaje Basado en Casos · Grado sexto.</p>
+  <p style="margin-top:6px">Licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener">Creative Commons BY-SA 4.0</a>: puedes retener, reutilizar, revisar, remezclar y redistribuir este recurso citando la fuente.</p>
+</footer>
+<script>
+/* ================== DATOS PEDAGÓGICOS (DCE + ABC) ================== */
+const RECURSOS = [
+ {t:"🎬",n:"Números enteros en la recta numérica (Sexto)",d:"Video para repasar cómo se ubican los enteros. Útil en el Caso 1.",u:"https://www.youtube.com/watch?v=NEAl5KeyIuQ"},
+ {t:"🎬",n:"La recta numérica y su escala — súper fácil",d:"Explicación paso a paso, ideal para principiantes.",u:"https://www.youtube.com/watch?v=uhK8FmgsxY8"},
+ {t:"🎬",n:"Suma de números enteros en la recta (math2me)",d:"José Andalón muestra cómo sumar moviéndose por la recta.",u:"https://www.youtube.com/watch?v=t-Zl7ipoyVg"},
+ {t:"🎬",n:"Los números enteros para primaria — método fácil",d:"Comparar enteros y saber cuál es mayor o menor.",u:"https://www.youtube.com/watch?v=AjL5qOUYqMg"},
+ {t:"🎬",n:"Suma de fracciones con diferente denominador",d:"Daniel Carreón explica las fracciones del Caso 2.",u:"https://www.youtube.com/watch?v=LVHo5xvsvO0"},
+ {t:"🎬",n:"Regla de 3 simple — súper fácil",d:"Para la proporcionalidad de la leche y el queso (Caso 2).",u:"https://www.youtube.com/watch?v=Xphb-tzJj24"},
+ {t:"📃",n:"Lista de videos: la recta numérica completa",d:"Playlist con todos los videos de recta numérica.",u:"https://www.youtube.com/playlist?list=PL_M-YZEbBhDN9BQdjECKDu6xdmE18QJOk"},
+ {t:"📃",n:"Lista de videos: fracciones (Daniel Carreón)",d:"Suma, resta, multiplicación y división de fracciones.",u:"https://www.youtube.com/playlist?list=PLDjtbBXUusIwyAgKB1DtnDl4FdS3Qcr1w"},
+ {t:"🧮",n:"Khan Academy en español — Aritmética",d:"Práctica gratuita con ejercicios y videos de todos los temas.",u:"https://es.khanacademy.org/math/arithmetic"},
+ {t:"📐",n:"GeoGebra — calculadora y geometría",d:"Para explorar la recta, las fracciones y las figuras del corral.",u:"https://www.geogebra.org/calculator"},
+ {t:"🇨🇴",n:"Colombia Aprende",d:"Recursos oficiales del Ministerio de Educación Nacional.",u:"https://www.colombiaaprende.edu.co"},
+ {t:"🇨🇴",n:"ICFES — pruebas Saber",d:"Guías y cuadernillos oficiales tipo Saber para practicar.",u:"https://www.icfes.gov.co"}
+];
+
+const INSIGNIAS = [
+ {id:"lector",  ico:"🔎", n:"Lector de la finca",     d:"Parafraseaste los tres casos con tus palabras."},
+ {id:"detective",ico:"🕵️",n:"Detective de datos",    d:"Clasificaste bien lo que sé y lo que busco."},
+ {id:"ordenador",ico:"🐄", n:"Vaquero de enteros",    d:"Terminaste el Caso 1: La finca lechera."},
+ {id:"quesero", ico:"🧀", n:"Quesero de fracciones",  d:"Terminaste el Caso 2: Del ordeño al queso."},
+ {id:"comerciante",ico:"🛒",n:"Comerciante Saber",    d:"Terminaste el Caso 3: La venta en el mercado."},
+ {id:"argumentador",ico:"🗣️",n:"Gran argumentador",  d:"Escribiste 4 justificaciones completas."},
+ {id:"cantina", ico:"🥛", n:"Cantina llena",          d:"Completaste todo el recurso. ¡Felicitaciones!"}
+];
+
+/* Cada actividad: id, tipo, comp (int|for|arg), titulo, observable DCE, pistas[3], y datos según tipo */
+const CASOS = [
+{
+ id:"c1", icono:"🐄", clase:"c1", titulo:"Caso 1 · La finca lechera",
+ tema:"Números enteros, recta numérica y comprensión de enunciados",
+ presentacion:{
+  relato:[
+   "En la vereda Rodania, don Ramiro y su familia viven de la finca La Esperanza. Todos los días, antes de que salga el sol, ordeñan sus 18 vacas y llenan las cantinas de leche que recoge el carrotanque.",
+   "Pero manejar una finca no es solo ordeñar: hay que llevar las cuentas. ¿Cuánta leche se produjo? ¿Cuánta se entregó? ¿Cuánto se debe en la tienda de la vereda? A veces los números son positivos, como los litros que entran, y a veces son negativos, como las deudas.",
+   "En este caso vas a ayudar a la familia de don Ramiro a llevar las cuentas de la leche usando los números enteros y la recta numérica."
+  ],
+  video:{n:"Video de apoyo: Números enteros en la recta numérica",u:"https://www.youtube.com/watch?v=NEAl5KeyIuQ"},
+  acuerdos:["Leo cada situación completa antes de responder, mínimo dos veces.","Si me bloqueo, pido una pista a Lola antes de rendirme.","Explico mis respuestas: en esta finca no vale solo el resultado.","Respeto el turno y las ideas de mis compañeros cuando trabajamos en equipo."]
+ },
+ actividades:[
+  {id:"c1a1",tipo:"parafraseo",comp:"int",titulo:"Cuenta el caso con tus palabras",
+   observable:"Parafrasea el enunciado del caso",
+   enunciado:"Ya conociste la finca La Esperanza. Escribe con TUS palabras: ¿de qué trata este caso y en qué vamos a ayudar a la familia de don Ramiro?",
+   minimo:25,
+   modelo:"Ejemplo: El caso trata de una finca lechera en Rodania. La familia ordeña las vacas todos los días y nosotros vamos a ayudarles a llevar las cuentas de la leche y de las deudas usando números positivos y negativos.",
+   pistas:["Vuelve a leer el relato. ¿Quiénes aparecen? ¿Qué hacen todos los días?","Piensa en dos cosas: qué produce la finca y qué cuentas hay que llevar.","Empieza así: “El caso trata de una finca donde... y vamos a ayudar a...”"]},
+  {id:"c1a2",tipo:"clasificar",comp:"int",titulo:"Detective: ¿qué sé y qué busco?",
+   observable:"Identifica datos relevantes y la pregunta del problema",
+   enunciado:"El lunes la finca produjo 85 litros de leche. Entregó 60 litros al carrotanque y vendió 15 litros a los vecinos. ¿Cuántos litros quedaron para la casa?",
+   fichas:[
+    {t:"Produjo 85 litros",z:"se"},{t:"Entregó 60 al carrotanque",z:"se"},{t:"Vendió 15 a los vecinos",z:"se"},
+    {t:"¿Cuántos litros quedaron para la casa?",z:"busco"},
+    {t:"La finca tiene 18 vacas",z:"sobra"},{t:"El lunes llovió por la tarde",z:"sobra"}
+   ],
+   pistas:["“Lo que sé” son los números y hechos que el problema me da y que SÍ necesito.","“Lo que busco” es la pregunta: casi siempre empieza con ¿Cuántos…?","¡Ojo! Hay datos que sobran: no todos los números sirven para responder."]},
+  {id:"c1a3",tipo:"recta",comp:"for",titulo:"La cuenta de la tienda en la recta",
+   observable:"Ubica números enteros negativos en la recta numérica",
+   enunciado:"La familia debía $8.000 en la tienda de la vereda (eso es −8 en miles de pesos). Esta semana abonó $5.000. Toca en la recta el número que muestra cómo quedó la cuenta.",
+   min:-10,max:10,respuesta:-3,
+   retroOk:"¡Exacto! −8 + 5 = −3. La familia todavía debe $3.000, por eso el número es negativo.",
+   pistas:["Deber dinero se escribe con signo menos: la deuda era −8.","Abonar (pagar una parte) es sumar: párate en −8 y avanza 5 hacia la derecha.","−8 + 5: cuenta los saltos desde −8: −7, −6, −5, −4… ¿dónde caes al quinto salto?"]},
+  {id:"c1a4",tipo:"opcion",comp:"for",titulo:"¿Qué operación toca?",
+   observable:"Selecciona la operación pertinente a la situación",
+   enunciado:"Don Ramiro tenía ahorrados $45.000 y pagó $28.000 del bulto de concentrado para las vacas. Para saber cuánto le quedó, ¿qué operación debe hacer?",
+   opciones:["45.000 + 28.000","45.000 − 28.000","45.000 × 28.000","45.000 ÷ 28.000"],correcta:1,
+   retroOk:"¡Correcto! Cuando pagamos, el dinero disminuye: 45.000 − 28.000 = 17.000 pesos le quedaron.",
+   pistas:["¿El dinero de don Ramiro aumenta o disminuye al pagar?","Si disminuye, la operación quita: ¿cuál de las cuatro quita?","Es la resta: al total ahorrado le quitamos lo que pagó."]},
+  {id:"c1a5",tipo:"numero",comp:"for",titulo:"La leche de toda la semana",
+   observable:"Ejecuta procedimientos de suma con números naturales",
+   enunciado:"Esta fue la producción de la semana: lunes 85, martes 78, miércoles 66 (la vaca Lucero amaneció enferma), jueves 70 y viernes 81 litros. ¿Cuántos litros produjo la finca en total?",
+   respuesta:380,unidad:"litros",
+   retroOk:"¡Muy bien! 85 + 78 + 66 + 70 + 81 = 380 litros en la semana.",
+   pistas:["Es una suma de cinco números. Escríbelos en columna para no perderte.","Suma por partes: 85 + 78 = 163; 163 + 66 = 229…","229 + 70 = 299 y 299 + 81 = … ¡ya casi!"]},
+  {id:"c1a6",tipo:"justificar",comp:"arg",titulo:"¿Y si el carrotanque pide más?",
+   observable:"Formula un escenario proyectivo y argumenta con datos",
+   enunciado:"Escenario proyectivo: el lunes la finca produjo 85 litros, entregó 60 al carrotanque y vendió 15, así que quedaron 10 para la casa. ¿Qué pasaría con la leche de la casa si el carrotanque pidiera 70 litros en vez de 60? Explica tu respuesta con números.",
+   minimo:30,claves:["5"],
+   modelo:"Ejemplo: Si el carrotanque pide 70, entonces 85 − 70 − 15 = 0... espera: 85 − 70 = 15 y 15 − 15 = 0, quedarían 0 litros para la casa, 10 menos que antes. Tendrían que vender menos a los vecinos o dejar leche para la casa primero.",
+   pistas:["Vuelve a hacer la cuenta cambiando el 60 por 70: 85 − 70 − 15 = ¿?","Compara: antes quedaban 10 litros. ¿Ahora cuántos quedan? ¿Qué significa eso para la familia?","Escribe la operación nueva Y di qué decisión podría tomar la familia."]}
+ ],
+ conclusiones:{
+  intro:"¡Terminaste el trabajo del Caso 1! Antes de pasar al queso, vamos a pensar en cómo aprendiste (a eso se le llama metacognición).",
+  ruta:"Ruta de solución de este caso: 1) leer despacio y contar el problema con tus palabras, 2) separar lo que sé de lo que busco, 3) escoger la operación (las deudas son negativas, los abonos suman), 4) hacer la cuenta y 5) explicar el resultado.",
+  preguntas:[
+   {q:"¿Qué fue lo más fácil de este caso para ti?",tipo:"texto"},
+   {q:"¿Qué paso de la ruta te costó más trabajo: leer, escoger la operación o explicar?",tipo:"texto"},
+   {q:"¿Cómo te sentiste ayudando con las cuentas de la finca?",tipo:"escala"}
+  ]
+ }
+},
+{
+ id:"c2", icono:"🧀", clase:"c2", titulo:"Caso 2 · Del ordeño al queso",
+ tema:"Fracciones y proporcionalidad en la quesera",
+ presentacion:{
+  relato:[
+   "Doña Nubia, la esposa de don Ramiro, es famosa en Rodania por su queso costeño. Cada mañana, después del ordeño, separa parte de la leche para la quesera.",
+   "Doña Nubia tiene una regla que nunca falla: de cada 10 litros de leche sale 1 kilo de queso. Los quesos redondos los parte en 8 tajadas iguales para vender en la tienda, y ahí es donde aparecen las fracciones.",
+   "En este caso vas a trabajar en la quesera: repartir tajadas, calcular cuánto queso sale de la leche y ayudar con los pedidos usando la proporcionalidad."
+  ],
+  video:{n:"Video de apoyo: Suma de fracciones (Daniel Carreón)",u:"https://www.youtube.com/watch?v=LVHo5xvsvO0"},
+  acuerdos:["Dibujo o uso el queso de la pantalla cuando una fracción me confunda.","Reviso que el denominador me dice en cuántas partes se partió el queso.","Antes de responder un pedido, compruebo la regla de doña Nubia: 10 litros → 1 kilo.","Comparto mis trucos con el equipo: aquí todos aprendemos de todos."]
+ },
+ actividades:[
+  {id:"c2a1",tipo:"parafraseo",comp:"int",titulo:"La regla de doña Nubia, con tus palabras",
+   observable:"Parafrasea la relación de proporcionalidad del caso",
+   enunciado:"Explica con TUS palabras la regla de doña Nubia para hacer queso y por qué crees que le sirve para calcular los pedidos.",
+   minimo:25,
+   modelo:"Ejemplo: La regla es que con 10 litros de leche se hace 1 kilo de queso. Le sirve porque si sabe cuántos litros tiene, puede calcular cuántos kilos de queso le van a salir, o al revés.",
+   pistas:["Busca en el relato la frase que dice “de cada 10 litros…”.","La regla conecta dos cosas: litros de leche y kilos de queso.","Empieza así: “La regla dice que con ___ litros sale ___ kilo, y sirve para…”"]},
+  {id:"c2a2",tipo:"queso",comp:"int",titulo:"Las tajadas del queso",
+   observable:"Representa fracciones a partir de un modelo gráfico",
+   enunciado:"El queso está partido en 8 tajadas iguales. Doña Nubia ya vendió 3 (las tajadas punteadas). Toca las tajadas que QUEDAN para pintarlas y escribe la fracción que representa el queso que queda.",
+   total:8,vendidas:3,
+   retroOk:"¡Perfecto! Quedan 5 tajadas de 8: la fracción es 5/8 del queso.",
+   pistas:["El denominador (abajo) es el total de tajadas del queso: 8.","El numerador (arriba) es cuántas tajadas quedan sin vender.","Si vendió 3 de 8, cuenta las que quedan: 8 − 3 = …"]},
+  {id:"c2a3",tipo:"opcion",comp:"for",titulo:"Suma en la quesera",
+   observable:"Opera con fracciones homogéneas",
+   enunciado:"Por la mañana doña Nubia vendió 2/8 del queso y por la tarde vendió 3/8 más. ¿Qué fracción del queso vendió en todo el día?",
+   opciones:["5/16","5/8","6/8","1/8"],correcta:1,
+   retroOk:"¡Eso es! 2/8 + 3/8 = 5/8. Cuando el denominador es igual, solo se suman los numeradores.",
+   pistas:["Las dos fracciones tienen el mismo denominador: 8. Eso facilita todo.","Con igual denominador, se suman SOLO los de arriba: 2 + 3.","El denominador NO se suma: sigue siendo 8. Por eso 5/16 es una trampa."]},
+  {id:"c2a4",tipo:"tabla",comp:"for",titulo:"La tabla de la quesera",
+   observable:"Completa una tabla de proporcionalidad directa",
+   enunciado:"Completa la tabla con la regla de doña Nubia (10 litros → 1 kilo).",
+   cols:["Litros de leche","Kilos de queso"],
+   filas:[[10,1],[20,2],[50,"?"],["?",8]],
+   respuestas:[5,80],
+   retroOk:"¡Muy bien! 50 litros → 5 kilos, y para 8 kilos se necesitan 80 litros. La tabla crece de forma proporcional.",
+   pistas:["Fíjate en el patrón: 10→1, 20→2… los litros son 10 veces los kilos.","Para pasar de litros a kilos, divide entre 10. Para pasar de kilos a litros, multiplica por 10.","50 ÷ 10 = … y 8 × 10 = …"]},
+  {id:"c2a5",tipo:"numero",comp:"for",titulo:"El pedido del mercado",
+   observable:"Aplica la regla de tres simple en un contexto real",
+   enunciado:"Doña Nubia vende el kilo de queso a $16.000. Si el sábado le encargaron 3 kilos para el mercado del pueblo, ¿cuánto dinero recibirá por el pedido?",
+   respuesta:48000,unidad:"pesos",
+   retroOk:"¡Correcto! 16.000 × 3 = $48.000 por el pedido del sábado.",
+   pistas:["1 kilo cuesta $16.000. El pedido es de 3 kilos.","Si un kilo vale 16.000, tres kilos valen tres veces eso.","Multiplica: 16.000 × 3. Recuerda: 16 × 3 = 48."]},
+  {id:"c2a6",tipo:"justificar",comp:"arg",titulo:"¿Alcanza la leche del verano?",
+   observable:"Argumenta una decisión usando la proporcionalidad",
+   enunciado:"Escenario proyectivo: en verano las vacas producen menos y solo quedan 25 litros para la quesera. Con el pedido de 3 kilos de queso, ¿alcanza la leche? Explica tu respuesta con la regla de doña Nubia.",
+   minimo:30,claves:["30","25"],
+   modelo:"Ejemplo: No alcanza, porque para 3 kilos se necesitan 3 × 10 = 30 litros y solo hay 25. Con 25 litros salen 2 kilos y medio. Doña Nubia tendría que conseguir 5 litros más o entregar menos queso.",
+   pistas:["Primero calcula cuántos litros se necesitan para 3 kilos: 3 × 10 = …","Compara: se necesitan 30 y hay 25. ¿Sobra o falta? ¿Cuánto?","Cierra con una decisión: ¿qué podría hacer doña Nubia?"]}
+ ],
+ conclusiones:{
+  intro:"¡La quesera quedó al día! Piensa un momento en lo que aprendiste antes de ir al mercado.",
+  ruta:"Ruta de solución de este caso: 1) entender la regla (10 litros → 1 kilo), 2) usar el dibujo del queso para ver las fracciones, 3) sumar fracciones fijándome en el denominador, 4) usar la tabla proporcional para los pedidos y 5) argumentar si alcanza o no la leche.",
+  preguntas:[
+   {q:"¿En qué otra situación de tu casa o tu vereda has visto fracciones o repartos?",tipo:"texto"},
+   {q:"Si un compañero no entiende la tabla de proporcionalidad, ¿cómo se la explicarías?",tipo:"texto"},
+   {q:"¿Cómo te sentiste trabajando en la quesera?",tipo:"escala"}
+  ]
+ }
+},
+{
+ id:"c3", icono:"🛒", clase:"c3", titulo:"Caso 3 · La venta: leche, queso y suero",
+ tema:"Medición, geometría, datos y reto tipo Saber",
+ presentacion:{
+  relato:[
+   "Los sábados, la familia madruga para el mercado del pueblo: llevan cantinas de leche, quesos de doña Nubia y bolsas de suero costeño, que en Rodania nunca falta en la mesa.",
+   "Este mes hay dos proyectos grandes: construir un corral nuevo para los terneros y organizar las cuentas del puesto del mercado para saber si el negocio deja ganancia.",
+   "En este último caso vas a medir el corral, leer los datos de las ventas y enfrentar el reto integrador: preguntas tipo prueba Saber donde no basta responder… ¡hay que argumentar como todo un comerciante!"
+  ],
+  video:{n:"Video de apoyo: Regla de 3 simple — súper fácil",u:"https://www.youtube.com/watch?v=Xphb-tzJj24"},
+  acuerdos:["En las preguntas tipo Saber leo TODAS las opciones antes de escoger.","Mi justificación siempre dice el porqué con números, no solo “porque sí”.","Uso lo aprendido en los casos 1 y 2: enteros, fracciones y proporciones.","Celebro mis avances y los de mis compañeros: todos empezamos este periodo sabiendo menos que hoy."]
+ },
+ actividades:[
+  {id:"c3a1",tipo:"parafraseo",comp:"int",titulo:"El plan del mercado, con tus palabras",
+   observable:"Parafrasea la situación general del caso",
+   enunciado:"Cuenta con TUS palabras cuáles son los dos proyectos de la familia en este caso y qué vas a hacer tú para ayudar.",
+   minimo:25,
+   modelo:"Ejemplo: La familia quiere construir un corral nuevo para los terneros y organizar las cuentas del puesto del mercado. Yo voy a ayudar midiendo el corral, leyendo los datos de las ventas y respondiendo el reto final con buenas justificaciones.",
+   pistas:["En el relato se nombran dos proyectos: uno de construir y otro de cuentas.","El primero es el corral; el segundo, el puesto del mercado.","Empieza: “Los dos proyectos son… y yo voy a ayudar con…”"]},
+  {id:"c3a2",tipo:"numero",comp:"for",titulo:"El alambre del corral",
+   observable:"Calcula el perímetro en una situación de medición",
+   enunciado:"El corral nuevo será un rectángulo de 12 metros de largo por 8 metros de ancho. Don Ramiro le dará 3 vueltas completas de alambre de púas. ¿Cuántos metros de alambre necesita comprar?",
+   respuesta:120,unidad:"metros",
+   retroOk:"¡Excelente! El perímetro es 12 + 8 + 12 + 8 = 40 m, y 40 × 3 vueltas = 120 metros de alambre.",
+   pistas:["Primero calcula UNA vuelta: es el perímetro, la suma de los 4 lados del rectángulo.","Perímetro: 12 + 8 + 12 + 8 = … metros por vuelta.","Son 3 vueltas: multiplica el perímetro por 3."]},
+  {id:"c3a3",tipo:"opcion",comp:"for",titulo:"El pasto del corral",
+   observable:"Diferencia perímetro y área en el contexto",
+   enunciado:"Para saber cuánto pasto sembrar DENTRO del corral de 12 m × 8 m, la familia necesita calcular el área. ¿Cuánto mide el área del corral?",
+   opciones:["40 metros cuadrados","20 metros cuadrados","96 metros cuadrados","120 metros cuadrados"],correcta:2,
+   retroOk:"¡Correcto! Área del rectángulo = largo × ancho = 12 × 8 = 96 m². El perímetro (40 m) era para el alambre; el área es para el pasto.",
+   pistas:["El área es lo de ADENTRO; se calcula multiplicando largo × ancho.","No la confundas con el perímetro (40 m), que es el borde.","12 × 8 = … Piensa: 12 × 8 es lo mismo que 10×8 + 2×8."]},
+  {id:"c3a4",tipo:"opcion",comp:"int",titulo:"Los datos del suero",
+   observable:"Interpreta datos organizados en una tabla",
+   enunciado:"Ventas de bolsas de suero esta semana — Lunes: 6, Martes: 4, Miércoles: 7, Jueves: 5, Viernes: 10. Según los datos, ¿cuál afirmación es VERDADERA?",
+   opciones:["El día de menos venta fue el lunes","En total se vendieron 30 bolsas en la semana","El viernes se vendió el doble que el jueves","El miércoles fue el día de mayor venta"],correcta:2,
+   retroOk:"¡Bien leído! El jueves se vendieron 5 y el viernes 10: exactamente el doble. Las otras fallan: el día de menos venta fue el martes (4), el total es 6+4+7+5+10 = 32 bolsas (no 30) y el de mayor venta fue el viernes.",
+   pistas:["Verifica opción por opción con los números de la tabla, sin afán.","¿El doble de 5 es…? Compara jueves y viernes.","Suma el total: 6+4+7+5+10. ¿Da 30? ¿Y cuál fue de verdad el día de menos venta?"]},
+  {id:"c3a5",tipo:"saber",comp:"arg",titulo:"RETO SABER 1 · La ganancia del sábado",
+   observable:"Resuelve y argumenta una situación tipo Saber (formulación)",
+   enunciado:"El sábado el puesto recibió $96.000 por las ventas. Ese día la familia gastó $28.000 en transporte y $15.000 en bolsas y hielo. ¿Cuál fue la ganancia del día?",
+   opciones:["$139.000","$53.000","$68.000","$43.000"],correcta:1,
+   justifPrompt:"Explica cómo lo calculaste: ¿qué sumaste, qué restaste y por qué?",
+   retroOk:"¡Correcto! Gastos: 28.000 + 15.000 = 43.000. Ganancia: 96.000 − 43.000 = $53.000. Lo que entra suma, lo que se gasta resta.",
+   pistas:["Ganancia = lo que entró − lo que se gastó.","Primero junta los dos gastos: 28.000 + 15.000 = …","Ahora réstalos de 96.000. ¡Y no olvides justificar!"]},
+  {id:"c3a6",tipo:"saber",comp:"arg",titulo:"RETO SABER 2 · ¿Cuál oferta conviene?",
+   observable:"Argumenta la elección entre dos opciones usando proporcionalidad",
+   enunciado:"Dos clientes quieren comprar TODO el queso del día (4 kilos). El restaurante ofrece $60.000 por los 4 kilos. La tienda ofrece pagar a $16.000 cada kilo. ¿Cuál oferta le conviene más a doña Nubia?",
+   opciones:["La del restaurante, porque $60.000 se ve más grande","La de la tienda, porque 4 × 16.000 = $64.000, que es más que $60.000","Las dos ofertas pagan igual","Ninguna, porque el queso vale más"],correcta:1,
+   justifPrompt:"Justifica con las dos cuentas: ¿cuánto paga cada cliente en total y cuál es la diferencia?",
+   retroOk:"¡Como un verdadero comerciante! Tienda: 4 × 16.000 = $64.000. Restaurante: $60.000. La tienda paga $4.000 más.",
+   pistas:["Calcula cuánto paga en TOTAL cada cliente por los 4 kilos.","La tienda: 16.000 × 4 = … El restaurante ya dijo su total: 60.000.","Compara los dos totales y di la diferencia en tu justificación."]},
+  {id:"c3a7",tipo:"saber",comp:"arg",titulo:"RETO SABER 3 · La deuda del cliente",
+   observable:"Integra números enteros y argumentación (integración de los tres casos)",
+   enunciado:"Un cliente del mercado quedó debiendo $12.000 la semana pasada (su cuenta está en −12.000). Este sábado abonó $7.000 y llevó $4.000 más en suero fiado. ¿Cómo quedó la cuenta del cliente?",
+   opciones:["Debe $9.000 (cuenta en −9.000)","Debe $1.000 (cuenta en −1.000)","Ya no debe nada (cuenta en 0)","La familia le debe $9.000 al cliente"],correcta:0,
+   justifPrompt:"Explica paso a paso con los signos: ¿por qué el abono suma y lo fiado resta?",
+   retroOk:"¡Dominaste los enteros! −12.000 + 7.000 = −5.000, y −5.000 − 4.000 = −9.000. El cliente todavía debe $9.000.",
+   pistas:["Empieza en −12.000. El abono es dinero que entra: se suma.","−12.000 + 7.000 = −5.000. Ahora lo fiado es deuda nueva: se resta.","−5.000 − 4.000 = … El resultado sigue siendo negativo: aún debe."]}
+ ],
+ conclusiones:{
+  intro:"¡Completaste el mercado y el reto Saber! Este es el cierre de todo el periodo: mírate en el espejo del aprendizaje.",
+  ruta:"Ruta de solución de este caso: 1) medir con perímetro (el borde) y área (lo de adentro), 2) leer los datos de la tabla comprobando opción por opción, 3) en los retos Saber: entender, calcular, comparar y SIEMPRE justificar con números.",
+  preguntas:[
+   {q:"Piensa en los tres casos: la finca, la quesera y el mercado. ¿Cuál ruta de solución te pareció la más útil y por qué?",tipo:"texto"},
+   {q:"Antes de este recurso, ¿escribías el porqué de tus respuestas? ¿Qué aprendiste sobre argumentar?",tipo:"texto"},
+   {q:"¿Cómo te sientes terminando todo el recorrido?",tipo:"escala"}
+  ]
+ }
+}
+];
+/* ================== MOTOR DEL REA ================== */
+const CLAVE_DOCENTE = "rodania2026";
+const LS_KEY = "matematicas_rodania_v1";
+
+/* --- almacenamiento seguro (funciona aunque localStorage falle) --- */
+let memoria = {perfiles:{}, observables:[]};
+function cargar(){
+  try{ const d = localStorage.getItem(LS_KEY); if(d) memoria = JSON.parse(d); }catch(e){}
+  if(!memoria.perfiles) memoria.perfiles = {};
+  if(!memoria.observables) memoria.observables = [];
+}
+function guardar(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(memoria)); }catch(e){} }
+
+let EST = null;      // perfil activo
+let casoActual = null, etapaActual = 0;
+const $ = id => document.getElementById(id);
+
+function perfilNuevo(nombre){
+  return {nombre, creado:Date.now(), actividades:{}, etapasVistas:{}, insignias:[], meta:{}, justifsCompletas:0, visitoRecursos:false};
+}
+
+/* --- registro de observables DCE --- */
+function registrarObservable(actId, observable, comp, resultado, intentos, pistas, respuesta){
+  memoria.observables.push({
+    fecha:new Date().toISOString(), estudiante:EST.nombre,
+    caso:casoActual? casoActual.titulo : "-", actividad:actId, competencia:comp,
+    observable, resultado, intentos, pistas, respuesta:String(respuesta||"").slice(0,300)
+  });
+  guardar();
+}
+
+/* --- audio con voz del sistema --- */
+function leer(texto){
+  try{
+    if(!("speechSynthesis" in window)) return alert("Este equipo no tiene voz disponible.");
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = "es-CO"; u.rate = .95;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* --- navegación --- */
+function mostrar(idPantalla){
+  document.querySelectorAll(".pantalla").forEach(p=>p.classList.remove("activa"));
+  $(idPantalla).classList.add("activa");
+  window.scrollTo({top:0});
+  const nav = $("nav-flotante");
+  nav.classList.toggle("visible", idPantalla!=="p-registro");
+  $("nf-mapa").classList.toggle("activa", idPantalla==="p-mapa");
+  $("nf-recursos").classList.toggle("activa", idPantalla==="p-recursos");
+}
+function irMapa(){ casoActual=null; pintarMapa(); mostrar("p-mapa"); }
+function irRecursos(){
+  if(EST && !EST.visitoRecursos){ EST.visitoRecursos=true; guardar(); revisarInsignias(); }
+  mostrar("p-recursos");
+}
+
+/* --- progreso --- */
+function actividadesTotales(){ return CASOS.reduce((n,c)=>n+c.actividades.length,0); }
+function actividadesHechas(){ return Object.values(EST.actividades).filter(a=>a.completa).length; }
+function casoCompleto(c){ return c.actividades.every(a=>EST.actividades[a.id] && EST.actividades[a.id].completa); }
+function casoDesbloqueado(i){ return i===0 || casoCompleto(CASOS[i-1]); }
+function estrellasTotales(){ return Object.values(EST.actividades).reduce((n,a)=>n+(a.estrellas||0),0); }
+
+/* --- insignias --- */
+function darInsignia(id){
+  if(EST.insignias.includes(id)) return;
+  EST.insignias.push(id); guardar();
+  const ins = INSIGNIAS.find(x=>x.id===id);
+  $("modal-icono").textContent = ins.ico;
+  $("modal-titulo").textContent = "¡Insignia: " + ins.n + "!";
+  $("modal-texto").textContent = ins.d;
+  $("modal-insignia").classList.add("visible");
+}
+function cerrarModal(){ $("modal-insignia").classList.remove("visible"); }
+function revisarInsignias(){
+  const hechas = id => EST.actividades[id] && EST.actividades[id].completa;
+  if(["c1a1","c2a1","c3a1"].every(hechas)) darInsignia("lector");
+  if(hechas("c1a2")) darInsignia("detective");
+  if(casoCompleto(CASOS[0])) darInsignia("ordenador");
+  if(casoCompleto(CASOS[1])) darInsignia("quesero");
+  if(casoCompleto(CASOS[2])) darInsignia("comerciante");
+  if(EST.justifsCompletas >= 4) darInsignia("argumentador");
+  if(actividadesHechas() === actividadesTotales()) darInsignia("cantina");
+  pintarProgreso();
+}
+
+/* --- pintar mapa --- */
+function pintarProgreso(){
+  const pct = Math.round(100*actividadesHechas()/actividadesTotales());
+  $("progreso-pct").textContent = pct;
+  const h = 68*pct/100;
+  const nivel = $("leche-nivel");
+  nivel.setAttribute("height", h);
+  nivel.setAttribute("y", 80-h);
+  $("total-estrellas").textContent = estrellasTotales();
+  $("total-insignias").textContent = EST.insignias.length;
+  const fila = $("fila-insignias");
+  fila.innerHTML = INSIGNIAS.map(i=>
+    `<div class="insignia ${EST.insignias.includes(i.id)?'ganada':''}" title="${i.d}">
+      <div class="medalla">${i.ico}</div><p>${i.n}</p></div>`).join("");
+}
+function pintarMapa(){
+  $("saludo-nombre").textContent = EST.nombre.split(" ")[0];
+  pintarProgreso();
+  const cont = $("lista-casos");
+  cont.innerHTML = "";
+  CASOS.forEach((c,i)=>{
+    const abierto = casoDesbloqueado(i);
+    const completo = casoCompleto(c);
+    const hechasN = c.actividades.filter(a=>EST.actividades[a.id]&&EST.actividades[a.id].completa).length;
+    const b = document.createElement("button");
+    b.className = `tarjeta caso ${c.clase} ${abierto?'':'candado'}`;
+    b.innerHTML = `<div class="icono">${abierto?c.icono:"🔒"}</div>
+      <div><h3>${c.titulo}</h3>
+      <p style="color:var(--gris);font-size:.9rem">${c.tema}</p>
+      <p class="estado" style="color:${completo?'var(--pasto)':'var(--corral)'}">
+        ${!abierto?"Termina el caso anterior para abrirlo":(completo?"✔ Caso completado":hechasN+" de "+c.actividades.length+" actividades")}</p></div>`;
+    if(abierto) b.onclick = ()=>abrirCaso(i);
+    cont.appendChild(b);
+  });
+}
+
+/* --- abrir caso y etapas ABC --- */
+const ETAPAS = [
+ {n:"1", t:"El caso", ico:"📖"},
+ {n:"2", t:"Manos a la obra", ico:"🔧"},
+ {n:"3", t:"Pienso en lo aprendido", ico:"🪞"}
+];
+function abrirCaso(i){
+  casoActual = CASOS[i]; etapaActual = 0;
+  $("caso-titulo").textContent = casoActual.titulo;
+  $("caso-miga").textContent = casoActual.tema;
+  pintarEtapas(); pintarEtapa();
+  mostrar("p-caso");
+}
+function pintarEtapas(){
+  const cont = $("caso-etapas"); cont.innerHTML="";
+  ETAPAS.forEach((e,i)=>{
+    const b = document.createElement("button");
+    b.className = "etapa-btn" + (i===etapaActual?" activa":"");
+    b.setAttribute("role","tab");
+    b.innerHTML = `<span class="num">${e.n}</span> ${e.ico} ${e.t}`;
+    b.onclick = ()=>{ etapaActual=i; pintarEtapas(); pintarEtapa(); };
+    cont.appendChild(b);
+  });
+}
+function pintarEtapa(){
+  const cont = $("caso-contenido"); cont.innerHTML="";
+  if(etapaActual===0) pintarPresentacion(cont);
+  else if(etapaActual===1) pintarResolucion(cont);
+  else pintarConclusiones(cont);
+  window.scrollTo({top:0});
+}
+
+function pintarPresentacion(cont){
+  const p = casoActual.presentacion;
+  const relatoTexto = p.relato.join(" ");
+  cont.innerHTML = `
+   <div class="tarjeta">
+    <div class="act-cab"><h4>📖 Presentación del caso</h4>
+      <button class="btn btn-audio" onclick="leer(${JSON.stringify(relatoTexto).replace(/"/g,"&quot;")})">🔊 Escuchar</button></div>
+    <div class="relato">${p.relato.map(x=>`<p>${x}</p>`).join("")}</div>
+    <div class="acuerdos"><b>🤝 Así vamos a trabajar (nuestros acuerdos):</b>
+      <ul>${p.acuerdos.map(a=>`<li>${a}</li>`).join("")}</ul>
+      <p style="font-size:.85rem;margin-top:8px;color:var(--gris)">Al final del caso: revisamos lo aprendido en la etapa <b>Pienso en lo aprendido</b>. Tus estrellas dependen de resolver con pocas pistas, ¡pero pedir pistas nunca está mal!</p></div>
+    <p style="margin:10px 0 4px">🎬 <b>${p.video.n}</b> <span class="chip">necesita internet</span><br>
+      <a href="${p.video.u}" target="_blank" rel="noopener" style="color:var(--cielo);font-weight:700;word-break:break-all">${p.video.u}</a></p>
+    <div class="botonera"><button class="btn btn-p" onclick="etapaActual=1;pintarEtapas();pintarEtapa()">¡Manos a la obra! →</button></div>
+   </div>`;
+  if(!EST.etapasVistas[casoActual.id+"-p"]){ EST.etapasVistas[casoActual.id+"-p"]=true; guardar(); }
+}
+/* ================== ETAPA 2: RESOLUCIÓN (actividades) ================== */
+const RUNTIME = {}; // estado temporal por actividad
+
+function compEtiqueta(c){
+  return c==="int"?'<span class="competencia comp-int">Interpretación</span>'
+       : c==="for"?'<span class="competencia comp-for">Formulación</span>'
+       : '<span class="competencia comp-arg">Argumentación</span>';
+}
+function estrellasHTML(n){ return "⭐".repeat(n) + "☆".repeat(3-n); }
+
+function pintarResolucion(cont){
+  cont.innerHTML = `<p class="sub">Etapa de resolución: investiga, calcula, propone. Lola la vaca te da pistas si las necesitas. 🐮</p>`;
+  casoActual.actividades.forEach((a,idx)=>{
+    const est = EST.actividades[a.id] || {};
+    const div = document.createElement("div");
+    div.className = "actividad" + (est.completa?" hecha":"");
+    div.id = "act-"+a.id;
+    div.innerHTML = `
+      <div class="act-cab"><h4>${idx+1}. ${a.titulo} ${est.completa?"✔":""}</h4>
+        <div>${compEtiqueta(a.comp)} <span class="estrellas">${est.completa?estrellasHTML(est.estrellas):""}</span></div></div>
+      <div class="enunciado">${a.enunciado}
+        <div class="botonera" style="margin-top:8px">
+          <button class="btn btn-audio" onclick="leer(${JSON.stringify(a.enunciado).replace(/"/g,"&quot;")})">🔊 Escuchar</button>
+          <button class="btn btn-pista" onclick="pedirPista('${a.id}')">💡 Pista de Lola</button>
+        </div></div>
+      <div class="pista-caja" id="pista-${a.id}">
+        <svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="32" r="22" fill="#fff" stroke="#26332B" stroke-width="3"/><path d="M12,20 q-8,-8 2,-12 q8,-2 8,8" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/><path d="M46,16 q10,-6 10,2 q0,8 -10,6" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/><circle cx="23" cy="28" r="3.4" fill="#26332B"/><circle cx="37" cy="28" r="3.4" fill="#26332B"/><ellipse cx="30" cy="42" rx="12" ry="8" fill="#F6C7A8" stroke="#26332B" stroke-width="2"/><circle cx="26" cy="41" r="2" fill="#26332B"/><circle cx="34" cy="41" r="2" fill="#26332B"/><path d="M18,14 q6,-10 12,-2" fill="#26332B"/></svg>
+        <div><div class="nivel" id="pista-nivel-${a.id}"></div><p id="pista-texto-${a.id}"></p></div>
+      </div>
+      <div id="cuerpo-${a.id}"></div>
+      <div class="retro" id="retro-${a.id}"></div>`;
+    cont.appendChild(div);
+    RUNTIME[a.id] = RUNTIME[a.id] || {intentos:0, pistas:0, sel:null};
+    pintarCuerpo(a, est);
+  });
+  const fin = document.createElement("div");
+  fin.className = "tarjeta";
+  fin.innerHTML = `<div class="botonera"><button class="btn btn-p" onclick="etapaActual=2;pintarEtapas();pintarEtapa()">Ir a “Pienso en lo aprendido” →</button></div>`;
+  cont.appendChild(fin);
+}
+
+function pedirPista(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  if(r.pistas < 3){ r.pistas++; }
+  const caja = $("pista-"+id);
+  caja.classList.add("visible");
+  $("pista-nivel-"+id).textContent = ["Pista 1 · de lectura","Pista 2 · de traducción","Pista 3 · de procedimiento"][r.pistas-1];
+  $("pista-texto-"+id).textContent = a.pistas[r.pistas-1];
+}
+function buscarAct(id){ for(const c of CASOS){ const a = c.actividades.find(x=>x.id===id); if(a) return a; } }
+function calcEstrellas(r){ return r.pistas===0 && r.intentos<=1 ? 3 : (r.pistas<=1 && r.intentos<=2 ? 2 : 1); }
+
+function completar(a, r, respuesta){
+  const est = EST.actividades[a.id] || {};
+  if(!est.completa){
+    est.completa = true; est.estrellas = calcEstrellas(r);
+    EST.actividades[a.id] = est;
+    registrarObservable(a.id, a.observable, a.comp, "logrado", r.intentos+1, r.pistas, respuesta);
+    guardar(); revisarInsignias();
+    const cab = document.querySelector("#act-"+a.id+" .estrellas");
+    if(cab) cab.textContent = estrellasHTML(est.estrellas);
+    document.getElementById("act-"+a.id).classList.add("hecha");
+  }
+}
+function fallo(a, r, respuesta){
+  r.intentos++;
+  registrarObservable(a.id, a.observable, a.comp, "intento fallido", r.intentos, r.pistas, respuesta);
+}
+function retro(id, clase, msj){
+  const el = $("retro-"+id);
+  el.className = "retro " + clase;
+  el.innerHTML = msj;
+}
+
+/* ---------- constructores por tipo ---------- */
+function pintarCuerpo(a, est){
+  const c = $("cuerpo-"+a.id);
+  if(a.tipo==="parafraseo" || a.tipo==="justificar") c.innerHTML = cuerpoTexto(a, est);
+  else if(a.tipo==="clasificar") c.innerHTML = cuerpoClasificar(a, est);
+  else if(a.tipo==="opcion") c.innerHTML = cuerpoOpcion(a, est);
+  else if(a.tipo==="numero") c.innerHTML = cuerpoNumero(a, est);
+  else if(a.tipo==="recta") { c.innerHTML = cuerpoRecta(a, est); }
+  else if(a.tipo==="queso") { c.innerHTML = cuerpoQueso(a, est); }
+  else if(a.tipo==="tabla") c.innerHTML = cuerpoTabla(a, est);
+  else if(a.tipo==="saber") c.innerHTML = cuerpoSaber(a, est);
+  if(est.completa) retro(a.id, "ok", a.retroOk ? a.retroOk : "✔ Actividad completada.");
+}
+
+/* texto libre: parafraseo / justificación */
+function cuerpoTexto(a, est){
+  return `<textarea class="texto-resp" id="txt-${a.id}" placeholder="Escribe aquí con tus palabras..." ${est.completa?"disabled":""}>${est.respuesta||""}</textarea>
+   <div class="botonera">
+     <button class="btn btn-p" onclick="enviarTexto('${a.id}')" ${est.completa?"disabled":""}>Enviar</button>
+     <button class="btn btn-s" onclick="verModelo('${a.id}')">👀 Ver un ejemplo</button>
+   </div><div class="retro info oculto" id="modelo-${a.id}"></div>`;
+}
+function verModelo(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const el = $("modelo-"+id);
+  el.classList.remove("oculto"); el.className = "retro info";
+  el.textContent = a.modelo;
+  if(r.pistas<3) r.pistas++;
+}
+function enviarTexto(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const val = $("txt-"+id).value.trim();
+  if(val.length < a.minimo){
+    fallo(a, r, val);
+    return retro(id, "mal", `Tu respuesta está muy cortica (${val.length} letras). Cuéntame más: mínimo ${a.minimo} letras. Puedes usar el ejemplo como guía.`);
+  }
+  if(a.claves && !a.claves.some(k=>val.replace(/\./g,"").includes(k))){
+    fallo(a, r, val);
+    return retro(id, "mal", "Buen intento, pero falta la cuenta con números. Haz la operación del escenario y escríbela dentro de tu explicación.");
+  }
+  const est = EST.actividades[a.id] || {}; est.respuesta = val; EST.actividades[a.id]=est;
+  if(a.tipo==="justificar" || (a.claves && a.claves.length)) { EST.justifsCompletas = (EST.justifsCompletas||0)+1; }
+  completar(a, r, val);
+  retro(id, "ok", a.tipo==="parafraseo" ? "¡Muy bien contado! Compara tu versión con el ejemplo: ¿nombraste lo mismo?" : "¡Excelente argumentación! Explicaste con números, como los buenos comerciantes.");
+  $("txt-"+id).disabled = true;
+}
+
+/* clasificar sé/busco */
+function cuerpoClasificar(a, est){
+  const r = RUNTIME[a.id];
+  if(!r.colocadas) r.colocadas = {};
+  const pendientes = a.fichas.map((f,i)=>({...f,i})).filter(f=>!(f.i in r.colocadas));
+  let html = `<p style="margin-top:8px;font-size:.9rem;color:var(--gris)">Toca una ficha y luego toca la caja donde va. Hay fichas que <b>sobran</b>.</p>
+  <div class="fichas" id="fichas-${a.id}">` +
+    pendientes.map(f=>`<button class="ficha" data-i="${f.i}" onclick="selFicha('${a.id}',${f.i},this)" ${est.completa?"disabled":""}>${f.t}</button>`).join("") + `</div>
+  <div class="clasificador">
+    <div class="zona se" onclick="soltarFicha('${a.id}','se')"><h5>✅ Lo que sé (datos útiles)</h5><div id="zona-se-${a.id}"></div></div>
+    <div class="zona busco" onclick="soltarFicha('${a.id}','busco')"><h5>❓ Lo que busco (la pregunta)</h5><div id="zona-busco-${a.id}"></div></div>
+    <div class="zona sobra" style="grid-column:1/-1" onclick="soltarFicha('${a.id}','sobra')"><h5>🗑️ Sobra (no lo necesito)</h5><div id="zona-sobra-${a.id}"></div></div>
+  </div>
+  <div class="botonera"><button class="btn btn-p" onclick="revisarClasificar('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>`;
+  return html;
+}
+function selFicha(id, i, btn){
+  const r = RUNTIME[id];
+  r.sel = i;
+  document.querySelectorAll(`#fichas-${id} .ficha`).forEach(f=>f.classList.remove("sel"));
+  btn.classList.add("sel");
+}
+function soltarFicha(id, zona){
+  const r = RUNTIME[id], a = buscarAct(id);
+  if(r.sel===null || r.sel===undefined) return;
+  r.colocadas[r.sel] = zona;
+  const f = a.fichas[r.sel];
+  const chip = document.createElement("button");
+  chip.className = "ficha"; chip.textContent = f.t;
+  chip.onclick = (ev)=>{ ev.stopPropagation(); delete r.colocadas[r.sel]; refrescarClasificar(id); };
+  const idx = r.sel;
+  chip.onclick = (ev)=>{ ev.stopPropagation(); delete r.colocadas[idx]; refrescarClasificar(id); };
+  $("zona-"+zona+"-"+id).appendChild(chip);
+  const orig = document.querySelector(`#fichas-${id} .ficha[data-i="${r.sel}"]`);
+  if(orig) orig.remove();
+  r.sel = null;
+}
+function refrescarClasificar(id){
+  const a = buscarAct(id), est = EST.actividades[a.id]||{};
+  $("cuerpo-"+id).innerHTML = cuerpoClasificar(a, est);
+  const r = RUNTIME[id];
+  Object.entries(r.colocadas).forEach(([i,z])=>{
+    const f = a.fichas[i];
+    const chip = document.createElement("button");
+    chip.className="ficha"; chip.textContent=f.t;
+    chip.onclick=(ev)=>{ev.stopPropagation(); delete r.colocadas[i]; refrescarClasificar(id);};
+    $("zona-"+z+"-"+id).appendChild(chip);
+  });
+}
+function revisarClasificar(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  if(Object.keys(r.colocadas).length < a.fichas.length){
+    return retro(id, "info", "Todavía te quedan fichas por colocar. ¡Colócalas todas y vuelve a revisar!");
+  }
+  const errores = a.fichas.filter((f,i)=>r.colocadas[i]!==f.z).length;
+  if(errores===0){
+    completar(a, r, JSON.stringify(r.colocadas));
+    retro(id, "ok", "¡Detective de primera! Separaste los datos útiles, la pregunta y lo que sobra. Ese es el primer paso de todo buen problema.");
+  } else {
+    fallo(a, r, JSON.stringify(r.colocadas));
+    retro(id, "mal", `Hay ${errores} ficha(s) en la caja equivocada. Toca una ficha colocada para devolverla e inténtalo de nuevo. Recuerda la pista de Lola.`);
+  }
+}
+
+/* opción múltiple */
+function cuerpoOpcion(a, est){
+  const letras = ["A","B","C","D"];
+  return `<div class="opciones">` + a.opciones.map((o,i)=>
+    `<button class="opcion" id="op-${a.id}-${i}" onclick="responderOpcion('${a.id}',${i})" ${est.completa?"disabled":""}>
+      <span class="letra">${letras[i]}</span> ${o}</button>`).join("") + `</div>`;
+}
+function responderOpcion(id, i){
+  const a = buscarAct(id), r = RUNTIME[id];
+  document.querySelectorAll(`[id^="op-${id}-"]`).forEach(b=>b.classList.remove("sel"));
+  const btn = $("op-"+id+"-"+i);
+  if(i===a.correcta){
+    btn.classList.add("ok");
+    document.querySelectorAll(`[id^="op-${id}-"]`).forEach(b=>b.disabled=true);
+    completar(a, r, a.opciones[i]);
+    retro(id, "ok", a.retroOk);
+  } else {
+    btn.classList.add("mal"); btn.disabled = true;
+    fallo(a, r, a.opciones[i]);
+    retro(id, "mal", "Esa no es. Lee otra vez la situación con calma — o pídele una pista a Lola — y prueba otra opción.");
+  }
+}
+
+/* respuesta numérica */
+function cuerpoNumero(a, est){
+  return `<div class="botonera" style="margin-top:10px">
+    <input type="number" inputmode="numeric" class="num-resp" id="num-${a.id}" placeholder="?" value="${est.completa?a.respuesta:""}" ${est.completa?"disabled":""}>
+    <b>${a.unidad}</b>
+    <button class="btn btn-p" onclick="responderNumero('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>`;
+}
+function responderNumero(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const val = parseFloat($("num-"+id).value);
+  if(isNaN(val)) return retro(id, "info", "Escribe un número en la casilla.");
+  if(val===a.respuesta){
+    $("num-"+id).disabled = true;
+    completar(a, r, val); retro(id, "ok", a.retroOk);
+  } else {
+    fallo(a, r, val);
+    const dif = val > a.respuesta ? "Tu número se pasó." : "Tu número se quedó corto.";
+    retro(id, "mal", dif + " Revisa la cuenta paso a paso o pide una pista a Lola.");
+  }
+}
+
+/* recta numérica */
+function cuerpoRecta(a, est){
+  let puntos = "";
+  const n = a.max - a.min;
+  for(let v=a.min; v<=a.max; v++){
+    const x = ((v-a.min)/n)*100;
+    puntos += `<div class="marca-n" style="left:${x}%"></div><div class="num" style="left:${x}%">${v}</div>
+      <button class="punto" style="left:${x}%" onclick="responderRecta('${a.id}',${v})" ${est.completa?"disabled":""} aria-label="Elegir ${v}" id="pt-${a.id}-${v}"></button>`;
+  }
+  return `<div class="recta-cont"><div class="recta"><div class="linea"></div>${puntos}</div></div>
+   <p style="font-size:.85rem;color:var(--gris)">Toca el círculo sobre el número que responde la situación.</p>`;
+}
+function responderRecta(id, v){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const btn = $("pt-"+id+"-"+v);
+  if(v===a.respuesta){
+    btn.classList.add("ok"); btn.textContent = v;
+    document.querySelectorAll(`[id^="pt-${id}-"]`).forEach(b=>b.disabled=true);
+    completar(a, r, v); retro(id, "ok", a.retroOk);
+  } else {
+    btn.classList.add("mal"); btn.textContent = v; btn.disabled = true;
+    fallo(a, r, v);
+    retro(id, "mal", "Ahí no queda la cuenta. Recuerda: la deuda arranca en −8 y el abono avanza hacia la derecha.");
+  }
+}
+
+/* queso de fracciones */
+function cuerpoQueso(a, est){
+  const r = RUNTIME[a.id]; if(!r.pintadas) r.pintadas = new Set();
+  let sectores = "";
+  for(let i=0;i<a.total;i++){
+    const a0 = (i/a.total)*2*Math.PI - Math.PI/2, a1 = ((i+1)/a.total)*2*Math.PI - Math.PI/2;
+    const x0 = 95+80*Math.cos(a0), y0 = 95+80*Math.sin(a0);
+    const x1 = 95+80*Math.cos(a1), y1 = 95+80*Math.sin(a1);
+    const vendida = i < a.vendidas;
+    sectores += `<path d="M95,95 L${x0.toFixed(1)},${y0.toFixed(1)} A80,80 0 0,1 ${x1.toFixed(1)},${y1.toFixed(1)} Z"
+      class="tajada ${vendida?'vendida':''}" id="tj-${a.id}-${i}" ${vendida?"":`onclick="tocarTajada('${a.id}',${i})"`}/>`;
+  }
+  return `<div class="queso-wrap">
+    <svg viewBox="0 0 190 190" role="img" aria-label="Queso partido en ${a.total} tajadas">${sectores}</svg>
+    <div><p class="marcador-frac"><span id="frac-num-${a.id}">0</span> / ${a.total}</p>
+      <p style="font-size:.9rem;color:var(--gris)">tajadas pintadas (las punteadas ya se vendieron)</p>
+      <div class="botonera"><button class="btn btn-p" onclick="revisarQueso('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>
+    </div></div>`;
+}
+function tocarTajada(id, i){
+  const a = buscarAct(id), r = RUNTIME[id];
+  if(EST.actividades[id] && EST.actividades[id].completa) return;
+  const el = $("tj-"+id+"-"+i);
+  if(r.pintadas.has(i)){ r.pintadas.delete(i); el.classList.remove("sel"); }
+  else { r.pintadas.add(i); el.classList.add("sel"); }
+  $("frac-num-"+id).textContent = r.pintadas.size;
+}
+function revisarQueso(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const esperado = a.total - a.vendidas;
+  if(r.pintadas.size===esperado && [...r.pintadas].every(i=>i>=a.vendidas)){
+    completar(a, r, r.pintadas.size + "/" + a.total);
+    retro(id, "ok", a.retroOk);
+  } else {
+    fallo(a, r, r.pintadas.size + "/" + a.total);
+    retro(id, "mal", "Revisa: solo debes pintar las tajadas que QUEDAN (las que no están punteadas). Cuenta de nuevo cuántas son.");
+  }
+}
+
+/* tabla proporcional */
+function cuerpoTabla(a, est){
+  let idxInput = 0;
+  const filas = a.filas.map(f=>{
+    const celdas = f.map(v=>{
+      if(v==="?"){ const k = idxInput++; return `<td><input type="number" inputmode="numeric" id="tb-${a.id}-${k}" ${est.completa?`value="${a.respuestas[k]}" disabled`:""}></td>`; }
+      return `<td>${v}</td>`;
+    }).join("");
+    return `<tr>${celdas}</tr>`;
+  }).join("");
+  return `<table class="tabla-prop"><thead><tr>${a.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>${filas}</tbody></table>
+   <div class="botonera"><button class="btn btn-p" onclick="revisarTabla('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>`;
+}
+function revisarTabla(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const vals = a.respuestas.map((_,k)=>parseFloat($("tb-"+id+"-"+k).value));
+  if(vals.some(isNaN)) return retro(id, "info", "Completa las dos casillas vacías.");
+  if(vals.every((v,k)=>v===a.respuestas[k])){
+    a.respuestas.forEach((_,k)=>$("tb-"+id+"-"+k).disabled=true);
+    completar(a, r, vals.join(", ")); retro(id, "ok", a.retroOk);
+  } else {
+    fallo(a, r, vals.join(", "));
+    retro(id, "mal", "Alguna casilla no sigue la regla de doña Nubia. Recuerda: kilos × 10 = litros, y litros ÷ 10 = kilos.");
+  }
+}
+
+/* tipo Saber: opción + justificación obligatoria */
+function cuerpoSaber(a, est){
+  const letras = ["A","B","C","D"];
+  return `<div class="opciones">` + a.opciones.map((o,i)=>
+    `<button class="opcion" id="op-${a.id}-${i}" onclick="selSaber('${a.id}',${i})" ${est.completa?"disabled":""}>
+      <span class="letra">${letras[i]}</span> ${o}</button>`).join("") + `</div>
+   <p style="margin-top:12px;font-weight:700">✍️ ${a.justifPrompt}</p>
+   <textarea class="texto-resp" id="just-${a.id}" placeholder="Mi justificación con números..." ${est.completa?"disabled":""}>${est.justif||""}</textarea>
+   <div class="botonera"><button class="btn btn-p" onclick="responderSaber('${a.id}')" ${est.completa?"disabled":""}>Enviar respuesta y justificación</button></div>`;
+}
+function selSaber(id, i){
+  RUNTIME[id].sel = i;
+  document.querySelectorAll(`[id^="op-${id}-"]`).forEach(b=>b.classList.remove("sel"));
+  $("op-"+id+"-"+i).classList.add("sel");
+}
+function responderSaber(id){
+  const a = buscarAct(id), r = RUNTIME[id];
+  const just = $("just-"+id).value.trim();
+  if(r.sel===null || r.sel===undefined) return retro(id, "info", "Primero escoge una opción (A, B, C o D).");
+  if(just.length < 25){
+    fallo(a, r, "opción "+r.sel+" sin justificar");
+    return retro(id, "mal", "En las pruebas Saber de esta finca no vale responder sin explicar. Escribe tu justificación con números (mínimo 25 letras).");
+  }
+  if(r.sel===a.correcta){
+    $("op-"+id+"-"+r.sel).classList.add("ok");
+    document.querySelectorAll(`[id^="op-${id}-"]`).forEach(b=>b.disabled=true);
+    $("just-"+id).disabled = true;
+    const est = EST.actividades[a.id]||{}; est.justif = just; EST.actividades[a.id]=est;
+    EST.justifsCompletas = (EST.justifsCompletas||0)+1;
+    completar(a, r, "opción correcta · "+just);
+    retro(id, "ok", a.retroOk);
+  } else {
+    $("op-"+id+"-"+r.sel).classList.add("mal");
+    $("op-"+id+"-"+r.sel).disabled = true;
+    fallo(a, r, "opción "+r.sel+" · "+just);
+    retro(id, "mal", "La opción no es la correcta, pero tu justificación queda registrada: revísala, ahí puede estar el error de la cuenta. Escoge otra opción.");
+    r.sel = null;
+  }
+}
+/* ================== ETAPA 3: CONCLUSIONES (metacognición) ================== */
+function pintarConclusiones(cont){
+  const con = casoActual.conclusiones;
+  const completoCaso = casoCompleto(casoActual);
+  let html = `<div class="tarjeta">
+    <div class="act-cab"><h4>🪞 Pienso en lo aprendido</h4>
+      <button class="btn btn-audio" onclick="leer(${JSON.stringify(con.intro+" "+con.ruta).replace(/"/g,"&quot;")})">🔊 Escuchar</button></div>
+    <p>${con.intro}</p>
+    <div class="acuerdos" style="margin-top:12px"><b>🗺️ ${con.ruta.split(":")[0]}:</b><p style="margin-top:6px">${con.ruta.split(":").slice(1).join(":")}</p></div>`;
+  con.preguntas.forEach((p,i)=>{
+    const clave = casoActual.id+"-m"+i;
+    const guardado = EST.meta[clave];
+    if(p.tipo==="texto"){
+      html += `<div class="meta-preg"><b>${i+1}. ${p.q}</b>
+        <textarea class="texto-resp" id="meta-${clave}" style="margin-top:8px" ${guardado?"disabled":""} placeholder="Escribe tu reflexión...">${guardado||""}</textarea></div>`;
+    } else {
+      const caras = ["😕","🙂","😄","🤩"];
+      html += `<div class="meta-preg"><b>${i+1}. ${p.q}</b><div class="escala">` +
+        caras.map((c,j)=>`<button id="esc-${clave}-${j}" class="${guardado==j?'sel':''}" onclick="selEscala('${clave}',${j})" ${guardado!==undefined&&guardado!==null?"disabled":""}>${c}</button>`).join("") + `</div></div>`;
+    }
+  });
+  html += `<div class="botonera">
+     <button class="btn btn-p" onclick="guardarMeta()">Guardar mi reflexión</button>
+     ${completoCaso?`<button class="btn btn-s" onclick="irMapa()">Volver a la finca 🏡</button>`:`<button class="btn btn-s" onclick="etapaActual=1;pintarEtapas();pintarEtapa()">Aún me faltan actividades ←</button>`}
+   </div><div class="retro" id="retro-meta"></div></div>`;
+  cont.innerHTML = html;
+}
+function selEscala(clave, j){
+  document.querySelectorAll(`[id^="esc-${clave}-"]`).forEach(b=>b.classList.remove("sel"));
+  $("esc-"+clave+"-"+j).classList.add("sel");
+  EST.meta["_tmp_"+clave] = j;
+}
+function guardarMeta(){
+  const con = casoActual.conclusiones;
+  let guardadas = 0;
+  con.preguntas.forEach((p,i)=>{
+    const clave = casoActual.id+"-m"+i;
+    if(EST.meta[clave]!==undefined && EST.meta[clave]!==null && EST.meta[clave]!=="") return;
+    if(p.tipo==="texto"){
+      const v = $("meta-"+clave).value.trim();
+      if(v.length>=10){
+        EST.meta[clave]=v; guardadas++;
+        registrarObservable("meta-"+clave, "Reflexión metacognitiva: "+p.q, "int", "registrada", 1, 0, v);
+        $("meta-"+clave).disabled = true;
+      }
+    } else {
+      const v = EST.meta["_tmp_"+clave];
+      if(v!==undefined){
+        EST.meta[clave]=v; guardadas++;
+        registrarObservable("meta-"+clave, "Valoración emocional: "+p.q, "int", "registrada", 1, 0, ["😕","🙂","😄","🤩"][v]);
+        document.querySelectorAll(`[id^="esc-${clave}-"]`).forEach(b=>b.disabled=true);
+        delete EST.meta["_tmp_"+clave];
+      }
+    }
+  });
+  guardar();
+  const el = $("retro-meta");
+  if(guardadas>0){ el.className="retro ok"; el.textContent="¡Reflexión guardada! Pensar en cómo aprendes te hace mejor estudiante (eso es la metacognición)."; }
+  else { el.className="retro info"; el.textContent="Responde las preguntas que te falten (las de texto con al menos 10 letras) y vuelve a guardar."; }
+}
+
+/* ================== RECURSOS ================== */
+function pintarRecursos(){
+  $("lista-recursos").innerHTML = RECURSOS.map(r=>
+    `<div class="recurso"><div class="tipo">${r.t}</div>
+      <div><b>${r.n}</b><p style="font-size:.88rem;color:var(--gris)">${r.d}</p>
+      <a href="${r.u}" target="_blank" rel="noopener">${r.u}</a></div></div>`).join("");
+}
+
+/* ================== PANEL DOCENTE ================== */
+function entrarDocente(){
+  if($("clave-doc").value !== CLAVE_DOCENTE) return alert("Clave incorrecta.");
+  $("docente-login").classList.add("oculto");
+  $("docente-panel").classList.remove("oculto");
+  pintarDocente();
+}
+function pintarDocente(){
+  const obs = memoria.observables;
+  const estudiantes = [...new Set(obs.map(o=>o.estudiante))];
+  const porComp = c => obs.filter(o=>o.competencia===c && o.resultado==="logrado").length;
+  const justifs = obs.filter(o=>o.competencia==="arg" && o.resultado==="logrado").length;
+  $("doc-kpis").innerHTML = `
+    <div class="kpi"><b>${estudiantes.length}</b><span>estudiantes en este equipo</span></div>
+    <div class="kpi"><b>${obs.length}</b><span>observables registrados</span></div>
+    <div class="kpi"><b>${porComp("int")}</b><span>logros de interpretación</span></div>
+    <div class="kpi"><b>${porComp("for")}</b><span>logros de formulación</span></div>
+    <div class="kpi"><b>${justifs}</b><span>logros de argumentación</span></div>`;
+  const nombreComp = {int:"Interpretación",for:"Formulación","arg":"Argumentación"};
+  $("tabla-observables").querySelector("tbody").innerHTML = obs.slice().reverse().map(o=>
+    `<tr><td>${o.fecha.slice(0,16).replace("T"," ")}</td><td>${o.estudiante}</td><td>${o.caso.replace("Caso ","C")}</td>
+     <td>${o.actividad}</td><td>${nombreComp[o.competencia]||o.competencia}</td><td>${o.observable}</td>
+     <td>${o.resultado}</td><td>${o.intentos}</td><td>${o.pistas}</td><td>${(o.respuesta||"").slice(0,80)}</td></tr>`).join("");
+}
+function descargar(nombre, contenido, tipo){
+  const blob = new Blob([contenido], {type:tipo});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 400);
+}
+function exportarCSV(){
+  const cab = ["fecha","estudiante","caso","actividad","competencia","observable","resultado","intentos","pistas","respuesta"];
+  const filas = memoria.observables.map(o=>cab.map(k=>`"${String(o[k]??"").replace(/"/g,'""')}"`).join(";"));
+  descargar("observables_rodania.csv", "\uFEFF"+cab.join(";")+"\n"+filas.join("\n"), "text/csv;charset=utf-8");
+}
+function exportarJSON(){
+  descargar("datos_rodania.json", JSON.stringify(memoria, null, 2), "application/json");
+}
+function borrarDatos(){
+  if(!confirm("¿Borrar TODOS los perfiles y observables de este equipo? Esta acción no se puede deshacer.")) return;
+  if(!confirm("Confirma otra vez: se recomienda exportar el CSV antes de borrar. ¿Borrar definitivamente?")) return;
+  memoria = {perfiles:{}, observables:[]}; guardar();
+  location.reload();
+}
+
+/* ================== INICIO Y REGISTRO ================== */
+function entrar(nombre){
+  nombre = nombre.trim().replace(/\s+/g," ");
+  if(nombre.length < 3) return alert("Escribe tu nombre completo (mínimo 3 letras).");
+  if(!memoria.perfiles[nombre]) memoria.perfiles[nombre] = perfilNuevo(nombre);
+  EST = memoria.perfiles[nombre];
+  guardar(); irMapa();
+}
+function init(){
+  cargar();
+  pintarRecursos();
+  const nombres = Object.keys(memoria.perfiles);
+  if(nombres.length){
+    $("perfiles-previos").innerHTML = "<p style='width:100%;font-size:.85rem;color:var(--gris)'>O toca tu nombre si ya habías entrado:</p>" +
+      nombres.map(n=>`<button class="perfil-btn" onclick="entrar('${n.replace(/'/g,"\\'")}')">${n}</button>`).join("");
+  }
+  $("btn-entrar").onclick = ()=>entrar($("nombre-est").value);
+  $("nombre-est").addEventListener("keydown", e=>{ if(e.key==="Enter") entrar($("nombre-est").value); });
+  $("btn-recursos").onclick = irRecursos;
+  $("btn-docente").onclick = ()=>mostrar("p-docente");
+  $("btn-clave").onclick = entrarDocente;
+  $("clave-doc").addEventListener("keydown", e=>{ if(e.key==="Enter") entrarDocente(); });
+  $("btn-csv").onclick = exportarCSV;
+  $("btn-json").onclick = exportarJSON;
+  $("btn-borrar").onclick = borrarDatos;
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
