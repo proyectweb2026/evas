@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDEÁPOLIS · El archipiélago de las ideas locas</title>
+<style>
+:root{
+  --tinta:#10102A;
+  --tinta2:#1B1B45;
+  --papel:#FFF3DB;
+  --chispa:#FFD23F;
+  --fusion:#FF4D8D;
+  --garabato:#22D3EE;
+  --quesi:#A56BFF;
+  --sos:#FF8C42;
+  --puente:#7CE577;
+  --caos:#FF2E4C;
+  --portal:#C9D1FF;
+  --borde:#0B0B1E;
+  --sombra:6px 6px 0 var(--borde);
+  --sombra-sm:4px 4px 0 var(--borde);
+  --display:'Arial Black','Arial Bold',Impact,Haettenschweiler,system-ui,sans-serif;
+  --texto:'Trebuchet MS','Segoe UI',Verdana,system-ui,sans-serif;
+  --escala:1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--texto);
+  background:var(--tinta);
+  color:var(--papel);
+  font-size:calc(16px * var(--escala));
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(165,107,255,.28), transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(255,77,141,.24), transparent 40%),
+    radial-gradient(circle at 70% 88%, rgba(34,211,238,.20), transparent 45%);
+  background-attachment:fixed;
+}
+body.grande{--escala:1.18}
+
+/* ---------- tipografía y piezas base ---------- */
+h1,h2,h3,.display{font-family:var(--display);text-transform:uppercase;letter-spacing:.02em;line-height:.95}
+.eyebrow{font-family:var(--display);font-size:.72rem;letter-spacing:.22em;color:var(--chispa);text-transform:uppercase}
+.tarjeta{
+  background:var(--papel);color:var(--tinta);
+  border:4px solid var(--borde);border-radius:18px;
+  box-shadow:var(--sombra);padding:22px;
+}
+.btn{
+  font-family:var(--display);text-transform:uppercase;font-size:1rem;letter-spacing:.04em;
+  background:var(--chispa);color:var(--tinta);
+  border:4px solid var(--borde);border-radius:14px;
+  padding:14px 22px;cursor:pointer;box-shadow:var(--sombra-sm);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--borde)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--borde)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--sombra-sm)}
+.btn.rosa{background:var(--fusion);color:#fff}
+.btn.cian{background:var(--garabato)}
+.btn.lima{background:var(--puente)}
+.btn.morado{background:var(--quesi);color:#fff}
+.btn.fantasma{background:transparent;color:var(--papel);border-color:var(--papel)}
+.btn.mini{font-size:.75rem;padding:8px 12px;border-width:3px;border-radius:10px}
+:focus-visible{outline:4px solid var(--garabato);outline-offset:3px}
+
+.wrap{max-width:1120px;margin:0 auto;padding:20px}
+.pantalla{display:none}
+.pantalla.activa{display:block;animation:entra .35s ease}
+@keyframes entra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- portada ---------- */
+#lienzoPortada{width:100%;height:230px;display:block;border-radius:18px;border:4px solid var(--borde);background:var(--tinta2)}
+.portada-titulo{
+  font-family:var(--display);font-size:clamp(2.6rem,10vw,6rem);
+  text-align:center;margin:-70px 0 0;position:relative;z-index:2;
+  color:var(--chispa);
+  text-shadow:5px 5px 0 var(--borde), 10px 10px 0 var(--fusion);
+}
+.subtitulo{text-align:center;font-size:1.05rem;margin:18px auto 0;max-width:620px;line-height:1.5}
+.fila-botones{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.pastillas{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.pastilla{
+  background:var(--tinta2);border:3px solid var(--papel);border-radius:999px;
+  padding:7px 14px;font-size:.8rem;font-weight:bold
+}
+
+/* ---------- config ---------- */
+.grid-jug{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:16px}
+.campo{display:flex;flex-direction:column;gap:6px}
+label{font-weight:bold;font-size:.85rem}
+input[type=text],select,textarea{
+  font-family:var(--texto);font-size:1rem;padding:11px;border:3px solid var(--borde);
+  border-radius:10px;background:#fff;color:var(--tinta);width:100%
+}
+textarea{min-height:110px;resize:vertical}
+.colores{display:flex;gap:6px;flex-wrap:wrap}
+.swatch{width:30px;height:30px;border-radius:50%;border:3px solid var(--borde);cursor:pointer}
+.swatch.sel{outline:4px solid var(--tinta);outline-offset:2px;transform:scale(1.15)}
+
+/* ---------- tablero ---------- */
+.barra{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+  background:var(--tinta2);border:4px solid var(--borde);border-radius:16px;padding:12px 16px;margin-bottom:14px
+}
+.marcadores{display:flex;gap:8px;flex-wrap:wrap}
+.marcador{
+  display:flex;align-items:center;gap:8px;background:var(--papel);color:var(--tinta);
+  border:3px solid var(--borde);border-radius:12px;padding:6px 12px;font-weight:bold;font-size:.85rem
+}
+.marcador.turno{box-shadow:0 0 0 4px var(--chispa);transform:translateY(-2px)}
+.punto{width:16px;height:16px;border-radius:50%;border:2px solid var(--borde)}
+#lienzoTablero{width:100%;display:block;border:4px solid var(--borde);border-radius:20px;background:#0C0C22;touch-action:manipulation}
+.panel-turno{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.dado{
+  width:78px;height:78px;border:4px solid var(--borde);border-radius:16px;background:var(--papel);
+  color:var(--tinta);font-family:var(--display);font-size:2.4rem;display:grid;place-items:center;
+  box-shadow:var(--sombra-sm)
+}
+.dado.rueda{animation:tiembla .12s infinite}
+@keyframes tiembla{0%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}100%{transform:rotate(-7deg)}}
+.aviso{flex:1;min-width:220px;font-size:.95rem;line-height:1.45}
+
+/* ---------- modal de retos ---------- */
+.velo{
+  position:fixed;inset:0;background:rgba(8,8,24,.86);display:none;z-index:60;
+  padding:16px;overflow-y:auto
+}
+.velo.abierto{display:block}
+.modal{max-width:760px;margin:24px auto;position:relative}
+.cinta{
+  display:inline-block;font-family:var(--display);font-size:.9rem;padding:8px 16px;
+  border:4px solid var(--borde);border-radius:999px;margin-bottom:10px
+}
+.reto-texto{font-size:1.28rem;line-height:1.4;font-weight:bold;margin:12px 0}
+.regla-caos{background:var(--caos);color:#fff;border:3px solid var(--borde);border-radius:12px;padding:12px;font-weight:bold;margin:12px 0}
+.crono{
+  height:20px;border:3px solid var(--borde);border-radius:999px;overflow:hidden;background:#fff;margin:10px 0
+}
+.crono span{display:block;height:100%;background:var(--puente);width:100%;transition:width 1s linear}
+.crono.rojo span{background:var(--caos)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chispa);border:3px solid var(--borde);border-radius:999px;padding:6px 12px;font-weight:bold;font-size:.85rem}
+.jueces{display:grid;gap:10px;margin-top:12px}
+.juez{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:3px dashed var(--borde);border-radius:12px;padding:10px}
+.juez strong{min-width:120px}
+.estrella{
+  background:#fff;border:3px solid var(--borde);border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:bold
+}
+.estrella.on{background:var(--chispa)}
+.lienzo-dibujo{width:100%;border:4px solid var(--borde);border-radius:14px;background:#fff;display:block;touch-action:none;cursor:crosshair}
+.herramientas{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tinta-op{width:32px;height:32px;border-radius:50%;border:3px solid var(--borde);cursor:pointer}
+.tinta-op.sel{outline:3px solid var(--tinta);outline-offset:2px}
+
+/* ---------- final ---------- */
+.podio{display:grid;gap:12px;margin-top:16px}
+.puesto{display:flex;align-items:center;gap:14px;border:4px solid var(--borde);border-radius:14px;padding:14px;background:var(--papel);color:var(--tinta)}
+.puesto .num{font-family:var(--display);font-size:2rem}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:14px}
+.galeria figure{background:var(--papel);border:4px solid var(--borde);border-radius:12px;padding:8px;color:var(--tinta)}
+.galeria img{width:100%;border-radius:6px;display:block;border:2px solid var(--borde)}
+.galeria figcaption{font-size:.72rem;font-weight:bold;margin-top:6px;text-align:center}
+#confeti{position:fixed;inset:0;pointer-events:none;z-index:70;display:none}
+
+/* ---------- manual imprimible ---------- */
+#manual{display:none;background:#fff;color:#111;padding:0}
+#manual.visible{display:block}
+.hoja{max-width:900px;margin:0 auto;padding:34px;font-size:.95rem;line-height:1.55}
+.hoja h2{font-size:1.7rem;margin:22px 0 8px;color:#10102A;border-bottom:4px solid #10102A;padding-bottom:6px}
+.hoja h3{font-size:1.05rem;margin:16px 0 6px;color:#10102A}
+.hoja p,.hoja li{margin-bottom:7px}
+.hoja ul,.hoja ol{padding-left:22px}
+.hoja table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
+.hoja th,.hoja td{border:2px solid #10102A;padding:7px;text-align:left;vertical-align:top}
+.hoja th{background:#10102A;color:#fff}
+.encabezado-manual{border:4px solid #10102A;border-radius:14px;padding:18px;margin-bottom:18px;background:#FFF3DB}
+.encabezado-manual h1{font-size:2.6rem;color:#10102A}
+.no-print{margin:16px 0}
+
+@media print{
+  body{background:#fff;color:#000}
+  .wrap,#confeti,.velo,.no-print{display:none !important}
+  #manual{display:block !important}
+  .hoja{padding:0;max-width:none}
+  .hoja h2{page-break-after:avoid}
+  .hoja table{page-break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+@media (max-width:640px){
+  .portada-titulo{margin-top:-40px}
+  .dado{width:64px;height:64px;font-size:1.9rem}
+}
+</style>
+</head>
+<body>
+
+<canvas id="confeti"></canvas>
+
+<div class="wrap" id="app">
+
+<!-- ============ PORTADA ============ -->
+<section class="pantalla activa" id="pInicio">
+  <canvas id="lienzoPortada" width="1000" height="230" aria-label="Islas flotantes de Ideápolis"></canvas>
+  <h1 class="portada-titulo">Ideápolis</h1>
+  <p class="subtitulo">Un archipiélago donde las ideas raras valen oro. Tira el dado, cae en una isla y resuelve el reto: inventa, dibuja, imagina y convence al jurado. Aquí no gana quien llega primero, gana quien enciende más chispas.</p>
+  <div class="pastillas">
+    <span class="pastilla">10 a 12 años</span>
+    <span class="pastilla">2 a 4 jugadores</span>
+    <span class="pastilla">25 a 40 minutos</span>
+    <span class="pastilla">Funciona sin internet</span>
+    <span class="pastilla" id="pastillaCombos">Miles de retos distintos</span>
+  </div>
+  <div class="fila-botones">
+    <button class="btn" onclick="irA('pConfig')">Empezar a jugar</button>
+    <button class="btn cian" onclick="irA('pReglas')">Ver las reglas</button>
+    <button class="btn lima" onclick="abrirManual()">Manual para imprimir en PDF</button>
+    <button class="btn fantasma" onclick="continuarPartida()" id="btnContinuar">Continuar partida guardada</button>
+  </div>
+  <div class="fila-botones">
+    <button class="btn mini fantasma" onclick="alternarSonido()" id="btnSonido">Sonido: activado</button>
+    <button class="btn mini fantasma" onclick="alternarLetra()">Letra más grande</button>
+    <button class="btn mini fantasma" onclick="irA('pFama')">Salón de la fama</button>
+  </div>
+</section>
+
+<!-- ============ REGLAS ============ -->
+<section class="pantalla" id="pReglas">
+  <div class="tarjeta">
+    <p class="eyebrow" style="color:var(--fusion)">Reglamento oficial</p>
+    <h2 style="font-size:2rem;margin-bottom:10px">Cómo se juega Ideápolis</h2>
+    <div id="reglasHTML"></div>
+    <div class="fila-botones" style="justify-content:flex-start">
+      <button class="btn" onclick="irA('pConfig')">Listo, a jugar</button>
+      <button class="btn cian" onclick="irA('pInicio')">Volver</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIGURACIÓN ============ -->
+<section class="pantalla" id="pConfig">
+  <div class="tarjeta">
+    <p class="eyebrow" style="color:var(--fusion)">Antes de zarpar</p>
+    <h2 style="font-size:2rem">¿Quiénes exploran hoy?</h2>
+    <p style="margin:8px 0 4px">Escribe los nombres. Si una casilla queda vacía, ese explorador se queda en tierra.</p>
+    <div class="grid-jug" id="gridJugadores"></div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:18px">
+      <div class="campo" style="max-width:230px">
+        <label for="selTiempo">Tiempo por reto</label>
+        <select id="selTiempo">
+          <option value="60">60 segundos (rápido)</option>
+          <option value="90" selected>90 segundos (normal)</option>
+          <option value="120">120 segundos (con calma)</option>
+          <option value="0">Sin reloj (aula tranquila)</option>
+        </select>
+      </div>
+      <div class="campo" style="max-width:230px">
+        <label for="selMeta">Duración de la partida</label>
+        <select id="selMeta">
+          <option value="corta">Corta: 1 vuelta a la isla</option>
+          <option value="normal" selected>Normal: llegar a la Meta</option>
+        </select>
+      </div>
+    </div>
+    <div class="fila-botones" style="justify-content:flex-start">
+      <button class="btn rosa" onclick="iniciarPartida()">Zarpar</button>
+      <button class="btn cian" onclick="irA('pInicio')">Volver</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JUEGO ============ -->
+<section class="pantalla" id="pJuego">
+  <div class="barra">
+    <div class="marcadores" id="marcadores"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn mini fantasma" onclick="verBitacora()">Bitácora</button>
+      <button class="btn mini fantasma" onclick="guardarPartida(true)">Guardar</button>
+      <button class="btn mini fantasma" onclick="terminarPartida()">Terminar</button>
+    </div>
+  </div>
+  <canvas id="lienzoTablero" width="1000" height="580" aria-label="Tablero del archipiélago"></canvas>
+  <div class="panel-turno">
+    <div class="dado" id="dado">?</div>
+    <button class="btn" id="btnDado" onclick="lanzarDado()">Lanzar el dado</button>
+    <p class="aviso" id="aviso">Toca el dado para empezar.</p>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="pantalla" id="pFinal">
+  <div class="tarjeta">
+    <p class="eyebrow" style="color:var(--fusion)">Fin del viaje</p>
+    <h2 id="tituloFinal" style="font-size:2.2rem"></h2>
+    <div class="podio" id="podio"></div>
+    <h3 style="margin-top:22px;font-size:1.2rem">Galería de garabatos rescatados</h3>
+    <div class="galeria" id="galeriaFinal"></div>
+    <div class="fila-botones" style="justify-content:flex-start;margin-top:20px">
+      <button class="btn" onclick="verBitacora()">Ver bitácora de ideas</button>
+      <button class="btn cian" onclick="imprimirBitacora()">Imprimir bitácora en PDF</button>
+      <button class="btn lima" onclick="location.reload()">Nueva partida</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SALÓN DE LA FAMA ============ -->
+<section class="pantalla" id="pFama">
+  <div class="tarjeta">
+    <p class="eyebrow" style="color:var(--fusion)">Records guardados en este dispositivo</p>
+    <h2 style="font-size:2rem">Salón de la fama</h2>
+    <div id="listaFama"></div>
+    <div class="fila-botones" style="justify-content:flex-start">
+      <button class="btn cian" onclick="irA('pInicio')">Volver</button>
+      <button class="btn mini" onclick="borrarDatos()">Borrar todo lo guardado</button>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- ============ MODAL DE RETO ============ -->
+<div class="velo" id="velo">
+  <div class="modal tarjeta" id="modal"></div>
+</div>
+
+<!-- ============ MANUAL IMPRIMIBLE ============ -->
+<div id="manual">
+  <div class="hoja">
+    <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="window.print()">Imprimir o guardar como PDF</button>
+      <button class="btn cian" onclick="cerrarManual()">Volver al juego</button>
+    </div>
+    <div class="encabezado-manual">
+      <h1>Ideápolis</h1>
+      <p style="font-weight:bold;font-size:1.05rem">El archipiélago de las ideas locas</p>
+      <p>Recurso didáctico tipo juego para el desarrollo de procesos creativos. Población: niñas y niños de 10 a 12 años. Modalidad: juego de mesa digital jugable sin conexión a internet, en un solo archivo HTML.</p>
+    </div>
+    <div id="manualCuerpo"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   IDEÁPOLIS · juego offline de creatividad
+   Un solo archivo. Sin librerías. Sin internet.
+   ========================================================= */
+
+/* ---------- 1. BANCOS DE CONTENIDO (la "base de datos" interna) ---------- */
+const BANCO = {
+  objetos:["un zapato viejo","una cuchara de palo","un paraguas roto","una llanta de bicicleta","un rollo de papel higiénico vacío","una botella plástica","una media desparejada","un cepillo de dientes usado","una tapa de olla","un CD rayado","una silla sin espaldar","un balde con hueco","una caja de cartón","un lápiz sin punta","una cortina vieja","un ventilador dañado","una escoba sin palo","un mapa arrugado","una lata vacía","un guante de arquero","una peinilla","un colador","una totuma","un espejo pequeño","un costal de arroz","un teclado sin cable","una hamaca rota","un cargador viejo","un tarro de pintura vacío","una hoja de palma","un machete sin filo","una cuerda de tres metros","un vaso desechable","una llave sin puerta","un abanico de mano","un radio sin pilas","un tapabocas","una sombrilla de playa","un cuaderno mojado","una caneca sin tapa"],
+  fusionA:["una nevera","un paraguas","una mochila","una bicicleta","un reloj","un sombrero","una lámpara","un balón","una cuchara","un espejo","un ventilador","una cometa","una guitarra","un zapato","una hamaca","una carretilla","una cámara","un libro","una silla","un cepillo","una olla","un pupitre"],
+  fusionB:["que hable con los animales","que funcione con música","que solo sirva cuando llueve","que crezca si lo riegas","que se vuelva invisible los martes","que fabrique helado","que prediga el clima","que se doble hasta caber en un bolsillo","que cambie de color con tus emociones","que flote en el aire","que guarde tus sueños","que hable tres idiomas","que se recargue con risas","que limpie el río","que dé sombra a un pueblo entero","que enseñe matemáticas","que espante mosquitos","que funcione con el sol","que cante vallenato","que se repare solo","que avise cuando alguien está triste","que sirva también de barco"],
+  quesi:["los adultos tuvieran que pedirle permiso a los niños para todo","la gravedad se apagara los domingos","todos los animales pudieran escribir","el agua supiera a lo que estás pensando","las plantas caminaran para buscar el sol","cada mentira te pintara un punto verde en la nariz","los sueños se pudieran grabar y prestar","el colegio funcionara de noche","las palabras se volvieran objetos al decirlas","nadie pudiera usar la palabra no","el dinero se reemplazara por favores","pudieras chatear con tu yo del futuro","los ríos cambiaran de color según la contaminación","todos midiéramos exactamente lo mismo","los libros se leyeran solos en voz alta","el sol saliera solo cuando alguien canta","las casas se pudieran mudar caminando","los recuerdos se intercambiaran como láminas","cada persona naciera con un superpoder inútil","los espejos mostraran el futuro","las tareas se resolvieran con acertijos","el tiempo pasara más lento cuando te aburres","los árboles dieran señal de celular","se pudiera apagar el hambre con un botón","los zapatos escogieran a su dueño","la lluvia cayera hacia arriba","cada emoción tuviera un olor distinto","los profesores fueran robots","pudieras copiar una habilidad ajena por una hora","los animales cobraran por las fotos","desapareciera el número siete","pudieras ponerle pausa a un día"],
+  problemas:["En tu escuela no hay sombra en el patio y a las once de la mañana el calor es insoportable.","Se fue la luz y hay que terminar un trabajo en grupo esta noche.","Llega un compañero nuevo que no habla tu idioma y quieres invitarlo a jugar.","El agua del bebedero se acabó y faltan tres horas de clase.","Llovió y el camino a la escuela quedó lleno de barro.","Hay un solo balón para cuarenta estudiantes en el descanso.","La caneca del salón se llena antes del mediodía.","Un perro callejero llega todos los días con hambre a la escuela.","Los libros de la biblioteca se están dañando con la humedad.","Siempre pelean por escoger equipo y alguien queda de último.","El salón es tan ruidoso que no se escucha a la profesora.","Se dañó el único ventilador del aula.","Tu abuela no puede leer las letras pequeñas de sus medicinas.","Los mosquitos no dejan estudiar en la tarde.","El bus escolar pasa una sola vez y a veces se llena.","Un compañero se queda dormido en clase todos los días.","La cancha se inunda cada vez que llueve.","En tu casa se daña mucha comida antes de comerla.","Nadie recuerda cuándo hay que entregar las tareas.","El río cerca de tu vereda está lleno de plásticos.","Los más pequeños se caen siempre en el mismo escalón.","No hay señal de celular para llamar en una emergencia.","La huerta escolar se seca durante las vacaciones.","Una compañera usa silla de ruedas y la rampa es muy empinada.","El uniforme se ensucia de barro y no alcanza a secar."],
+  restricciones:["sin gastar un solo peso","usando solo materiales reciclados","en menos de diez minutos","sin usar electricidad","que puedan hacerlo niños de cinco años","que también sirva de noche","usando solo lo que hay en tu salón","sin que nadie salga del colegio","que sirva además para otra cosa distinta","sin usar papel","que quepa en una mochila","que se pueda repetir cada semana","que involucre a toda la comunidad","sin hacer ruido","que sea divertido para quien ayuda","usando algo que normalmente se bota","que funcione bajo la lluvia","que se pueda explicar con un solo dibujo","que no necesite adultos","que dure por lo menos un año"],
+  puenteA:["la amistad","el aburrimiento","aprender","el miedo","una idea","la escuela","el tiempo","la rabia","un error","la creatividad","la paciencia","un secreto","la música","el silencio","la memoria","el respeto","la esperanza","un problema","la confianza","crecer"],
+  puenteB:["un río","una cebolla","un semáforo","una cometa","un partido de fútbol","una tormenta","un rompecabezas","una olla a presión","una semilla","un espejo","un mapa","una escalera","un celular sin batería","una hormiga","un nudo","una llave","una ventana","un tambor","una raíz","un fósforo"],
+  caos:["Responde sin usar la letra A.","Tu respuesta tiene que incluir un animal.","Explica tu idea solo con mímica y que los demás adivinen.","Habla como narrador de fútbol.","Tu idea debe tener nombre de marca y eslogan.","Canta tu respuesta.","Responde en menos de diez palabras.","Tu idea también le debe servir a un abuelo.","Dilo como si fuera un secreto.","Incluye un color y un olor en tu respuesta.","Tu idea tiene que hacer reír a alguien.","Termina con una pregunta para el grupo.","Tu idea debe caber en la palma de la mano.","Responde rimando.","Empieza tu respuesta con la letra que diga el jugador de tu derecha.","Dibuja tu idea en vez de decirla.","Cuéntala como noticia de última hora.","Tu idea debe incluir algo que exista en tu vereda o barrio.","Responde usando exactamente tres frases.","Tu idea debe tener un sonido característico y tienes que hacerlo.","Habla en cámara lenta.","Empieza diciendo: esto va a sonar imposible, pero..."],
+  torbellinos:[
+    {t:"Viento de ideas",d:"Un soplo te empuja. Avanza 2 islas sin resolver reto.",ef:"avanza2"},
+    {t:"Chispazo",d:"Se te prendió el bombillo sin razón aparente. Ganas 3 chispas.",ef:"mas3"},
+    {t:"Robo amistoso",d:"Toma prestada una idea de otro jugador y mejórala en voz alta. Si el grupo aplaude, ganas 2 chispas.",ef:"mas2grupo"},
+    {t:"Niebla",d:"Pierdes el rumbo. Retrocedes 2 islas.",ef:"atras2"},
+    {t:"Reto relámpago",d:"Di tres cosas rojas que quepan en un bolsillo antes de contar hasta diez. Si lo logras, 2 chispas.",ef:"mas2grupo"},
+    {t:"Regalo de la isla",d:"Regala 1 chispa a quien va de último. La generosidad también es creativa: ganas 1.",ef:"regalo"},
+    {t:"Eco",d:"Repite el reto anterior de otro jugador pero con una respuesta totalmente distinta. Ganas 2 chispas si lo logras.",ef:"mas2grupo"},
+    {t:"Turbulencia",d:"Todos los jugadores intercambian posición con el de al lado. El tablero se sacude.",ef:"rotar"}
+  ],
+  insignias:[
+    {id:"volcan",n:"Fluidez volcánica",d:"Diez ideas o más en un solo reto"},
+    {id:"artista",n:"Manos de artista",d:"Tres garabatos completados"},
+    {id:"heroe",n:"Apaga incendios",d:"Tres problemas resueltos"},
+    {id:"caotico",n:"Rey del caos",d:"Tres retos con regla loca superados"},
+    {id:"filosofo",n:"Constructor de puentes",d:"Tres metáforas creadas"},
+    {id:"faro",n:"Faro de Ideápolis",d:"Treinta chispas o más"}
+  ]
+};
+
+const TIPOS = {
+  INICIO:{nombre:"Puerto de salida",color:"#FFFFFF",icono:"⚓"},
+  CHISPA:{nombre:"Isla Chispa",color:"#FFD23F",icono:"💡",lema:"Fluidez"},
+  FUSION:{nombre:"Isla Fusión",color:"#FF4D8D",icono:"🧬",lema:"Flexibilidad"},
+  GARABATO:{nombre:"Isla Garabato",color:"#22D3EE",icono:"🎨",lema:"Elaboración"},
+  QUESI:{nombre:"Isla Y si...",color:"#A56BFF",icono:"🌀",lema:"Imaginación"},
+  SOS:{nombre:"Isla SOS",color:"#FF8C42",icono:"🛟",lema:"Resolución"},
+  PUENTE:{nombre:"Isla Puente",color:"#7CE577",icono:"🌉",lema:"Analogía"},
+  CAOS:{nombre:"Isla Caos",color:"#FF2E4C",icono:"🎲",lema:"Originalidad"},
+  PORTAL:{nombre:"Torbellino",color:"#C9D1FF",icono:"🌪️",lema:"Sorpresa"},
+  META:{nombre:"Faro final",color:"#FFD700",icono:"🏆"}
+};
+
+const MAPA = ["INICIO","CHISPA","FUSION","GARABATO","CAOS","QUESI","SOS","PUENTE","CHISPA","PORTAL",
+              "FUSION","QUESI","GARABATO","CHISPA","CAOS","SOS","PUENTE","FUSION","QUESI","PORTAL",
+              "GARABATO","CHISPA","CAOS","SOS","FUSION","PUENTE","QUESI","GARABATO","CAOS","META"];
+
+const COLORES_JUG = ["#FFD23F","#FF4D8D","#22D3EE","#7CE577"];
+
+/* ---------- 2. ALMACENAMIENTO SEGURO ---------- */
+const Guardado = (function(){
+  let memoria = {};
+  let vivo = true;
+  try{
+    const p = "__ideapolis_test__";
+    window.localStorage.setItem(p,"1");
+    window.localStorage.removeItem(p);
+  }catch(e){ vivo = false; }
+  return {
+    disponible:vivo,
+    leer(k,def){
+      try{
+        const v = vivo ? window.localStorage.getItem(k) : memoria[k];
+        return v ? JSON.parse(v) : def;
+      }catch(e){ return def; }
+    },
+    escribir(k,v){
+      try{
+        const s = JSON.stringify(v);
+        if(vivo) window.localStorage.setItem(k,s); else memoria[k]=s;
+        return true;
+      }catch(e){ memoria[k]=JSON.stringify(v); return false; }
+    },
+    borrar(k){
+      try{ if(vivo) window.localStorage.removeItem(k); else delete memoria[k]; }catch(e){}
+    }
+  };
+})();
+const K = {partida:"ideapolis_v1_partida", fama:"ideapolis_v1_fama", galeria:"ideapolis_v1_galeria", bitacora:"ideapolis_v1_bitacora"};
+
+/* ---------- 3. ESTADO ---------- */
+const S = {
+  jugadores:[], turno:0, tiempo:90, modo:"normal",
+  animando:false, retoActivo:null, ultimoReto:null,
+  ideasDichas:new Set(), terminada:false, rondaCierre:false, disparador:-1,
+  sonido:true, inicio:Date.now()
+};
+
+/* ---------- 4. UTILIDADES ---------- */
+const azar = a => a[Math.floor(Math.random()*a.length)];
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function irA(id){
+  document.querySelectorAll(".pantalla").forEach(p=>p.classList.remove("activa"));
+  $(id).classList.add("activa");
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(id==="pFama") pintarFama();
+}
+
+/* ---------- 5. SONIDO SINTETIZADO ---------- */
+let ctxAudio=null;
+function tono(f,dur,tipo){
+  if(!S.sonido) return;
+  try{
+    ctxAudio = ctxAudio || new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctxAudio.createOscillator(), g=ctxAudio.createGain();
+    o.type=tipo||"triangle"; o.frequency.value=f;
+    g.gain.setValueAtTime(.14,ctxAudio.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctxAudio.currentTime+dur);
+    o.connect(g); g.connect(ctxAudio.destination);
+    o.start(); o.stop(ctxAudio.currentTime+dur);
+  }catch(e){}
+}
+const sfx = {
+  dado(){ [220,300,380].forEach((f,i)=>setTimeout(()=>tono(f,.09,"square"),i*70)); },
+  paso(){ tono(520,.06,"square"); },
+  bien(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tono(f,.16),i*90)); },
+  caos(){ [400,260,180].forEach((f,i)=>setTimeout(()=>tono(f,.14,"sawtooth"),i*90)); },
+  tic(){ tono(880,.04,"square"); }
+};
+function alternarSonido(){
+  S.sonido=!S.sonido;
+  $("btnSonido").textContent = "Sonido: " + (S.sonido?"activado":"apagado");
+}
+function alternarLetra(){ document.body.classList.toggle("grande"); }
+
+/* ---------- 6. PORTADA ANIMADA ---------- */
+(function portada(){
+  const c=$("lienzoPortada"), x=c.getContext("2d");
+  const islas=[];
+  for(let i=0;i<11;i++){
+    islas.push({x:Math.random()*1000,y:40+Math.random()*150,r:14+Math.random()*22,
+      col:azar(["#FFD23F","#FF4D8D","#22D3EE","#A56BFF","#7CE577","#FF8C42"]),
+      f:Math.random()*6.28, v:.4+Math.random()*.8});
+  }
+  let t=0;
+  (function loop(){
+    t+=.02;
+    x.clearRect(0,0,1000,230);
+    const g=x.createLinearGradient(0,0,1000,230);
+    g.addColorStop(0,"#141238"); g.addColorStop(1,"#2A1450");
+    x.fillStyle=g; x.fillRect(0,0,1000,230);
+    x.fillStyle="rgba(255,255,255,.5)";
+    for(let i=0;i<50;i++){
+      const px=(i*137.5)%1000, py=(i*89.3)%230;
+      x.globalAlpha=.25+.25*Math.sin(t*2+i);
+      x.fillRect(px,py,2,2);
+    }
+    x.globalAlpha=1;
+    islas.forEach(is=>{
+      const y=is.y+Math.sin(t*is.v+is.f)*10;
+      x.beginPath(); x.arc(is.x,y,is.r,0,6.2832);
+      x.fillStyle=is.col; x.fill();
+      x.lineWidth=3; x.strokeStyle="#0B0B1E"; x.stroke();
+      x.beginPath(); x.arc(is.x-is.r*.3,y-is.r*.3,is.r*.28,0,6.2832);
+      x.fillStyle="rgba(255,255,255,.55)"; x.fill();
+    });
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ---------- 7. CONFIGURACIÓN DE JUGADORES ---------- */
+function pintarConfig(){
+  const cont=$("gridJugadores");
+  cont.innerHTML="";
+  for(let i=0;i<4;i++){
+    const d=document.createElement("div");
+    d.className="campo";
+    d.innerHTML='<label for="jug'+i+'">Explorador '+(i+1)+(i<2?" (obligatorio)":" (opcional)")+'</label>'+
+      '<input type="text" id="jug'+i+'" maxlength="14" placeholder="'+(i<2?"Escribe un nombre":"Deja vacío si no juega")+'">'+
+      '<div class="colores" data-jug="'+i+'">'+COLORES_JUG.map((c,j)=>
+        '<span class="swatch'+(j===i?' sel':'')+'" style="background:'+c+'" data-c="'+c+'"></span>').join("")+'</div>';
+    cont.appendChild(d);
+  }
+  cont.querySelectorAll(".colores").forEach(g=>{
+    g.addEventListener("click",e=>{
+      if(!e.target.classList.contains("swatch")) return;
+      g.querySelectorAll(".swatch").forEach(s=>s.classList.remove("sel"));
+      e.target.classList.add("sel");
+    });
+  });
+}
+pintarConfig();
+
+function iniciarPartida(){
+  const lista=[];
+  for(let i=0;i<4;i++){
+    const n=$("jug"+i).value.trim();
+    if(!n) continue;
+    const sel=document.querySelector('.colores[data-jug="'+i+'"] .swatch.sel');
+    lista.push({id:lista.length, nombre:n, color:sel?sel.dataset.c:COLORES_JUG[i],
+      pos:0, chispas:0, ideas:[], insignias:[], conteo:{GARABATO:0,SOS:0,CAOS:0,PUENTE:0}});
+  }
+  if(lista.length<2){ alert("Se necesitan al menos dos exploradores para zarpar."); return; }
+  S.jugadores=lista; S.turno=0; S.tiempo=parseInt($("selTiempo").value,10);
+  S.modo=$("selMeta").value; S.terminada=false; S.rondaCierre=false; S.disparador=-1;
+  S.ideasDichas=new Set(); S.inicio=Date.now();
+  irA("pJuego"); pintarMarcadores();
+  $("aviso").textContent = S.jugadores[0].nombre + " abre el viaje. Lanza el dado.";
+  guardarPartida(false);
+}
+
+/* ---------- 8. GEOMETRÍA DEL TABLERO ---------- */
+const LT=$("lienzoTablero"), XT=LT.getContext("2d");
+const COLS=6, FILAS=5, MX=90, MY=80;
+const PASOX=(1000-MX*2)/(COLS-1), PASOY=(580-MY*2)/(FILAS-1);
+const CASILLAS=MAPA.map((tipo,i)=>{
+  const fila=Math.floor(i/COLS);
+  let col=i%COLS;
+  if(fila%2===1) col=COLS-1-col;
+  return {i, tipo, x:MX+col*PASOX, y:MY+fila*PASOY};
+});
+
+let reloj=0;
+function dibujarTablero(){
+  reloj+=.02;
+  XT.clearRect(0,0,1000,580);
+  const g=XT.createLinearGradient(0,0,0,580);
+  g.addColorStop(0,"#0C0C22"); g.addColorStop(1,"#1A1140");
+  XT.fillStyle=g; XT.fillRect(0,0,1000,580);
+  // olas de fondo
+  XT.strokeStyle="rgba(34,211,238,.14)"; XT.lineWidth=2;
+  for(let k=0;k<7;k++){
+    XT.beginPath();
+    for(let px=0;px<=1000;px+=20){
+      const py=70+k*75+Math.sin(px/85+reloj+k)*8;
+      px===0?XT.moveTo(px,py):XT.lineTo(px,py);
+    }
+    XT.stroke();
+  }
+  // ruta punteada
+  XT.setLineDash([10,10]); XT.lineWidth=5; XT.strokeStyle="rgba(255,243,219,.35)";
+  XT.beginPath();
+  CASILLAS.forEach((c,i)=> i===0?XT.moveTo(c.x,c.y):XT.lineTo(c.x,c.y));
+  XT.stroke(); XT.setLineDash([]);
+  // islas
+  CASILLAS.forEach(c=>{
+    const T=TIPOS[c.tipo];
+    const flot=Math.sin(reloj*1.4+c.i)*3;
+    const r=(c.tipo==="META"||c.tipo==="INICIO")?34:28;
+    XT.beginPath(); XT.arc(c.x,c.y+flot+6,r,0,6.2832);
+    XT.fillStyle="rgba(0,0,0,.45)"; XT.fill();
+    XT.beginPath(); XT.arc(c.x,c.y+flot,r,0,6.2832);
+    XT.fillStyle=T.color; XT.fill();
+    XT.lineWidth=4; XT.strokeStyle="#0B0B1E"; XT.stroke();
+    XT.font="bold 22px system-ui"; XT.textAlign="center"; XT.textBaseline="middle";
+    XT.fillText(T.icono,c.x,c.y+flot+1);
+    XT.font="bold 11px "+getComputedStyle(document.body).fontFamily;
+    XT.fillStyle="rgba(255,243,219,.75)";
+    XT.fillText(c.i===0?"SALIDA":(c.i===29?"FARO":c.i),c.x,c.y+flot+r+13);
+  });
+  // fichas
+  S.jugadores.forEach((j,k)=>{
+    const c=CASILLAS[Math.min(j.pos,CASILLAS.length-1)];
+    const ang=(k/S.jugadores.length)*6.2832;
+    const px=(j.animX!==undefined?j.animX:c.x)+Math.cos(ang)*20;
+    const py=(j.animY!==undefined?j.animY:c.y)+Math.sin(ang)*20-14+Math.sin(reloj*3+k)*3;
+    XT.beginPath(); XT.arc(px,py,15,0,6.2832);
+    XT.fillStyle=j.color; XT.fill();
+    XT.lineWidth=4; XT.strokeStyle="#0B0B1E"; XT.stroke();
+    if(k===S.turno && !S.animando){
+      XT.beginPath(); XT.arc(px,py,15+4+Math.sin(reloj*5)*3,0,6.2832);
+      XT.strokeStyle="#FFF3DB"; XT.lineWidth=3; XT.stroke();
+    }
+    XT.fillStyle="#0B0B1E"; XT.font="bold 14px "+getComputedStyle(document.body).fontFamily;
+    XT.fillText(j.nombre.charAt(0).toUpperCase(),px,py+1);
+  });
+  requestAnimationFrame(dibujarTablero);
+}
+dibujarTablero();
+
+function pintarMarcadores(){
+  $("marcadores").innerHTML = S.jugadores.map((j,i)=>
+    '<div class="marcador'+(i===S.turno?' turno':'')+'">'+
+    '<span class="punto" style="background:'+j.color+'"></span>'+esc(j.nombre)+
+    ' · <strong>'+j.chispas+' ⚡</strong>'+
+    (j.insignias.length?' <span title="insignias">'+ '🎖️'.repeat(j.insignias.length) +'</span>':'')+
+    '</div>').join("");
+}
+
+/* ---------- 9. TURNOS Y DADO ---------- */
+function jugadorActual(){ return S.jugadores[S.turno]; }
+
+function lanzarDado(){
+  if(S.animando||S.terminada) return;
+  S.animando=true; $("btnDado").disabled=true;
+  const d=$("dado"); d.classList.add("rueda"); sfx.dado();
+  let n=1, giros=0;
+  const it=setInterval(()=>{
+    n=1+Math.floor(Math.random()*6); d.textContent=n; giros++;
+    if(giros>11){
+      clearInterval(it); d.classList.remove("rueda");
+      $("aviso").textContent = jugadorActual().nombre+" avanza "+n+(n===1?" isla.":" islas.");
+      moverFicha(n);
+    }
+  },70);
+}
+
+function moverFicha(pasos, atras){
+  const j=jugadorActual();
+  let restantes=Math.abs(pasos);
+  const dir = atras ? -1 : 1;
+  function saltar(){
+    if(restantes===0){ delete j.animX; delete j.animY; llegar(); return; }
+    const destino=Math.max(0,Math.min(CASILLAS.length-1, j.pos+dir));
+    const a=CASILLAS[j.pos], b=CASILLAS[destino];
+    let t=0;
+    const anim=setInterval(()=>{
+      t+=.1;
+      j.animX=a.x+(b.x-a.x)*t;
+      j.animY=a.y+(b.y-a.y)*t - Math.sin(t*Math.PI)*32;
+      if(t>=1){
+        clearInterval(anim); j.pos=destino; restantes--; sfx.paso();
+        if(j.pos===CASILLAS.length-1) restantes=0;
+        saltar();
+      }
+    },22);
+  }
+  saltar();
+}
+
+function llegar(){
+  const j=jugadorActual();
+  pintarMarcadores();
+  const casilla=CASILLAS[j.pos];
+  if(casilla.tipo==="META" || (S.modo==="corta" && j.pos>=CASILLAS.length-1)){
+    if(S.disparador<0){ S.disparador=S.turno; S.rondaCierre=true; }
+    $("aviso").textContent = j.nombre+" llegó al Faro. Los demás tienen un turno más para alcanzar sus chispas.";
+    sfx.bien();
+    setTimeout(siguienteTurno,900);
+    return;
+  }
+  if(casilla.tipo==="PORTAL"){ torbellino(); return; }
+  if(casilla.tipo==="INICIO"){ $("aviso").textContent="Puerto tranquilo. Pasa el turno."; setTimeout(siguienteTurno,700); return; }
+  abrirReto(casilla.tipo);
+}
+
+function siguienteTurno(){
+  S.animando=false; $("btnDado").disabled=false;
+  S.turno=(S.turno+1)%S.jugadores.length;
+  if(S.rondaCierre && S.turno===S.disparador){ terminarPartida(); return; }
+  pintarMarcadores();
+  $("aviso").textContent = "Turno de "+jugadorActual().nombre+". Lanza el dado.";
+  guardarPartida(false);
+}
+
+/* ---------- 10. TORBELLINOS ---------- */
+function torbellino(){
+  const ev=azar(BANCO.torbellinos);
+  const j=jugadorActual();
+  sfx.caos();
+  abrirVelo('<span class="cinta" style="background:'+TIPOS.PORTAL.color+'">🌪️ Torbellino</span>'+
+    '<h2 style="font-size:1.8rem">'+esc(ev.t)+'</h2>'+
+    '<p class="reto-texto">'+esc(ev.d)+'</p>'+
+    '<button class="btn" onclick="aplicarTorbellino(\''+ev.ef+'\')">Aceptar el destino</button>');
+}
+function aplicarTorbellino(ef){
+  const j=jugadorActual();
+  cerrarVelo();
+  if(ef==="mas3"){ j.chispas+=3; }
+  else if(ef==="mas2grupo"){ j.chispas+=2; }
+  else if(ef==="regalo"){
+    j.chispas+=1;
+    const ultimo=[...S.jugadores].sort((a,b)=>a.chispas-b.chispas)[0];
+    if(ultimo && ultimo.id!==j.id) ultimo.chispas+=1;
+  }
+  else if(ef==="rotar"){
+    const pos=S.jugadores.map(x=>x.pos);
+    S.jugadores.forEach((x,i)=> x.pos=pos[(i+1)%pos.length]);
+  }
+  pintarMarcadores();
+  if(ef==="avanza2"){ moverFicha(2); return; }
+  if(ef==="atras2"){ moverFicha(2,true); return; }
+  setTimeout(siguienteTurno,500);
+}
+
+/* ---------- 11. RETOS ---------- */
+let cronoID=null, listaIdeas=[], votos={}, dibujoData=null;
+
+function abrirVelo(html){ $("modal").innerHTML=html; $("velo").classList.add("abierto"); }
+function cerrarVelo(){ $("velo").classList.remove("abierto"); if(cronoID){clearInterval(cronoID);cronoID=null;} }
+
+function generarReto(tipo){
+  const conCaos = tipo==="CAOS" || Math.random()<.18;
+  const regla = conCaos ? azar(BANCO.caos) : null;
+  switch(tipo){
+    case "CHISPA": return {tipo, regla, titulo:"Usos imposibles", enunciado:"Escribe todos los usos distintos que se te ocurran para "+azar(BANCO.objetos)+". Vale lo raro, no vale lo obvio repetido.", modo:"lista"};
+    case "FUSION": return {tipo, regla, titulo:"Invento fusionado", enunciado:"Inventa "+azar(BANCO.fusionA)+" "+azar(BANCO.fusionB)+". Ponle nombre, di para qué sirve y quién lo usaría.", modo:"texto"};
+    case "QUESI": return {tipo, regla, titulo:"¿Qué pasaría si...?", enunciado:"¿Qué pasaría si "+azar(BANCO.quesi)+"? Cuenta al menos dos consecuencias que nadie más haya pensado.", modo:"texto"};
+    case "SOS": return {tipo, regla, titulo:"Rescate creativo", enunciado:azar(BANCO.problemas)+" Propón una solución "+azar(BANCO.restricciones)+".", modo:"texto"};
+    case "PUENTE": return {tipo, regla, titulo:"Puente de ideas", enunciado:"Completa: "+azar(BANCO.puenteA)+" se parece a "+azar(BANCO.puenteB)+" porque... Explica el parecido y llévalo lo más lejos que puedas.", modo:"texto"};
+    case "CAOS": return {tipo, regla:azar(BANCO.caos), titulo:"Isla Caos", enunciado:azar([
+        "Inventa un deporte nuevo que se pueda jugar en el salón de clase.",
+        "Convence al grupo de que los lunes deberían durar cinco minutos.",
+        "Inventa una criatura que viva dentro de un cuaderno y descríbela.",
+        "Crea la excusa más creativa del mundo para no haber hecho la tarea.",
+        "Inventa una fiesta nueva para el calendario y di cómo se celebra.",
+        "Diseña un uniforme escolar para el año 2150.",
+        "Inventa una palabra nueva que haga falta en el español y defínela.",
+        "Propón una regla nueva para el recreo que haga feliz a todo el mundo.",
+        "Inventa un instrumento musical hecho con basura y di cómo suena.",
+        "Crea el menú de un restaurante para monstruos vegetarianos."
+      ]), modo:"texto"};
+    case "GARABATO": return {tipo, regla, titulo:"Garabato con destino", enunciado:"Ese trazo del lienzo es el comienzo de un dibujo. Termínalo, ponle título y cuenta su historia en una frase.", modo:"dibujo"};
+  }
+}
+
+function abrirReto(tipo){
+  const r=generarReto(tipo);
+  S.retoActivo=r; listaIdeas=[]; votos={}; dibujoData=null;
+  const T=TIPOS[tipo];
+  const j=jugadorActual();
+  const cuerpo = r.modo==="lista"
+    ? '<input type="text" id="entradaIdea" placeholder="Escribe una idea y pulsa Enter" autocomplete="off">'+
+      '<div class="chips" id="chipsIdeas"></div>'+
+      '<p style="font-size:.85rem;margin-top:8px">Cada idea nueva suma 1 chispa de fluidez. Repetir una idea que ya dijo alguien no cuenta.</p>'
+    : r.modo==="dibujo"
+    ? '<canvas id="lienzoDibujo" width="640" height="360" class="lienzo-dibujo"></canvas>'+
+      '<div class="herramientas" id="herramientas"></div>'+
+      '<input type="text" id="tituloDibujo" placeholder="Título de tu obra" style="margin-top:10px">'
+    : '<textarea id="respuesta" placeholder="Escribe tu idea aquí. También puedes decirla en voz alta y escribir un resumen."></textarea>';
+
+  abrirVelo(
+    '<span class="cinta" style="background:'+T.color+'">'+T.icono+' '+T.nombre+' · '+(T.lema||"")+'</span>'+
+    '<h2 style="font-size:1.7rem">'+esc(r.titulo)+'</h2>'+
+    '<p style="font-weight:bold;color:#555">Le toca a '+esc(j.nombre)+'</p>'+
+    '<p class="reto-texto">'+esc(r.enunciado)+'</p>'+
+    (r.regla?'<div class="regla-caos">🎲 Regla loca: '+esc(r.regla)+' (si la cumples, +2 chispas)</div>':'')+
+    (S.tiempo>0?'<div class="crono" id="crono"><span id="cronoBarra"></span></div><p id="cronoTexto" style="font-weight:bold"></p>':'')+
+    cuerpo+
+    '<div class="fila-botones" style="justify-content:flex-start;margin-top:16px">'+
+      '<button class="btn rosa" onclick="pasarAVotacion()">Ya está, que juzgue el jurado</button>'+
+      '<button class="btn mini fantasma" style="color:#333;border-color:#333" onclick="rendirse()">Paso (0 chispas)</button>'+
+    '</div>'
+  );
+
+  if(r.modo==="lista") prepararLista();
+  if(r.modo==="dibujo") prepararDibujo();
+  if(S.tiempo>0) iniciarCrono();
+}
+
+function rendirse(){ cerrarVelo(); setTimeout(siguienteTurno,200); }
+
+function iniciarCrono(){
+  let restante=S.tiempo;
+  const barra=$("cronoBarra"), txt=$("cronoTexto"), caja=$("crono");
+  txt.textContent=restante+" segundos";
+  cronoID=setInterval(()=>{
+    restante--;
+    barra.style.width=(restante/S.tiempo*100)+"%";
+    txt.textContent=restante+" segundos";
+    if(restante<=10){ caja.classList.add("rojo"); sfx.tic(); }
+    if(restante<=0){ clearInterval(cronoID); cronoID=null; txt.textContent="Se acabó el tiempo. Turno del jurado."; pasarAVotacion(); }
+  },1000);
+}
+
+/* --- reto de lista --- */
+function prepararLista(){
+  const inp=$("entradaIdea");
+  inp.focus();
+  inp.addEventListener("keydown",e=>{
+    if(e.key!=="Enter") return;
+    const v=inp.value.trim();
+    if(v.length<2) return;
+    const clave=v.toLowerCase().replace(/\s+/g," ");
+    if(S.ideasDichas.has(clave)){ inp.value=""; inp.placeholder="Esa ya la dijeron. Prueba otra."; return; }
+    S.ideasDichas.add(clave); listaIdeas.push(v); inp.value="";
+    $("chipsIdeas").innerHTML=listaIdeas.map(t=>'<span class="chip">'+esc(t)+'</span>').join("");
+    tono(600+listaIdeas.length*40,.07);
+  });
+}
+
+/* --- reto de dibujo --- */
+let dibujando=false, tintaActual="#10102A", grosor=6;
+function prepararDibujo(){
+  const c=$("lienzoDibujo"), x=c.getContext("2d");
+  x.fillStyle="#fff"; x.fillRect(0,0,640,360);
+  // garabato base procedural: nunca es el mismo
+  x.strokeStyle="#9AA3B8"; x.lineWidth=9; x.lineCap="round"; x.lineJoin="round";
+  const trazos=2+Math.floor(Math.random()*3);
+  for(let t=0;t<trazos;t++){
+    x.beginPath();
+    let px=120+Math.random()*400, py=90+Math.random()*180;
+    x.moveTo(px,py);
+    const puntos=2+Math.floor(Math.random()*3);
+    for(let p=0;p<puntos;p++){
+      const cx1=px+(Math.random()-.5)*260, cy1=py+(Math.random()-.5)*200;
+      const cx2=px+(Math.random()-.5)*260, cy2=py+(Math.random()-.5)*200;
+      const nx=Math.max(60,Math.min(580,px+(Math.random()-.5)*260));
+      const ny=Math.max(50,Math.min(310,py+(Math.random()-.5)*200));
+      x.bezierCurveTo(cx1,cy1,cx2,cy2,nx,ny);
+      px=nx; py=ny;
+    }
+    x.stroke();
+  }
+  const paleta=["#10102A","#FF2E4C","#FF8C42","#FFD23F","#7CE577","#22D3EE","#A56BFF","#FF4D8D"];
+  $("herramientas").innerHTML =
+    paleta.map((p,i)=>'<span class="tinta-op'+(i===0?' sel':'')+'" style="background:'+p+'" data-c="'+p+'"></span>').join("")+
+    '<button class="btn mini" onclick="cambiarGrosor(3)">Fino</button>'+
+    '<button class="btn mini" onclick="cambiarGrosor(6)">Medio</button>'+
+    '<button class="btn mini" onclick="cambiarGrosor(16)">Grueso</button>'+
+    '<button class="btn mini cian" onclick="prepararDibujo()">Otro garabato</button>';
+  $("herramientas").querySelectorAll(".tinta-op").forEach(s=>{
+    s.onclick=()=>{
+      $("herramientas").querySelectorAll(".tinta-op").forEach(o=>o.classList.remove("sel"));
+      s.classList.add("sel"); tintaActual=s.dataset.c;
+    };
+  });
+  const pos=e=>{
+    const r=c.getBoundingClientRect();
+    const t=e.touches?e.touches[0]:e;
+    return {x:(t.clientX-r.left)*(640/r.width), y:(t.clientY-r.top)*(360/r.height)};
+  };
+  const empezar=e=>{ e.preventDefault(); dibujando=true; const p=pos(e); x.beginPath(); x.moveTo(p.x,p.y); };
+  const mover=e=>{
+    if(!dibujando) return; e.preventDefault();
+    const p=pos(e);
+    x.strokeStyle=tintaActual; x.lineWidth=grosor; x.lineCap="round";
+    x.lineTo(p.x,p.y); x.stroke();
+  };
+  const parar=()=>{ dibujando=false; };
+  c.onmousedown=empezar; c.onmousemove=mover; c.onmouseup=parar; c.onmouseleave=parar;
+  c.ontouchstart=empezar; c.ontouchmove=mover; c.ontouchend=parar;
+}
+function cambiarGrosor(g){ grosor=g; }
+
+/* --- votación entre pares --- */
+function pasarAVotacion(){
+  if(cronoID){ clearInterval(cronoID); cronoID=null; }
+  const r=S.retoActivo; if(!r) return;
+  const j=jugadorActual();
+  let contenido="";
+  if(r.modo==="lista"){ contenido=listaIdeas.join(" · ") || "(sin ideas)"; }
+  else if(r.modo==="dibujo"){
+    const c=$("lienzoDibujo");
+    if(c){
+      const mini=document.createElement("canvas");
+      mini.width=300; mini.height=169;
+      mini.getContext("2d").drawImage(c,0,0,300,169);
+      dibujoData=mini.toDataURL("image/jpeg",.6);
+    }
+    contenido=($("tituloDibujo")&&$("tituloDibujo").value.trim())||"Obra sin título";
+  }
+  else { contenido=($("respuesta")&&$("respuesta").value.trim())||"(respondió en voz alta)"; }
+  r.contenido=contenido;
+
+  const jueces=S.jugadores.filter(x=>x.id!==j.id);
+  const base = r.modo==="lista" ? Math.min(listaIdeas.length,10) : 1;
+  let html='<span class="cinta" style="background:var(--puente)">⚖️ Turno del jurado</span>'+
+    '<h2 style="font-size:1.6rem">¿Qué tan creativa fue la idea de '+esc(j.nombre)+'?</h2>'+
+    (r.modo==="dibujo"&&dibujoData?'<img src="'+dibujoData+'" style="width:100%;max-width:340px;border:4px solid #0B0B1E;border-radius:12px;margin:10px 0">':'')+
+    '<p style="background:#fff;border:3px dashed #0B0B1E;border-radius:12px;padding:12px;font-size:1.05rem"><strong>Su respuesta:</strong> '+esc(contenido)+'</p>'+
+    '<p style="margin:12px 0 4px;font-weight:bold">Chispas automáticas por participar: '+base+'</p>'+
+    '<p style="font-size:.88rem">Cada juez da de 1 a 3 chispas. Una chispa: se entiende. Dos: es original. Tres: nunca lo habíamos escuchado y lo explicó bien.</p>'+
+    '<div class="jueces">';
+  jueces.forEach(jz=>{
+    html+='<div class="juez"><strong>'+esc(jz.nombre)+'</strong>'+
+      [1,2,3].map(v=>'<button class="estrella" data-j="'+jz.id+'" data-v="'+v+'" onclick="votar(this)">'+"⚡".repeat(v)+'</button>').join("")+'</div>';
+  });
+  html+='</div>';
+  if(r.regla){
+    html+='<div class="regla-caos" style="margin-top:14px"><label style="display:flex;gap:10px;align-items:center;cursor:pointer">'+
+      '<input type="checkbox" id="cumplioCaos" style="width:22px;height:22px"> El grupo confirma que cumplió la regla loca: '+esc(r.regla)+' (+2)</label></div>';
+  }
+  html+='<div class="fila-botones" style="justify-content:flex-start;margin-top:16px">'+
+    '<button class="btn" onclick="cerrarReto('+base+')">Sumar chispas y seguir</button></div>';
+  abrirVelo(html);
+}
+
+function votar(btn){
+  const jz=btn.dataset.j;
+  document.querySelectorAll('.estrella[data-j="'+jz+'"]').forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  votos[jz]=parseInt(btn.dataset.v,10);
+  tono(700,.06);
+}
+
+function cerrarReto(base){
+  const j=jugadorActual(), r=S.retoActivo;
+  let total=base;
+  Object.values(votos).forEach(v=>total+=v);
+  const chk=$("cumplioCaos");
+  if(chk&&chk.checked) total+=2;
+  j.chispas+=total;
+  j.ideas.push({tipo:r.tipo, reto:r.enunciado, regla:r.regla||"", respuesta:r.contenido, chispas:total});
+  if(j.conteo[r.tipo]!==undefined) j.conteo[r.tipo]++;
+  if(r.regla) j.conteo.CAOS++;
+  if(dibujoData) guardarEnGaleria(j.nombre, r.contenido, dibujoData);
+  registrarBitacora(j.nombre, r);
+  revisarInsignias(j, listaIdeas.length);
+  sfx.bien(); lanzarConfeti(j.color);
+  cerrarVelo(); pintarMarcadores();
+  $("aviso").textContent = j.nombre+" ganó "+total+" chispas. "+(j.insignias.length?"Insignias: "+j.insignias.map(i=>i.n).join(", "):"");
+  setTimeout(siguienteTurno,700);
+}
+
+function revisarInsignias(j, cantidadIdeas){
+  const dar=id=>{
+    if(j.insignias.some(x=>x.id===id)) return;
+    const ins=BANCO.insignias.find(x=>x.id===id);
+    j.insignias.push(ins);
+    $("aviso").textContent="¡Insignia nueva para "+j.nombre+": "+ins.n+"!";
+  };
+  if(cantidadIdeas>=10) dar("volcan");
+  if(j.conteo.GARABATO>=3) dar("artista");
+  if(j.conteo.SOS>=3) dar("heroe");
+  if(j.conteo.CAOS>=3) dar("caotico");
+  if(j.conteo.PUENTE>=3) dar("filosofo");
+  if(j.chispas>=30) dar("faro");
+}
+
+/* ---------- 12. CONFETI ---------- */
+const CF=$("confeti"), XC=CF.getContext("2d");
+function ajustarConfeti(){ CF.width=innerWidth; CF.height=innerHeight; }
+addEventListener("resize",ajustarConfeti); ajustarConfeti();
+function lanzarConfeti(color){
+  CF.style.display="block";
+  const trozos=[];
+  for(let i=0;i<110;i++){
+    trozos.push({x:innerWidth/2+(Math.random()-.5)*260, y:innerHeight/2,
+      vx:(Math.random()-.5)*13, vy:-6-Math.random()*11, r:4+Math.random()*7,
+      c:Math.random()<.4?color:azar(["#FFD23F","#FF4D8D","#22D3EE","#7CE577","#A56BFF"]), g:Math.random()*6.28});
+  }
+  let f=0;
+  (function anim(){
+    XC.clearRect(0,0,CF.width,CF.height);
+    trozos.forEach(t=>{
+      t.x+=t.vx; t.y+=t.vy; t.vy+=.34; t.g+=.14;
+      XC.save(); XC.translate(t.x,t.y); XC.rotate(t.g);
+      XC.fillStyle=t.c; XC.fillRect(-t.r/2,-t.r/2,t.r,t.r*1.6); XC.restore();
+    });
+    f++;
+    if(f<95) requestAnimationFrame(anim);
+    else { XC.clearRect(0,0,CF.width,CF.height); CF.style.display="none"; }
+  })();
+}
+
+/* ---------- 13. GUARDADO, GALERÍA, BITÁCORA, FAMA ---------- */
+function guardarPartida(avisar){
+  const datos={jugadores:S.jugadores, turno:S.turno, tiempo:S.tiempo, modo:S.modo,
+    rondaCierre:S.rondaCierre, disparador:S.disparador, ideasDichas:[...S.ideasDichas], fecha:Date.now()};
+  const ok=Guardado.escribir(K.partida,datos);
+  if(avisar) $("aviso").textContent = ok ? "Partida guardada en este dispositivo." : "No se pudo guardar aquí, pero la partida sigue viva en pantalla.";
+}
+function continuarPartida(){
+  const d=Guardado.leer(K.partida,null);
+  if(!d||!d.jugadores||!d.jugadores.length){ alert("Todavía no hay ninguna partida guardada en este dispositivo."); return; }
+  S.jugadores=d.jugadores; S.turno=d.turno; S.tiempo=d.tiempo; S.modo=d.modo;
+  S.rondaCierre=d.rondaCierre; S.disparador=d.disparador; S.ideasDichas=new Set(d.ideasDichas||[]);
+  S.terminada=false;
+  irA("pJuego"); pintarMarcadores();
+  $("aviso").textContent="Partida recuperada. Sigue "+jugadorActual().nombre+".";
+}
+function guardarEnGaleria(autor,titulo,data){
+  const g=Guardado.leer(K.galeria,[]);
+  g.unshift({autor,titulo,data,fecha:new Date().toLocaleDateString("es-CO")});
+  Guardado.escribir(K.galeria,g.slice(0,18));
+}
+function registrarBitacora(autor,r){
+  const b=Guardado.leer(K.bitacora,[]);
+  b.unshift({autor, tipo:TIPOS[r.tipo].nombre, reto:r.enunciado, regla:r.regla||"",
+    respuesta:r.contenido, fecha:new Date().toLocaleDateString("es-CO")});
+  Guardado.escribir(K.bitacora,b.slice(0,220));
+}
+function pintarFama(){
+  const f=Guardado.leer(K.fama,[]);
+  $("listaFama").innerHTML = f.length
+    ? '<div class="podio">'+f.map((r,i)=>'<div class="puesto"><span class="num">'+(i+1)+'</span><div><strong>'+esc(r.nombre)+'</strong> · '+r.chispas+' chispas<br><small>'+esc(r.fecha)+' · '+r.jugadores+' exploradores</small></div></div>').join("")+'</div>'
+    : '<p style="margin-top:10px">Todavía no hay records. Juega una partida completa y aparecerá aquí.</p>'+
+      (Guardado.disponible?'':'<p style="margin-top:8px;font-weight:bold">Nota: este navegador no está permitiendo guardar datos. Descarga el archivo y ábrelo desde tu equipo para conservar records y galería.</p>');
+}
+function borrarDatos(){
+  if(!confirm("Se borrarán records, galería, bitácora y la partida guardada. ¿Seguro?")) return;
+  Object.values(K).forEach(k=>Guardado.borrar(k));
+  pintarFama();
+}
+
+/* ---------- 14. FINAL ---------- */
+function terminarPartida(){
+  if(S.terminada) return;
+  S.terminada=true; cerrarVelo();
+  const orden=[...S.jugadores].sort((a,b)=>b.chispas-a.chispas);
+  const campeon=orden[0];
+  $("tituloFinal").textContent = campeon.nombre+" es la mente más chispeante de Ideápolis";
+  $("podio").innerHTML = orden.map((j,i)=>
+    '<div class="puesto"><span class="num">'+(i+1)+'</span>'+
+    '<span class="punto" style="background:'+j.color+';width:26px;height:26px"></span>'+
+    '<div><strong style="font-size:1.15rem">'+esc(j.nombre)+'</strong> · '+j.chispas+' chispas · '+j.ideas.length+' ideas creadas'+
+    (j.insignias.length ? '<br><small>'+j.insignias.map(x=>"🎖️ "+esc(x.n)).join(" · ")+'</small>' : '<br><small>Sin insignias esta vez</small>')+
+    '</div></div>').join("");
+  const g=Guardado.leer(K.galeria,[]);
+  $("galeriaFinal").innerHTML = g.length
+    ? g.slice(0,12).map(o=>'<figure><img src="'+o.data+'" alt="'+esc(o.titulo)+'"><figcaption>'+esc(o.titulo)+'<br><small>'+esc(o.autor)+'</small></figcaption></figure>').join("")
+    : '<p>Nadie cayó en Isla Garabato esta vez.</p>';
+  const fama=Guardado.leer(K.fama,[]);
+  fama.push({nombre:campeon.nombre, chispas:campeon.chispas, jugadores:S.jugadores.length, fecha:new Date().toLocaleDateString("es-CO")});
+  fama.sort((a,b)=>b.chispas-a.chispas);
+  Guardado.escribir(K.fama,fama.slice(0,10));
+  Guardado.borrar(K.partida);
+  irA("pFinal");
+  lanzarConfeti(campeon.color);
+  setTimeout(()=>lanzarConfeti("#FFD23F"),600);
+}
+
+/* ---------- 15. BITÁCORA ---------- */
+function verBitacora(){
+  const b=Guardado.leer(K.bitacora,[]);
+  const html = b.length
+    ? b.slice(0,60).map(o=>'<div style="border-bottom:2px dashed #0B0B1E;padding:10px 0">'+
+        '<strong>'+esc(o.autor)+'</strong> <small>· '+esc(o.tipo)+' · '+esc(o.fecha)+'</small>'+
+        '<div style="font-size:.9rem;color:#555">'+esc(o.reto)+'</div>'+
+        (o.regla?'<div style="font-size:.85rem;color:#B00">Regla loca: '+esc(o.regla)+'</div>':'')+
+        '<div style="margin-top:4px">👉 '+esc(o.respuesta)+'</div></div>').join("")
+    : "<p>La bitácora está vacía. Resuelve retos y las ideas quedarán registradas aquí.</p>";
+  abrirVelo('<span class="cinta" style="background:var(--chispa)">📓 Bitácora de ideas</span>'+
+    '<h2 style="font-size:1.6rem">Todo lo que ha inventado este grupo</h2>'+
+    '<div style="max-height:52vh;overflow:auto;margin-top:10px">'+html+'</div>'+
+    '<div class="fila-botones" style="justify-content:flex-start;margin-top:14px">'+
+    '<button class="btn cian" onclick="imprimirBitacora()">Imprimir en PDF</button>'+
+    '<button class="btn" onclick="cerrarVelo()">Cerrar</button></div>');
+}
+
+function imprimirBitacora(){
+  const b=Guardado.leer(K.bitacora,[]);
+  const filas=b.map(o=>'<tr><td>'+esc(o.autor)+'</td><td>'+esc(o.tipo)+'</td><td>'+esc(o.reto)+(o.regla?'<br><em>Regla loca: '+esc(o.regla)+'</em>':'')+'</td><td>'+esc(o.respuesta)+'</td></tr>').join("");
+  $("manualCuerpo").innerHTML='<h2>Bitácora de ideas del grupo</h2>'+
+    '<p>Registro de las producciones creativas generadas durante las partidas. Sirve como evidencia de proceso y como insumo para la evaluación formativa.</p>'+
+    '<table><thead><tr><th>Explorador</th><th>Isla</th><th>Reto</th><th>Respuesta</th></tr></thead><tbody>'+
+    (filas||'<tr><td colspan="4">Sin registros todavía.</td></tr>')+'</tbody></table>';
+  $("manual").classList.add("visible");
+  cerrarVelo();
+  setTimeout(()=>window.print(),350);
+}
+
+/* ---------- 16. REGLAS Y MANUAL ---------- */
+const REGLAS_HTML = `
+<h3 style="margin-top:14px">Lo que necesitas</h3>
+<ul style="padding-left:20px">
+  <li>Un computador, tablet o celular con este archivo abierto. No necesita internet.</li>
+  <li>De 2 a 4 jugadores de 10 a 12 años. Un adulto o un compañero mayor puede acompañar como moderador.</li>
+  <li>Opcional: hojas y lápices para quienes prefieran dibujar en papel.</li>
+</ul>
+<h3>Cómo se juega, paso a paso</h3>
+<ol style="padding-left:20px">
+  <li>Cada jugador escribe su nombre y escoge un color de ficha.</li>
+  <li>Por turnos, el jugador de turno lanza el dado y su ficha avanza por el archipiélago.</li>
+  <li>La isla donde cae define el tipo de reto creativo. Cada reto se arma al azar, así que nunca sale el mismo dos veces.</li>
+  <li>El jugador tiene el tiempo acordado (60, 90 o 120 segundos, o sin reloj) para responder. Puede escribir, dibujar o decirlo en voz alta y anotar un resumen.</li>
+  <li>Cuando termina, los demás jugadores actúan como jurado y le dan de 1 a 3 chispas según la rúbrica.</li>
+  <li>El turno pasa al siguiente jugador.</li>
+</ol>
+<h3>Las ocho islas</h3>
+<ul style="padding-left:20px">
+  <li><strong>💡 Isla Chispa (fluidez):</strong> decir la mayor cantidad de usos distintos para un objeto cotidiano.</li>
+  <li><strong>🧬 Isla Fusión (flexibilidad):</strong> combinar un objeto con una propiedad imposible e inventar algo nuevo.</li>
+  <li><strong>🎨 Isla Garabato (elaboración):</strong> completar un trazo al azar y convertirlo en un dibujo con historia.</li>
+  <li><strong>🌀 Isla Y si (pensamiento hipotético):</strong> imaginar consecuencias de un mundo distinto.</li>
+  <li><strong>🛟 Isla SOS (resolución de problemas):</strong> resolver un problema real de la escuela o la vereda con una restricción.</li>
+  <li><strong>🌉 Isla Puente (analogía):</strong> encontrar el parecido entre dos cosas que no tienen nada que ver.</li>
+  <li><strong>🎲 Isla Caos (originalidad):</strong> reto extremo con una regla loca obligatoria.</li>
+  <li><strong>🌪️ Torbellino (azar):</strong> evento sorpresa que mueve fichas o regala chispas.</li>
+</ul>
+<h3>Cómo se gana</h3>
+<p><strong>Llegar primero al Faro no da la victoria.</strong> Llegar solo cierra la partida: los demás juegan un turno final y luego se cuentan las chispas. Gana quien acumule más chispas, es decir, quien haya producido más y mejores ideas. Así el juego premia la creatividad y no la suerte del dado.</p>
+<h3>Cómo se pierde</h3>
+<p>Se pierden oportunidades cuando el jugador dice "paso" y no propone nada, cuando repite una idea que ya dijo otro (no suma chispas) o cuando se le acaba el tiempo sin haber respondido. No hay eliminación: en Ideápolis nadie sale del juego, solo se queda con menos chispas.</p>
+<h3>Rúbrica del jurado</h3>
+<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem">
+<tr style="background:#10102A;color:#fff"><th style="border:2px solid #10102A;padding:6px;text-align:left">Chispas</th><th style="border:2px solid #10102A;padding:6px;text-align:left">Qué significa</th></tr>
+<tr><td style="border:2px solid #10102A;padding:6px"><strong>1 ⚡</strong></td><td style="border:2px solid #10102A;padding:6px">Se entiende la idea, pero es parecida a lo que cualquiera diría.</td></tr>
+<tr><td style="border:2px solid #10102A;padding:6px"><strong>2 ⚡⚡</strong></td><td style="border:2px solid #10102A;padding:6px">La idea es original o le dio una vuelta inesperada al reto.</td></tr>
+<tr><td style="border:2px solid #10102A;padding:6px"><strong>3 ⚡⚡⚡</strong></td><td style="border:2px solid #10102A;padding:6px">Nunca la habíamos escuchado y además la explicó con detalles.</td></tr>
+</table>
+<p style="margin-top:10px">Regla del jurado: nadie puede dar 3 chispas a su mejor amigo solo por amistad. Si no puede explicar por qué la idea es original, la nota baja a 1.</p>
+`;
+$("reglasHTML").innerHTML=REGLAS_HTML;
+
+const combos = BANCO.objetos.length + (BANCO.fusionA.length*BANCO.fusionB.length) + BANCO.quesi.length +
+  (BANCO.problemas.length*BANCO.restricciones.length) + (BANCO.puenteA.length*BANCO.puenteB.length);
+$("pastillaCombos").textContent = combos.toLocaleString("es-CO")+" retos posibles";
+
+function abrirManual(){
+  $("manualCuerpo").innerHTML = `
+  <h2>1. Ficha técnica</h2>
+  <table>
+    <tr><th>Nombre del recurso</th><td>Ideápolis, el archipiélago de las ideas locas</td></tr>
+    <tr><th>Tipo</th><td>Juego de mesa digital interactivo, en un archivo HTML autoejecutable sin conexión</td></tr>
+    <tr><th>Población</th><td>Niñas y niños de 10 a 12 años (grados cuarto a séptimo)</td></tr>
+    <tr><th>Participantes</th><td>De 2 a 4 jugadores por dispositivo. Se puede jugar por equipos si el grupo es numeroso</td></tr>
+    <tr><th>Duración</th><td>Entre 25 y 40 minutos por partida</td></tr>
+    <tr><th>Materiales</th><td>Un dispositivo con navegador (computador, tablet o celular). Opcional: hojas y lápices</td></tr>
+    <tr><th>Finalidad pedagógica</th><td>Potenciar los procesos creativos mediante retos de pensamiento divergente, resolución de problemas y producción de ideas originales</td></tr>
+  </table>
+
+  <h2>2. Finalidad pedagógica</h2>
+  <p>Ideápolis no evalúa respuestas correctas. Cada casilla obliga al jugador a producir ideas propias, defenderlas ante un jurado de pares y superar restricciones que impiden la respuesta obvia. La estructura del juego se apoya en los cuatro procesos clásicos del pensamiento divergente descritos por Guilford y operacionalizados por Torrance:</p>
+  <table>
+    <tr><th>Proceso creativo</th><th>Isla que lo entrena</th><th>Evidencia observable</th></tr>
+    <tr><td>Fluidez</td><td>Isla Chispa</td><td>Cantidad de usos alternativos producidos en un tiempo limitado</td></tr>
+    <tr><td>Flexibilidad</td><td>Isla Fusión y Isla Puente</td><td>Cambio de categoría mental y construcción de analogías lejanas</td></tr>
+    <tr><td>Originalidad</td><td>Isla Caos y las reglas locas</td><td>Respuestas estadísticamente infrecuentes dentro del grupo</td></tr>
+    <tr><td>Elaboración</td><td>Isla Garabato</td><td>Nivel de detalle, título y narrativa añadidos al trazo inicial</td></tr>
+    <tr><td>Pensamiento hipotético</td><td>Isla Y si</td><td>Consecuencias encadenadas a partir de una premisa imposible</td></tr>
+    <tr><td>Resolución creativa de problemas</td><td>Isla SOS</td><td>Solución viable bajo una restricción que bloquea la vía obvia</td></tr>
+  </table>
+  <p>Las situaciones de la Isla SOS están tomadas de la vida escolar y rural real: el patio sin sombra, el camino embarrado, el río con plásticos, la rampa empinada. Esto conecta la creatividad con el contexto del estudiante y evita el ejercicio abstracto sin sentido.</p>
+
+  <h2>3. Reglas completas</h2>
+  ${REGLAS_HTML}
+
+  <h2>4. Sistema de puntuación</h2>
+  <ul>
+    <li><strong>Chispas por participar:</strong> 1 chispa por responder. En la Isla Chispa se otorga 1 chispa por cada idea nueva, hasta 10.</li>
+    <li><strong>Chispas del jurado:</strong> cada compañero da de 1 a 3 chispas según la rúbrica.</li>
+    <li><strong>Bono de regla loca:</strong> +2 chispas si el grupo confirma que cumplió la condición extra.</li>
+    <li><strong>Insignias:</strong> se ganan automáticamente al alcanzar hitos (fluidez volcánica, manos de artista, apaga incendios, rey del caos, constructor de puentes, faro de Ideápolis).</li>
+    <li><strong>Idea repetida:</strong> no suma. El juego lleva memoria de todo lo dicho en la partida.</li>
+  </ul>
+
+  <h2>5. Qué hace el docente</h2>
+  <ul>
+    <li>Presenta el juego, forma los grupos y designa el primer moderador.</li>
+    <li>Observa, no corrige. Su papel es garantizar que el jurado justifique las chispas que otorga.</li>
+    <li>Al final abre la <strong>bitácora de ideas</strong> del juego, que guarda todas las respuestas producidas, y la usa para la reflexión de cierre: ¿cuál idea nos sorprendió más y por qué?</li>
+    <li>Puede imprimir la bitácora en PDF como evidencia del proceso creativo del grupo.</li>
+  </ul>
+
+  <h2>6. Adaptaciones para la diversidad</h2>
+  <ul>
+    <li><strong>Ritmo:</strong> el tiempo por reto es configurable, incluida la opción sin reloj.</li>
+    <li><strong>Canal de respuesta:</strong> se puede escribir, dibujar, hablar o hacer mímica. Ningún reto exige lectoescritura avanzada.</li>
+    <li><strong>Visual:</strong> botón de letra más grande, alto contraste en todas las fichas y opción de apagar el sonido.</li>
+    <li><strong>Movimiento reducido:</strong> el juego respeta la preferencia del sistema y desactiva las animaciones.</li>
+    <li><strong>Conectividad:</strong> funciona sin internet y se comparte por WhatsApp o memoria USB como archivo único.</li>
+  </ul>
+
+  <h2>7. Preguntas para el cierre reflexivo</h2>
+  <ol>
+    <li>¿Cuál fue la idea más rara que escuchaste hoy y por qué te sorprendió?</li>
+    <li>¿En qué momento pensaste "esto no se me ocurre" y después sí se te ocurrió algo?</li>
+    <li>¿Qué isla te costó más trabajo? ¿Por qué crees que fue esa?</li>
+    <li>¿Cambiarías alguna regla del juego para hacerlo más creativo? Propón una.</li>
+  </ol>
+
+  <h2>8. Referentes conceptuales</h2>
+  <ul>
+    <li>Acosta Gutiérrez, J., Barco Rodríguez, J. M. y Castañeda Rodríguez, R. T. (2014). En busca de las nuevas ideas: mediación de la creatividad desde la perspectiva cognitiva. <em>Pensamiento, Palabra y Obra</em>, 12, 64-73.</li>
+    <li>Elisondo, R. C. (2015). La creatividad como perspectiva educativa. Cinco ideas para pensar los contextos creativos de enseñanza y aprendizaje. <em>Actualidades Investigativas en Educación</em>, 15(3), 1-23.</li>
+    <li>Casado, Y., Llamas Salguero, F. y López-Fernández, V. (2015). Inteligencias múltiples, creatividad y lateralidad, nuevos retos en metodologías docentes enfocadas a la innovación educativa. <em>Reidocrea</em>, 4(43), 343-358.</li>
+    <li>Guilford, J. P. (1950). Creativity. <em>American Psychologist</em>, 5(9), 444-454.</li>
+    <li>Torrance, E. P. (1974). <em>Torrance Tests of Creative Thinking</em>. Scholastic Testing Service.</li>
+  </ul>
+  `;
+  $("manual").classList.add("visible");
+  $("app").style.display="none";
+  window.scrollTo(0,0);
+}
+function cerrarManual(){
+  $("manual").classList.remove("visible");
+  $("app").style.display="block";
+}
+
+/* ---------- 17. ARRANQUE ---------- */
+(function arranque(){
+  const hay=Guardado.leer(K.partida,null);
+  if(!hay||!hay.jugadores||!hay.jugadores.length) $("btnContinuar").style.display="none";
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape" && $("velo").classList.contains("abierto")) return;
+    if(e.key===" " && $("pJuego").classList.contains("activa") && !$("velo").classList.contains("abierto")){
+      e.preventDefault(); lanzarDado();
+    }
+  });
+})();
+</script>
+</body>
+</html>
