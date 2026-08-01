@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Fábrica de Inventos Imposibles</title>
+    <!-- Tailwind CSS para el diseño responsive y estético -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts para una tipografía lúdica -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Configuración personalizada de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'title': ['"Fredoka One"', 'cursive'],
+                        'body': ['"Nunito"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#1e1b4b',
+                            primary: '#6366f1',
+                            secondary: '#f43f5e',
+                            accent: '#f59e0b',
+                            light: '#e0e7ff'
+                        }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 4s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #1e1b4b; /* brand.dark */
+            background-image: radial-gradient(circle at center, #312e81 0%, #1e1b4b 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        /* Efecto de cristal para tarjetas */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Animación de la máquina tragamonedas (shuffle) */
+        .shuffle-anim {
+            animation: shuffle 0.1s infinite;
+        }
+        @keyframes shuffle {
+            0% { transform: translateY(-5px); opacity: 0.8; }
+            50% { transform: translateY(5px); opacity: 1; }
+            100% { transform: translateY(-5px); opacity: 0.8; }
+        }
+
+        /* Ocultar elementos */
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* Barra de progreso circular */
+        .circular-chart {
+            display: block;
+            margin: 0 auto;
+            max-width: 80%;
+            max-height: 250px;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.2);
+            stroke-width: 3.8;
+        }
+        .circle {
+            fill: none;
+            stroke-width: 3.8;
+            stroke-linecap: round;
+            transition: stroke-dasharray 1s linear;
+        }
+        
+        /* Efecto de botón presionado */
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+
+        /* Scrollbar estilizado */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); rounded: lg; }
+        ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
+    </style>
+</head>
+<body class="font-body min-h-screen flex flex-col antialiased">
+
+    <!-- Contenedor Principal -->
+    <div class="flex-grow flex flex-col items-center justify-center p-4 w-full max-w-6xl mx-auto relative z-10">
+        
+        <!-- PANTALLA 1: SETUP DE JUGADORES -->
+        <section id="screen-setup" class="w-full max-w-2xl flex flex-col items-center animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 bg-brand-primary rounded-full mb-4 shadow-lg shadow-brand-primary/50 animate-bounce-slow">
+                    <span class="text-5xl">🏭</span>
+                </div>
+                <h1 class="font-title text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-secondary drop-shadow-md mb-2">
+                    Fábrica de Inventos
+                </h1>
+                <p class="text-brand-light text-lg md:text-xl">¡Soluciones creativas a problemas disparatados!</p>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 md:p-8 w-full shadow-2xl">
+                <h2 class="text-2xl font-bold mb-6 text-center border-b border-white/20 pb-4">Añadir Inventores</h2>
+                
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <input type="text" id="player-name" placeholder="Nombre del inventor..." class="flex-grow bg-white/10 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all">
+                    
+                    <div class="relative">
+                        <button id="btn-avatar-select" class="h-full bg-white/10 border border-white/30 rounded-xl px-4 py-3 text-2xl hover:bg-white/20 transition-all flex items-center justify-center min-w-[60px]">
+                            🤖
+                        </button>
+                        <!-- Popup de Avatares -->
+                        <div id="avatar-popup" class="hidden absolute top-full mt-2 left-0 md:right-0 md:left-auto bg-brand-dark border border-white/20 rounded-xl p-3 shadow-2xl z-50 grid grid-cols-4 gap-2 w-64">
+                            <!-- Llenado por JS -->
+                        </div>
+                    </div>
+
+                    <button id="btn-add-player" class="bg-brand-secondary hover:bg-rose-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition-all btn-press">
+                        + Añadir
+                    </button>
+                </div>
+
+                <div class="bg-black/20 rounded-xl p-4 min-h-[150px]">
+                    <h3 class="text-sm text-brand-light uppercase tracking-wider font-bold mb-3">Inventores Listos (<span id="player-count">0</span>/6)</h3>
+                    <ul id="players-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Lista de jugadores (JS) -->
+                        <li id="empty-state" class="text-white/40 italic col-span-full text-center py-4">Agrega al menos 2 jugadores para comenzar...</li>
+                    </ul>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button id="btn-start-game" disabled class="bg-gray-500 text-gray-300 font-title text-2xl py-4 px-10 rounded-2xl cursor-not-allowed transition-all w-full md:w-auto">
+                        ¡COMENZAR JUEGO!
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 2: HUB PRINCIPAL -->
+        <section id="screen-hub" class="w-full hidden-screen flex flex-col items-center">
+            
+            <!-- Header con ronda actual -->
+            <div class="w-full flex justify-between items-center mb-8 glass-card p-4 rounded-2xl">
+                <div class="text-brand-accent font-bold text-xl"><span class="text-3xl mr-2">⚙️</span> Ronda <span id="round-display">1</span>/3</div>
+                <button id="btn-rules" class="text-brand-light hover:text-white underline text-sm">Ver Reglas</button>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-8 w-full">
+                <!-- Panel del Jugador Actual -->
+                <div class="flex-grow glass-card rounded-3xl p-8 text-center flex flex-col justify-center items-center relative overflow-hidden">
+                    <div class="absolute top-[-50px] right-[-50px] text-9xl opacity-5 pointer-events-none animate-spin-slow">⚙️</div>
+                    
+                    <h2 class="text-xl text-brand-light font-bold uppercase tracking-widest mb-2">Turno del Inventor</h2>
+                    <div class="text-8xl mb-4" id="current-player-avatar">👨‍🔬</div>
+                    <h3 class="font-title text-5xl text-white mb-8" id="current-player-name">Nombre</h3>
+                    
+                    <button id="btn-spin-machine" class="bg-gradient-to-r from-brand-accent to-orange-500 hover:from-orange-500 hover:to-brand-accent text-white font-title text-3xl py-5 px-12 rounded-full shadow-[0_0_30px_rgba(245,158,11,0.5)] transform transition-all hover:scale-105 btn-press">
+                        ¡ENCENDER MÁQUINA!
+                    </button>
+                </div>
+
+                <!-- Leaderboard Lateral -->
+                <div class="w-full md:w-1/3 glass-card rounded-3xl p-6 flex flex-col">
+                    <h3 class="font-title text-2xl text-center mb-4 text-brand-secondary border-b border-white/10 pb-4">Puntuaciones</h3>
+                    <div id="leaderboard-list" class="flex-col gap-3 overflow-y-auto flex-grow">
+                        <!-- JS genera la tabla -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 3: LA MÁQUINA DE INVENTOS (RULETA) -->
+        <section id="screen-machine" class="w-full max-w-4xl hidden-screen flex flex-col items-center">
+            <h2 class="font-title text-4xl md:text-5xl text-white mb-8 text-center">Generando el reto...</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-10">
+                <!-- Carta Reto -->
+                <div class="glass-card rounded-2xl p-6 border-t-4 border-brand-secondary flex flex-col items-center text-center shadow-lg relative overflow-hidden group">
+                    <div class="bg-brand-secondary/20 text-brand-secondary font-bold px-4 py-1 rounded-full text-sm mb-4">EL PROBLEMA</div>
+                    <div id="card-reto" class="text-xl md:text-2xl font-bold min-h-[120px] flex items-center justify-center">
+                        <span class="text-6xl animate-pulse">❓</span>
+                    </div>
+                </div>
+
+                <!-- Cartas Objetos (2 en 1 columna) -->
+                <div class="flex flex-row md:flex-col gap-6">
+                    <div class="glass-card rounded-2xl p-4 border-t-4 border-brand-primary flex-1 flex flex-col items-center justify-center text-center">
+                        <div class="bg-brand-primary/20 text-brand-light font-bold px-3 py-1 rounded-full text-xs mb-2">OBJETO 1</div>
+                        <div id="card-obj1" class="text-lg font-bold flex flex-col items-center gap-2">
+                            <span class="text-5xl animate-pulse">📦</span>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 border-t-4 border-brand-primary flex-1 flex flex-col items-center justify-center text-center">
+                        <div class="bg-brand-primary/20 text-brand-light font-bold px-3 py-1 rounded-full text-xs mb-2">OBJETO 2</div>
+                        <div id="card-obj2" class="text-lg font-bold flex flex-col items-center gap-2">
+                            <span class="text-5xl animate-pulse">📦</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carta Restricción (Dado) -->
+                <div class="glass-card rounded-2xl p-6 border-t-4 border-brand-accent flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+                    <div class="bg-brand-accent/20 text-brand-accent font-bold px-4 py-1 rounded-full text-sm mb-4">LA RESTRICCIÓN</div>
+                    <div id="card-restriccion" class="text-xl font-bold min-h-[120px] flex items-center justify-center">
+                        <span class="text-6xl animate-pulse">🎲</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-to-timer" class="hidden bg-green-500 hover:bg-green-400 text-white font-bold text-2xl py-4 px-10 rounded-full shadow-lg transform transition-all hover:scale-105 btn-press animate-bounce">
+                ¡Empezar a Inventar!
+            </button>
+        </section>
+
+        <!-- PANTALLA 4/5: TEMPORIZADOR (INVENTO / MEJORA) -->
+        <section id="screen-timer" class="w-full hidden-screen flex flex-col items-center">
+            
+            <div id="timer-header" class="text-center mb-6">
+                <h2 id="timer-title" class="font-title text-4xl text-brand-accent mb-2">Fase de Creación</h2>
+                <p id="timer-subtitle" class="text-xl text-white">¡Explica tu invento en voz alta!</p>
+            </div>
+
+            <!-- Resumen de Cartas Pequeño -->
+            <div class="flex flex-wrap justify-center gap-3 mb-8 w-full max-w-3xl">
+                <div class="bg-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-brand-secondary/50 flex-grow max-w-[48%]">
+                    <span class="text-brand-secondary font-bold">Problema:</span> <span id="mini-reto" class="truncate"></span>
+                </div>
+                <div class="bg-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-brand-primary/50">
+                    <span id="mini-obj1" class="text-xl"></span> + <span id="mini-obj2" class="text-xl"></span>
+                </div>
+                <div class="bg-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-brand-accent/50 flex-grow max-w-[48%]">
+                    <span class="text-brand-accent font-bold">Pero:</span> <span id="mini-restriccion" class="truncate"></span>
+                </div>
+            </div>
+
+            <!-- SVG Circular Timer -->
+            <div class="relative w-64 h-64 mb-8">
+                <svg viewBox="0 0 36 36" class="circular-chart text-brand-primary w-full h-full drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+                    <path class="circle-bg"
+                    d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path class="circle" id="timer-path"
+                    stroke-dasharray="100, 100"
+                    stroke="currentColor"
+                    d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="time-left" class="font-title text-6xl text-white">90</span>
+                    <span class="text-brand-light text-sm">segundos</span>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button id="btn-timer-action" class="bg-brand-primary hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-full shadow-lg btn-press">
+                    Pausar
+                </button>
+                <button id="btn-timer-skip" class="bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-8 rounded-full border border-white/30 btn-press">
+                    ¡Terminé antes!
+                </button>
+            </div>
+        </section>
+
+        <!-- PANTALLA 6: VOTACIÓN -->
+        <section id="screen-voting" class="w-full max-w-2xl hidden-screen flex flex-col items-center">
+            <h2 class="font-title text-4xl text-brand-accent mb-2">Evaluación</h2>
+            <p class="text-lg text-white mb-8 text-center">¡Es hora de que los demás califiquen el invento de <span id="vote-target-name" class="font-bold text-brand-secondary"></span>!</p>
+
+            <div class="w-full space-y-6">
+                <!-- Criterio 1: Originalidad -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-yellow-400">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold">✨ Originalidad</h3>
+                        <span class="text-2xl font-title text-yellow-400" id="val-orig">0</span>
+                    </div>
+                    <p class="text-sm text-brand-light mb-4">¿Fue una idea que a nadie más se le habría ocurrido?</p>
+                    <input type="range" id="slider-orig" min="0" max="2" value="0" class="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                    <div class="flex justify-between text-xs text-white/50 mt-2 px-1">
+                        <span>0 (Común)</span> <span>1 (Buena idea)</span> <span>2 (¡Genial!)</span>
+                    </div>
+                </div>
+
+                <!-- Criterio 2: Solución -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-green-400">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold">🎯 Funcionalidad</h3>
+                        <span class="text-2xl font-title text-green-400" id="val-func">0</span>
+                    </div>
+                    <p class="text-sm text-brand-light mb-4">¿Resuelve el problema respetando la restricción?</p>
+                    <input type="range" id="slider-func" min="0" max="2" value="0" class="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-green-400">
+                    <div class="flex justify-between text-xs text-white/50 mt-2 px-1">
+                        <span>0 (No mucho)</span> <span>1 (Lo resuelve)</span> <span>2 (¡Perfecto!)</span>
+                    </div>
+                </div>
+
+                <!-- Criterio 3: Colaboración -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-blue-400">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold">🤝 Mejora en equipo</h3>
+                        <span class="text-2xl font-title text-blue-400" id="val-colab">0</span>
+                    </div>
+                    <p class="text-sm text-brand-light mb-4">¿Las ideas de los compañeros mejoraron el invento?</p>
+                    <input type="range" id="slider-colab" min="0" max="1" value="0" class="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-400">
+                    <div class="flex justify-between text-xs text-white/50 mt-2 px-1">
+                        <span>0 (Quedó igual)</span> <span>1 (¡Mejoró mucho!)</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-save-score" class="mt-8 bg-brand-secondary hover:bg-rose-500 text-white font-title text-2xl py-4 px-12 rounded-full shadow-lg transform transition-all hover:scale-105 btn-press">
+                Guardar Puntuación
+            </button>
+        </section>
+
+        <!-- PANTALLA 7: PODIO FINAL -->
+        <section id="screen-end" class="w-full max-w-4xl hidden-screen flex flex-col items-center justify-center min-h-[70vh]">
+            <h1 class="font-title text-5xl md:text-7xl text-brand-accent drop-shadow-lg mb-4 text-center">¡Fábrica Cerrada!</h1>
+            <p class="text-2xl text-white mb-12 text-center">¡Estos son los maestros inventores de hoy!</p>
+            
+            <div id="podium-container" class="flex items-end justify-center gap-2 md:gap-6 w-full h-64 mb-16">
+                <!-- Generado por JS -->
+            </div>
+
+            <button id="btn-restart" class="bg-white text-brand-dark font-bold text-xl py-3 px-8 rounded-full shadow-lg hover:bg-gray-200 transition-all btn-press">
+                Jugar de Nuevo
+            </button>
+        </section>
+
+    </div>
+
+    <!-- Modal de Reglas -->
+    <div id="modal-rules" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-brand-dark border border-white/20 rounded-3xl p-6 md:p-8 max-w-2xl w-full relative shadow-2xl">
+            <button id="btn-close-rules" class="absolute top-4 right-4 text-white/50 hover:text-white text-2xl font-bold">&times;</button>
+            <h2 class="font-title text-3xl text-brand-accent mb-4">¿Cómo Jugar?</h2>
+            <div class="space-y-4 text-brand-light text-sm md:text-base max-h-[60vh] overflow-y-auto pr-2">
+                <p><strong>1. El Reto:</strong> En cada turno, la máquina asignará un problema disparatado, 2 objetos al azar y una restricción obligatoria.</p>
+                <p><strong>2. Inventar (90 seg):</strong> El inventor en turno tiene minuto y medio para pensar y explicar en voz alta cómo usará los 2 objetos para resolver el problema sin romper la restricción.</p>
+                <p><strong>3. Mejorar (30 seg):</strong> Luego, los demás jugadores tienen 30 segundos para proponer un detalle extra o mejora al invento original.</p>
+                <p><strong>4. Puntuar:</strong> Entre todos (excepto el inventor) deciden cuántas fichas (puntos) otorgar por Originalidad, Funcionalidad y si la mejora del equipo ayudó.</p>
+                <p>El juego termina cuando todos hayan jugado 3 turnos. ¡Gana la creatividad!</p>
+            </div>
+            <button id="btn-understand-rules" class="mt-6 w-full bg-brand-primary py-3 rounded-xl font-bold text-white hover:bg-indigo-500">¡Entendido!</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATOS BASADOS EN EL PDF ---
+
+        const OBJETOS = [
+            { name: 'Bicicleta', icon: '🚲' }, { name: 'Paraguas', icon: '☔' }, 
+            { name: 'Elefante', icon: '🐘' }, { name: 'Cuchara', icon: '🥄' },
+            { name: 'Espejo', icon: '🪞' }, { name: 'Cometa', icon: '🪁' }, 
+            { name: 'Reloj', icon: '⌚' }, { name: 'Semilla', icon: '🌱' },
+            { name: 'Escalera', icon: '🪜' }, { name: 'Guitarra', icon: '🎸' }, 
+            { name: 'Linterna', icon: '🔦' }, { name: 'Mochila', icon: '🎒' },
+            { name: 'Tijeras', icon: '✂️' }, { name: 'Globo', icon: '🎈' }, 
+            { name: 'Brújula', icon: '🧭' }, { name: 'Tambor', icon: '🥁' },
+            { name: 'Escoba', icon: '🧹' }, { name: 'Telaraña', icon: '🕸️' }, 
+            { name: 'Lupa', icon: '🔍' }, { name: 'Paracaídas', icon: '🪂' },
+            { name: 'Imán', icon: '🧲' }, { name: 'Termómetro', icon: '🌡️' }, 
+            { name: 'Silbato', icon: '哨' }, { name: 'Red de pescar', icon: '🥅' }
+        ];
+
+        const RETOS = [
+            "Los peces del río quieren conocer las nubes. Inventa algo que los ayude.",
+            "En el pueblo se dañó el único reloj y nadie sabe qué hora es. Inventa una solución.",
+            "A las gallinas les da miedo la lluvia. Ayúdalas con un invento.",
+            "Un niño ciego quiere jugar fútbol con sus amigos. Inventa algo que se lo permita.",
+            "Las hormigas de la escuela quieren construir una casa más grande. Ayúdalas.",
+            "En la vereda no hay señal y los abuelos quieren mandar mensajes lejos. Inventa algo.",
+            "Un perro muy viejo ya no puede subir las escaleras de su casa. Ayúdalo.",
+            "Las plantas del jardín se marchitan porque nadie se acuerda de regarlas. Inventa una solución.",
+            "Un grupo de ranas quiere dar un concierto, pero nadie las escucha bien. Ayúdalas.",
+            "En la escuela se pierden los lápices todo el tiempo. Inventa algo para que no pase más.",
+            "A los pájaros los espanta el ruido de los carros. Ayúdalos a sentirse seguros.",
+            "Un niño en silla de ruedas quiere subir a un árbol muy alto. Inventa cómo.",
+            "Las abejas de la finca ya no encuentran suficientes flores. Ayúdalas.",
+            "En vacaciones el pueblo se queda sin agua. Inventa una solución.",
+            "Los caracoles quieren llegar más rápido a la escuela. Ayúdalos.",
+            "Un abuelo que ya no ve bien quiere seguir leyendo sus libros favoritos. Inventa algo."
+        ];
+
+        const RESTRICCIONES = [
+            "Debe ser tan pequeño que quepa en una mano.",
+            "Debe funcionar sin usar electricidad.",
+            "Debe hacer un sonido o una música.",
+            "Solo lo pueden usar los animales, no las personas.",
+            "Debe poder doblarse o guardarse en un bolsillo.",
+            "Debe ayudar a más de una persona (o animal) al mismo tiempo."
+        ];
+
+        const AVATARS = ['🤖','👽','👻','🐶','🐱','🦊','🦁','🐸','🦄','🐙','🦖','🦉'];
+        
+        // --- ESTADO DEL JUEGO ---
+        let state = {
+            players: [], // { id, name, avatar, score, turnsPlayed }
+            currentTurnIndex: 0,
+            currentRound: 1,
+            maxRounds: 3,
+            selectedAvatar: AVATARS[0],
+            currentCardData: null // { reto, obj1, obj2, restriccion }
+        };
+
+        let timerInterval;
+        let timerSecondsLeft = 0;
+        let timerTotal = 0;
+        let isTimerPaused = false;
+        let currentTimerPhase = 'INVENT'; // 'INVENT' (90s) o 'COLLAB' (30s)
+
+        // Referencias DOM
+        const DOM = {
+            screens: ['setup', 'hub', 'machine', 'timer', 'voting', 'end'].reduce((acc, id) => {
+                acc[id] = document.getElementById(`screen-${id}`);
+                return acc;
+            }, {}),
+            
+            // Setup
+            playerNameInput: document.getElementById('player-name'),
+            btnAvatarSelect: document.getElementById('btn-avatar-select'),
+            avatarPopup: document.getElementById('avatar-popup'),
+            btnAddPlayer: document.getElementById('btn-add-player'),
+            playersList: document.getElementById('players-list'),
+            playerCount: document.getElementById('player-count'),
+            emptyState: document.getElementById('empty-state'),
+            btnStartGame: document.getElementById('btn-start-game'),
+            
+            // Hub
+            roundDisplay: document.getElementById('round-display'),
+            currentPlayerAvatar: document.getElementById('current-player-avatar'),
+            currentPlayerName: document.getElementById('current-player-name'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            btnSpinMachine: document.getElementById('btn-spin-machine'),
+            
+            // Machine
+            cardReto: document.getElementById('card-reto'),
+            cardObj1: document.getElementById('card-obj1'),
+            cardObj2: document.getElementById('card-obj2'),
+            cardRestriccion: document.getElementById('card-restriccion'),
+            btnToTimer: document.getElementById('btn-to-timer'),
+            
+            // Timer
+            timerTitle: document.getElementById('timer-title'),
+            timerSubtitle: document.getElementById('timer-subtitle'),
+            miniReto: document.getElementById('mini-reto'),
+            miniObj1: document.getElementById('mini-obj1'),
+            miniObj2: document.getElementById('mini-obj2'),
+            miniRestriccion: document.getElementById('mini-restriccion'),
+            timeLeft: document.getElementById('time-left'),
+            timerPath: document.getElementById('timer-path'),
+            btnTimerAction: document.getElementById('btn-timer-action'),
+            btnTimerSkip: document.getElementById('btn-timer-skip'),
+
+            // Voting
+            voteTargetName: document.getElementById('vote-target-name'),
+            sliders: ['orig', 'func', 'colab'].reduce((acc, id) => {
+                acc[id] = document.getElementById(`slider-${id}`);
+                acc[`val_${id}`] = document.getElementById(`val-${id}`);
+                return acc;
+            }, {}),
+            btnSaveScore: document.getElementById('btn-save-score'),
+
+            // End
+            podiumContainer: document.getElementById('podium-container'),
+            btnRestart: document.getElementById('btn-restart'),
+
+            // Modals
+            modalRules: document.getElementById('modal-rules'),
+            btnRules: document.getElementById('btn-rules'),
+            btnCloseRules: document.getElementById('btn-close-rules'),
+            btnUnderstandRules: document.getElementById('btn-understand-rules')
+        };
+
+        // --- STREAMING_CHUNK:Lógica de Sistema de Audio y Sonidos ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration, vol=0.1) {
+            try {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.log("Audio no disponible", e); }
+        }
+
+        const Sounds = {
+            click: () => playTone(600, 'sine', 0.1, 0.1),
+            add: () => { playTone(400, 'square', 0.1, 0.05); setTimeout(()=>playTone(600, 'square', 0.15, 0.05), 100); },
+            spin: () => playTone(200, 'sawtooth', 0.05, 0.05),
+            reveal: () => { playTone(523.25, 'sine', 0.2, 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.4, 0.1), 200); },
+            tick: () => playTone(800, 'square', 0.05, 0.02),
+            alarm: () => { playTone(400, 'sawtooth', 0.5, 0.2); setTimeout(()=>playTone(400, 'sawtooth', 0.5, 0.2), 600); },
+            cheer: () => {
+                for(let i=0; i<10; i++) {
+                    setTimeout(() => playTone(400 + (Math.random()*400), 'sine', 0.2, 0.05), i*100);
+                }
+            }
+        };
+
+        // --- STREAMING_CHUNK:Lógica de Navegación y Pantallas ---
+        function showScreen(screenId) {
+            Object.values(DOM.screens).forEach(screen => {
+                if(screen) screen.classList.add('hidden-screen');
+            });
+            if(DOM.screens[screenId]) {
+                DOM.screens[screenId].classList.remove('hidden-screen');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Lógica de Setup de Jugadores ---
+        function initSetup() {
+            // Llenar popup de avatares
+            DOM.avatarPopup.innerHTML = AVATARS.map(avatar => 
+                `<button class="text-3xl hover:bg-white/20 p-2 rounded-lg transition-colors" onclick="selectAvatar('${avatar}')">${avatar}</button>`
+            ).join('');
+
+            DOM.btnAvatarSelect.addEventListener('click', () => {
+                Sounds.click();
+                DOM.avatarPopup.classList.toggle('hidden');
+            });
+
+            DOM.btnAddPlayer.addEventListener('click', () => {
+                const name = DOM.playerNameInput.value.trim();
+                if(name && state.players.length < 6) {
+                    Sounds.add();
+                    state.players.push({
+                        id: Date.now(),
+                        name: name,
+                        avatar: state.selectedAvatar,
+                        score: 0,
+                        turnsPlayed: 0
+                    });
+                    DOM.playerNameInput.value = '';
+                    updatePlayersList();
+                    // Cambiar avatar por defecto al siguiente
+                    selectAvatar(AVATARS[state.players.length % AVATARS.length]);
+                }
+            });
+
+            DOM.btnStartGame.addEventListener('click', () => {
+                if(state.players.length >= 2) {
+                    Sounds.reveal();
+                    startHub();
+                }
+            });
+
+            // Reglas
+            const toggleRules = () => { Sounds.click(); DOM.modalRules.classList.toggle('hidden'); };
+            DOM.btnRules.addEventListener('click', toggleRules);
+            DOM.btnCloseRules.addEventListener('click', toggleRules);
+            DOM.btnUnderstandRules.addEventListener('click', toggleRules);
+        }
+
+        window.selectAvatar = function(emoji) {
+            state.selectedAvatar = emoji;
+            DOM.btnAvatarSelect.innerHTML = emoji;
+            DOM.avatarPopup.classList.add('hidden');
+        };
+
+        function removePlayer(id) {
+            Sounds.click();
+            state.players = state.players.filter(p => p.id !== id);
+            updatePlayersList();
+        }
+
+        function updatePlayersList() {
+            DOM.playerCount.innerText = state.players.length;
+            if(state.players.length === 0) {
+                DOM.playersList.innerHTML = '';
+                DOM.emptyState.style.display = 'block';
+                DOM.btnStartGame.disabled = true;
+                DOM.btnStartGame.classList.add('bg-gray-500', 'text-gray-300', 'cursor-not-allowed');
+                DOM.btnStartGame.classList.remove('bg-brand-accent', 'hover:bg-yellow-400', 'text-brand-dark');
+                return;
+            }
+            
+            DOM.emptyState.style.display = 'none';
+            DOM.playersList.innerHTML = state.players.map(p => `
+                <li class="bg-white/10 rounded-lg p-2 flex items-center justify-between border border-white/20 animate-fade-in">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${p.avatar}</span>
+                        <span class="font-bold truncate max-w-[100px] sm:max-w-[150px]">${p.name}</span>
+                    </div>
+                    <button class="text-white/50 hover:text-rose-400 text-xl px-2" onclick="removePlayer(${p.id})">&times;</button>
+                </li>
+            `).join('');
+
+            if(state.players.length >= 2) {
+                DOM.btnStartGame.disabled = false;
+                DOM.btnStartGame.classList.remove('bg-gray-500', 'text-gray-300', 'cursor-not-allowed');
+                DOM.btnStartGame.classList.add('bg-brand-accent', 'hover:bg-yellow-400', 'text-brand-dark');
+            }
+            if(state.players.length >= 6) {
+                DOM.btnAddPlayer.disabled = true;
+                DOM.btnAddPlayer.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                DOM.btnAddPlayer.disabled = false;
+                DOM.btnAddPlayer.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Lógica del Hub (Turnos y Puntuaciones) ---
+        function startHub() {
+            // Verificar si el juego terminó
+            const allFinished = state.players.every(p => p.turnsPlayed >= state.maxRounds);
+            if(allFinished) {
+                showEndScreen();
+                return;
+            }
+
+            // Encontrar al siguiente jugador que no haya terminado la ronda actual
+            let found = false;
+            for(let i=0; i<state.players.length; i++) {
+                if(state.players[i].turnsPlayed < state.currentRound) {
+                    state.currentTurnIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            // Si todos terminaron la ronda actual, avanzar ronda
+            if(!found) {
+                state.currentRound++;
+                startHub(); // Llamada recursiva para chequear final o siguiente
+                return;
+            }
+
+            showScreen('hub');
+            const currentPlayer = state.players[state.currentTurnIndex];
+            
+            DOM.roundDisplay.innerText = state.currentRound;
+            DOM.currentPlayerAvatar.innerText = currentPlayer.avatar;
+            DOM.currentPlayerName.innerText = currentPlayer.name;
+
+            // Actualizar Leaderboard
+            const sortedPlayers = [...state.players].sort((a,b) => b.score - a.score);
+            DOM.leaderboardList.innerHTML = sortedPlayers.map((p, index) => `
+                <div class="flex items-center justify-between bg-black/20 p-3 rounded-xl ${p.id === currentPlayer.id ? 'border-2 border-brand-accent' : ''}">
+                    <div class="flex items-center gap-3">
+                        <span class="font-title text-brand-light w-4">${index + 1}</span>
+                        <span class="text-2xl">${p.avatar}</span>
+                        <span class="font-bold truncate max-w-[80px]">${p.name}</span>
+                    </div>
+                    <div class="font-title text-brand-secondary text-xl">
+                        ${p.score} <span class="text-sm">pts</span>
+                    </div>
+                </div>
+            `).join('');
+
+            DOM.btnSpinMachine.onclick = () => {
+                Sounds.click();
+                startMachine();
+            };
+        }
+
+        // --- STREAMING_CHUNK:Lógica de la Máquina de Selección ---
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function startMachine() {
+            showScreen('machine');
+            DOM.btnToTimer.classList.add('hidden');
+            
+            const cardElements = [DOM.cardReto, DOM.cardObj1, DOM.cardObj2, DOM.cardRestriccion];
+            cardElements.forEach(el => {
+                el.classList.add('shuffle-anim');
+                el.innerHTML = '<span class="text-6xl">...</span>';
+            });
+
+            let spinCount = 0;
+            const spinInterval = setInterval(() => {
+                Sounds.spin();
+                // Simulación visual
+                DOM.cardReto.innerHTML = `<span class="text-sm px-4">${getRandomItem(RETOS).substring(0,40)}...</span>`;
+                DOM.cardObj1.innerHTML = `<span class="text-5xl">${getRandomItem(OBJETOS).icon}</span>`;
+                DOM.cardObj2.innerHTML = `<span class="text-5xl">${getRandomItem(OBJETOS).icon}</span>`;
+                DOM.cardRestriccion.innerHTML = `<span class="text-sm px-4">${getRandomItem(RESTRICCIONES).substring(0,30)}...</span>`;
+                
+                spinCount++;
+                if(spinCount > 15) { // 1.5 segundos aprox de spinning
+                    clearInterval(spinInterval);
+                    finalizeMachine();
+                }
+            }, 100);
+        }
+
+        function finalizeMachine() {
+            Sounds.reveal();
+            const cardElements = [DOM.cardReto, DOM.cardObj1, DOM.cardObj2, DOM.cardRestriccion];
+            cardElements.forEach(el => el.classList.remove('shuffle-anim'));
+
+            // Seleccionar reales
+            let o1 = getRandomItem(OBJETOS);
+            let o2;
+            do { o2 = getRandomItem(OBJETOS); } while (o1.name === o2.name); // Diferentes
+
+            state.currentCardData = {
+                reto: getRandomItem(RETOS),
+                obj1: o1,
+                obj2: o2,
+                restriccion: getRandomItem(RESTRICCIONES)
+            };
+
+            // Mostrar resultados
+            DOM.cardReto.innerHTML = `<p class="px-4 text-center leading-tight">${state.currentCardData.reto}</p>`;
+            DOM.cardObj1.innerHTML = `<span class="text-6xl mb-1">${state.currentCardData.obj1.icon}</span><span class="text-sm text-brand-light">${state.currentCardData.obj1.name}</span>`;
+            DOM.cardObj2.innerHTML = `<span class="text-6xl mb-1">${state.currentCardData.obj2.icon}</span><span class="text-sm text-brand-light">${state.currentCardData.obj2.name}</span>`;
+            DOM.cardRestriccion.innerHTML = `<p class="px-4 text-center leading-tight text-brand-accent">${state.currentCardData.restriccion}</p>`;
+
+            setTimeout(() => {
+                DOM.btnToTimer.classList.remove('hidden');
+                DOM.btnToTimer.onclick = () => { Sounds.click(); startTimerPhase('INVENT'); };
+            }, 500);
+        }
+
+        // --- STREAMING_CHUNK:Lógica del Temporizador ---
+        function updateTimerVisual() {
+            DOM.timeLeft.innerText = timerSecondsLeft;
+            // Calcular stroke-dasharray para el círculo (0 a 100)
+            const percentage = (timerSecondsLeft / timerTotal) * 100;
+            DOM.timerPath.setAttribute('stroke-dasharray', `${percentage}, 100`);
+            
+            // Cambiar color si queda poco tiempo
+            if(timerSecondsLeft <= 10) {
+                DOM.timerPath.setAttribute('stroke', '#f43f5e'); // brand-secondary
+                DOM.timeLeft.classList.add('text-brand-secondary');
+                Sounds.tick();
+            } else {
+                DOM.timerPath.setAttribute('stroke', 'currentColor');
+                DOM.timeLeft.classList.remove('text-brand-secondary');
+            }
+        }
+
+        function timerTick() {
+            if(isTimerPaused) return;
+            
+            timerSecondsLeft--;
+            updateTimerVisual();
+
+            if(timerSecondsLeft <= 0) {
+                clearInterval(timerInterval);
+                Sounds.alarm();
+                setTimeout(() => {
+                    if(currentTimerPhase === 'INVENT') {
+                        startTimerPhase('COLLAB');
+                    } else {
+                        startVotingPhase();
+                    }
+                }, 1500);
+            }
+        }
+
+        function startTimerPhase(phase) {
+            showScreen('timer');
+            currentTimerPhase = phase;
+            isTimerPaused = false;
+            
+            const currentPlayer = state.players[state.currentTurnIndex];
+
+            // Llenar minis
+            DOM.miniReto.innerText = state.currentCardData.reto;
+            DOM.miniObj1.innerText = state.currentCardData.obj1.icon;
+            DOM.miniObj2.innerText = state.currentCardData.obj2.icon;
+            DOM.miniRestriccion.innerText = state.currentCardData.restriccion;
+
+            if(phase === 'INVENT') {
+                timerTotal = 90;
+                DOM.timerTitle.innerText = "Fase de Invención";
+                DOM.timerTitle.className = "font-title text-4xl text-brand-accent mb-2";
+                DOM.timerSubtitle.innerHTML = `¡<span class="font-bold text-white">${currentPlayer.name}</span>, explica tu idea!`;
+                DOM.btnTimerAction.innerText = "Pausar";
+                DOM.btnTimerSkip.innerText = "¡Terminé antes!";
+            } else {
+                timerTotal = 30;
+                DOM.timerTitle.innerText = "Fase de Mejora";
+                DOM.timerTitle.className = "font-title text-4xl text-blue-400 mb-2";
+                DOM.timerSubtitle.innerHTML = `¡El resto del equipo propone mejoras a la idea!`;
+                DOM.btnTimerAction.innerText = "Pausar";
+                DOM.btnTimerSkip.innerText = "Nadie más aporta";
+            }
+
+            timerSecondsLeft = timerTotal;
+            updateTimerVisual();
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(timerTick, 1000);
+
+            // Botones de acción
+            DOM.btnTimerAction.onclick = () => {
+                Sounds.click();
+                isTimerPaused = !isTimerPaused;
+                DOM.btnTimerAction.innerText = isTimerPaused ? "Reanudar" : "Pausar";
+                DOM.btnTimerAction.classList.toggle('bg-brand-accent');
+                DOM.btnTimerAction.classList.toggle('bg-brand-primary');
+            };
+
+            DOM.btnTimerSkip.onclick = () => {
+                Sounds.click();
+                clearInterval(timerInterval);
+                if(phase === 'INVENT') startTimerPhase('COLLAB');
+                else startVotingPhase();
+            };
+        }
+
+        // --- STREAMING_CHUNK:Lógica de Votación ---
+        function startVotingPhase() {
+            showScreen('voting');
+            const currentPlayer = state.players[state.currentTurnIndex];
+            DOM.voteTargetName.innerText = currentPlayer.name;
+
+            // Resetear sliders
+            ['orig', 'func', 'colab'].forEach(id => {
+                DOM.sliders[id].value = 0;
+                DOM.sliders[`val_${id}`].innerText = '0';
+                
+                // Actualizar número en vivo
+                DOM.sliders[id].oninput = function() {
+                    DOM.sliders[`val_${id}`].innerText = this.value;
+                }
+            });
+
+            DOM.btnSaveScore.onclick = () => {
+                Sounds.cheer();
+                const ptsOrig = parseInt(DOM.sliders.orig.value);
+                const ptsFunc = parseInt(DOM.sliders.func.value);
+                const ptsColab = parseInt(DOM.sliders.colab.value);
+                
+                const totalPoints = ptsOrig + ptsFunc + ptsColab;
+                
+                state.players[state.currentTurnIndex].score += totalPoints;
+                state.players[state.currentTurnIndex].turnsPlayed++;
+                
+                startHub(); // Volver al inicio para el siguiente turno
+            };
+        }
+
+        // --- STREAMING_CHUNK:Lógica de Fin de Juego (Podio) ---
+        function showEndScreen() {
+            showScreen('end');
+            Sounds.cheer();
+
+            // Ordenar jugadores por puntuación
+            const sorted = [...state.players].sort((a, b) => b.score - a.score);
+            
+            let podiumHTML = '';
+            
+            // Construir el podio (2do, 1ero, 3ero si existen)
+            if(sorted.length > 1) {
+                podiumHTML += createPodiumBar(sorted[1], 2, 'bg-gray-400', 'h-32');
+            }
+            if(sorted.length > 0) {
+                podiumHTML += createPodiumBar(sorted[0], 1, 'bg-yellow-400', 'h-48');
+            }
+            if(sorted.length > 2) {
+                podiumHTML += createPodiumBar(sorted[2], 3, 'bg-orange-600', 'h-24');
+            }
+
+            DOM.podiumContainer.innerHTML = podiumHTML;
+
+            // Listar al resto
+            const rest = sorted.slice(3);
+            if(rest.length > 0) {
+                const restHTML = `<div class="mt-8 flex flex-wrap justify-center gap-4 w-full">` + 
+                    rest.map(p => `<div class="bg-white/10 px-4 py-2 rounded-xl flex items-center gap-2"><span class="text-xl">${p.avatar}</span> <span>${p.name}</span> <span class="font-bold text-brand-accent">${p.score} pts</span></div>`).join('')
+                + `</div>`;
+                DOM.podiumContainer.insertAdjacentHTML('afterend', restHTML);
+            }
+
+            DOM.btnRestart.onclick = () => {
+                Sounds.click();
+                // Reset state full
+                state.players.forEach(p => { p.score = 0; p.turnsPlayed = 0; });
+                state.currentRound = 1;
+                state.currentTurnIndex = 0;
+                updatePlayersList();
+                showScreen('setup');
+            };
+        }
+
+        function createPodiumBar(player, rank, color, heightClass) {
+            return `
+                <div class="flex flex-col items-center justify-end w-1/4 max-w-[120px] animate-fade-in" style="animation-delay: ${rank * 0.2}s">
+                    <div class="text-4xl md:text-6xl mb-2 hover:animate-bounce">${player.avatar}</div>
+                    <div class="font-bold text-sm md:text-lg mb-1 truncate w-full text-center">${player.name}</div>
+                    <div class="text-brand-accent font-bold mb-2">${player.score} pts</div>
+                    <div class="w-full ${color} ${heightClass} rounded-t-xl flex justify-center items-start pt-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                        <span class="font-title text-4xl text-black/50">${rank}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicialización
+        initSetup();
+
+    </script>
+</body>
+</html>
