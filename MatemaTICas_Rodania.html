@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<!--
+============================================================================================
+  REA "MatemáTICas Rodania"  ·  Institución Educativa Rodania · Sahagún, Córdoba
+  Recurso Educativo Abierto para el fortalecimiento de las competencias matemáticas
+  en grado sexto, fundamentado en el DISEÑO CENTRADO EN EVIDENCIAS (DCE).
+
+  Fundamentos implementados:
+   · DCE (Mislevy)   -> modelo de estudiante / tarea / evidencia. Cada reto captura
+                        observables: parafraseo, clasificación de datos, operaciones,
+                        expresión, resultado, verificación y argumentación escrita.
+   · Polya           -> flujo obligatorio en 4 pasos: Comprender, Concebir un plan,
+                        Ejecutar, Mirar hacia atrás.
+   · Vygotsky (ZDP)  -> pistas graduadas: 1) lectura  2) traducción  3) procedimiento,
+                        de desbloqueo progresivo y con costo en XP.
+   · Piaget          -> situaciones contextualizadas en la vida productiva de la vereda
+                        (ordeño, queso, suero, tienda veredal, transporte, corral).
+   · ABC             -> tres casos de enseñanza con presentación, resolución y cierre
+                        metacognitivo.
+   · Gamificación    -> XP, rangos, ruta de niveles e insignias desbloqueables.
+
+  Arquitectura: UN SOLO ARCHIVO .html · offline-first (localStorage) · envío opcional
+  de evidencias a Google Apps Script vía fetch(mode:'no-cors') con cola de reenvío.
+  Licencia sugerida: Creative Commons BY-SA 4.0
+============================================================================================
+-->
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1E1B4B">
+<title>MatemáTICas Rodania · REA de competencias matemáticas</title>
+
+<!-- ===================== LIBRERÍAS (CDN) ===================== -->
+<!-- Tailwind se usa solo como apoyo. Toda la identidad visual vive en el <style> de
+     abajo, de modo que si no hay internet el recurso conserva su diseño completo. -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,700;0,900;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+/* ============================================================================
+   1. TOKENS DE DISEÑO
+   Paleta tomada del mundo de la vereda: pasto, leche, mango, cielo de sabana,
+   suero y noche de finca.
+   ========================================================================== */
+:root{
+  --leche:#FFF9F0;
+  --pasto:#34D399;   --pasto-hondo:#059669;
+  --mango:#FBBF24;   --mango-hondo:#D97706;
+  --cielo:#38BDF8;   --cielo-hondo:#0284C7;
+  --uva:#A78BFA;     --uva-hondo:#7C3AED;
+  --tierra:#FB923C;  --tierra-hondo:#EA580C;
+  --rojo:#FB7185;    --rojo-hondo:#E11D48;
+  --noche:#1E1B4B;
+  --vidrio:rgba(255,255,255,.14);
+  --vidrio-fuerte:rgba(255,255,255,.22);
+  --borde:rgba(255,255,255,.30);
+  --sombra:0 18px 45px -18px rgba(9,6,40,.75);
+  --r-xl:28px; --r-lg:22px; --r-md:16px; --r-sm:12px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Nunito',system-ui,'Segoe UI',sans-serif;
+  color:var(--leche);
+  background:var(--noche);
+  min-height:100dvh;
+  overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+h1,h2,h3,h4,.tipo-titulo{font-family:'Fredoka','Nunito',sans-serif;font-weight:600;letter-spacing:.2px}
+
+/* ============================================================================
+   2. FONDO ANIMADO
+   Gradiente base en movimiento + tres manchas de color que flotan lentamente.
+   Se desactiva si el estudiante pidió menos movimiento en su dispositivo.
+   ========================================================================== */
+#fondo{position:fixed;inset:0;z-index:-2;
+  background:linear-gradient(135deg,#2E1065 0%,#0F172A 30%,#0C4A6E 60%,#064E3B 100%);
+  background-size:280% 280%;
+  animation:mueveFondo 26s ease infinite;
+}
+@keyframes mueveFondo{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.mancha{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:-1;pointer-events:none}
+.mancha.m1{width:52vw;height:52vw;background:var(--uva-hondo);top:-14vw;left:-12vw;animation:flota 19s ease-in-out infinite}
+.mancha.m2{width:46vw;height:46vw;background:var(--cielo-hondo);bottom:-16vw;right:-14vw;animation:flota 23s ease-in-out infinite reverse}
+.mancha.m3{width:38vw;height:38vw;background:var(--pasto-hondo);top:42%;right:-10vw;animation:flota 27s ease-in-out infinite}
+@keyframes flota{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(6vw,-5vw) scale(1.12)}66%{transform:translate(-5vw,4vw) scale(.92)}}
+
+/* ============================================================================
+   3. VIDRIO (GLASSMORPHISM)
+   ========================================================================== */
+.glass{
+  background:var(--vidrio);
+  border:1px solid var(--borde);
+  border-radius:var(--r-xl);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  box-shadow:var(--sombra), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.glass-suave{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.20);
+  border-radius:var(--r-lg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+
+/* ============================================================================
+   4. BOTONES 3D
+   ========================================================================== */
+.btn3d{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.02rem;
+  color:#231A05;border:none;cursor:pointer;user-select:none;
+  padding:.85rem 1.35rem;border-radius:var(--r-md);
+  background:linear-gradient(180deg,var(--mango) 0%,var(--mango-hondo) 100%);
+  box-shadow:0 6px 0 #92400E, 0 12px 22px -8px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.6);
+  transition:transform .07s ease, box-shadow .07s ease, filter .18s ease;
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
+}
+.btn3d:active:not(:disabled){transform:translateY(6px);box-shadow:0 0 0 #92400E, 0 4px 10px -6px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.5)}
+.btn3d:disabled{filter:grayscale(.75) brightness(.75);cursor:not-allowed;opacity:.75}
+.btn3d:focus-visible{outline:3px solid #FFF;outline-offset:3px}
+.btn3d--verde{background:linear-gradient(180deg,var(--pasto),var(--pasto-hondo));box-shadow:0 6px 0 #065F46,0 12px 22px -8px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.5);color:#04231A}
+.btn3d--verde:active:not(:disabled){box-shadow:0 0 0 #065F46,0 4px 10px -6px rgba(0,0,0,.7)}
+.btn3d--cielo{background:linear-gradient(180deg,var(--cielo),var(--cielo-hondo));box-shadow:0 6px 0 #075985,0 12px 22px -8px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.5);color:#04202E}
+.btn3d--cielo:active:not(:disabled){box-shadow:0 0 0 #075985,0 4px 10px -6px rgba(0,0,0,.7)}
+.btn3d--uva{background:linear-gradient(180deg,var(--uva),var(--uva-hondo));box-shadow:0 6px 0 #5B21B6,0 12px 22px -8px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.45);color:#FFF}
+.btn3d--uva:active:not(:disabled){box-shadow:0 0 0 #5B21B6,0 4px 10px -6px rgba(0,0,0,.7)}
+.btn3d--rojo{background:linear-gradient(180deg,var(--rojo),var(--rojo-hondo));box-shadow:0 6px 0 #9F1239,0 12px 22px -8px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.45);color:#FFF}
+.btn3d--rojo:active:not(:disabled){box-shadow:0 0 0 #9F1239,0 4px 10px -6px rgba(0,0,0,.7)}
+.btn3d--fantasma{background:rgba(255,255,255,.12);color:var(--leche);box-shadow:0 5px 0 rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.25);text-shadow:none;border:1px solid var(--borde)}
+.btn3d--fantasma:active:not(:disabled){box-shadow:0 0 0 rgba(255,255,255,.18)}
+.btn3d--bloque{width:100%}
+.btn3d--mini{padding:.5rem .85rem;font-size:.86rem;border-radius:12px;box-shadow:0 4px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn3d--mini:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 rgba(0,0,0,.35)}
+
+/* ============================================================================
+   5. FICHAS TÁCTILES (clasificación de datos por toque, sin drag and drop)
+   ========================================================================== */
+.ficha{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.62rem .9rem;margin:.25rem;
+  background:rgba(255,255,255,.92);color:#1F2937;
+  font-weight:700;font-size:.95rem;line-height:1.25;
+  border-radius:14px;border:2px solid transparent;cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.28);
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  max-width:100%;text-align:left;
+}
+.ficha:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.ficha--activa{border-color:var(--mango);box-shadow:0 0 0 4px rgba(251,191,36,.45),0 4px 0 rgba(0,0,0,.28);animation:latido 1s ease-in-out infinite}
+.ficha--ok{background:#BBF7D0;border-color:#16A34A}
+.ficha--mal{background:#FECACA;border-color:#DC2626;animation:tiembla .4s ease}
+@keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes tiembla{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.canasta{
+  min-height:96px;border-radius:var(--r-lg);padding:.7rem;
+  border:2.5px dashed rgba(255,255,255,.42);
+  background:rgba(255,255,255,.07);
+  transition:all .2s ease;
+}
+.canasta--lista{border-color:var(--mango);background:rgba(251,191,36,.16);animation:latido 1.1s ease-in-out infinite}
+.canasta__titulo{font-family:'Fredoka',sans-serif;font-size:.92rem;font-weight:600;
+  display:flex;align-items:center;gap:.45rem;margin-bottom:.45rem;opacity:.95}
+
+/* ============================================================================
+   6. OPCIONES SELECCIONABLES (operaciones, expresiones, verificación)
+   ========================================================================== */
+.opcion{
+  display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;
+  padding:.85rem 1rem;margin-bottom:.6rem;cursor:pointer;
+  background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);
+  border-radius:var(--r-md);color:var(--leche);font-weight:700;font-size:.98rem;
+  transition:all .15s ease;
+}
+.opcion:active{transform:scale(.985)}
+.opcion--sel{background:rgba(56,189,248,.30);border-color:var(--cielo);box-shadow:0 0 0 3px rgba(56,189,248,.28)}
+.opcion--ok{background:rgba(52,211,153,.32);border-color:var(--pasto)}
+.opcion--mal{background:rgba(251,113,133,.28);border-color:var(--rojo)}
+.opcion__marca{width:26px;height:26px;flex:0 0 26px;border-radius:8px;
+  border:2px solid rgba(255,255,255,.55);display:grid;place-items:center;font-size:.75rem}
+.opcion--sel .opcion__marca{background:var(--cielo);border-color:#FFF;color:#04202E}
+.opcion--ok .opcion__marca{background:var(--pasto);border-color:#FFF;color:#04231A}
+.opcion--mal .opcion__marca{background:var(--rojo);border-color:#FFF;color:#FFF}
+.expresion{font-family:'Fredoka',sans-serif;font-size:1.12rem;letter-spacing:.5px}
+
+/* ============================================================================
+   7. CAMPOS DE ESCRITURA (evidencias abiertas del DCE)
+   ========================================================================== */
+.campo{
+  width:100%;background:rgba(255,255,255,.94);color:#111827;
+  border:2px solid rgba(255,255,255,.5);border-radius:var(--r-md);
+  padding:.85rem 1rem;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:600;
+  line-height:1.5;resize:vertical;
+}
+.campo::placeholder{color:#9CA3AF;font-weight:600}
+.campo:focus{outline:none;border-color:var(--mango);box-shadow:0 0 0 4px rgba(251,191,36,.35)}
+.campo--num{font-family:'Fredoka',sans-serif;font-size:1.5rem;text-align:center;letter-spacing:1px}
+.contador{font-size:.78rem;font-weight:800;opacity:.8;text-align:right;margin-top:.3rem}
+.contador--ok{color:#86EFAC}
+
+/* ============================================================================
+   8. RUTA DE POLYA (stepper)
+   ========================================================================== */
+.polya{display:flex;gap:.4rem;overflow-x:auto;padding:.3rem .1rem .6rem;scrollbar-width:none}
+.polya::-webkit-scrollbar{display:none}
+.polya__paso{
+  flex:1 0 auto;min-width:86px;text-align:center;padding:.55rem .5rem;border-radius:14px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;opacity:.6;
+  transition:all .25s ease;
+}
+.polya__paso i{display:block;font-size:1.05rem;margin-bottom:.2rem}
+.polya__paso--activo{opacity:1;background:linear-gradient(180deg,var(--mango),var(--mango-hondo));
+  color:#231A05;border-color:#FFF;transform:translateY(-3px);box-shadow:0 6px 16px -6px rgba(251,191,36,.9)}
+.polya__paso--ok{opacity:1;background:rgba(52,211,153,.30);border-color:var(--pasto);color:#D1FAE5}
+
+/* ============================================================================
+   9. XP, RANGOS Y BARRA DE PROGRESO (cantina de leche que se llena)
+   ========================================================================== */
+.barra{height:16px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden;
+  border:1px solid rgba(255,255,255,.25)}
+.barra__relleno{height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--pasto),var(--mango),var(--tierra));
+  background-size:200% 100%;animation:brilla 3s linear infinite;
+  transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes brilla{0%{background-position:0% 0}100%{background-position:200% 0}}
+
+.pastilla{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:99px;
+  font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.5px;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
+.pastilla--interp{background:rgba(56,189,248,.28);border-color:var(--cielo)}
+.pastilla--form{background:rgba(52,211,153,.28);border-color:var(--pasto)}
+.pastilla--arg{background:rgba(167,139,250,.30);border-color:var(--uva)}
+
+/* ============================================================================
+   10. RUTA DE LA VEREDA (tablero de niveles) · elemento distintivo del REA
+   ========================================================================== */
+.ruta{position:relative;padding:.5rem 0}
+.ruta__linea{position:absolute;left:39px;top:12px;bottom:12px;width:6px;border-radius:99px;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.55) 0 12px,transparent 12px 24px)}
+.parada{position:relative;display:flex;gap:1rem;align-items:stretch;margin-bottom:1rem;z-index:1}
+.parada__nodo{flex:0 0 80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.parada__circulo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  font-size:1.6rem;border:4px solid rgba(255,255,255,.85);
+  box-shadow:0 8px 20px -6px rgba(0,0,0,.7), inset 0 2px 0 rgba(255,255,255,.4)}
+.parada--abierta .parada__circulo{background:linear-gradient(180deg,var(--mango),var(--tierra-hondo));color:#2B1503;animation:saltito 2.4s ease-in-out infinite}
+.parada--hecha .parada__circulo{background:linear-gradient(180deg,var(--pasto),var(--pasto-hondo));color:#04231A}
+.parada--cerrada .parada__circulo{background:rgba(255,255,255,.14);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.3)}
+@keyframes saltito{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.parada__cuerpo{flex:1;min-width:0}
+
+.tarjeta-reto{display:block;width:100%;text-align:left;padding:.85rem 1rem;border-radius:var(--r-lg);
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);cursor:pointer;
+  transition:transform .15s ease,background .15s ease}
+.tarjeta-reto:active{transform:scale(.98)}
+.tarjeta-reto--hecho{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.55)}
+.tarjeta-reto--cerrado{opacity:.5;cursor:not-allowed}
+
+/* ============================================================================
+   11. INSIGNIAS
+   ========================================================================== */
+.insignia{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.9rem .5rem;
+  border-radius:var(--r-lg);background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);
+  text-align:center;transition:transform .2s ease}
+.insignia__disco{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:1.55rem;
+  background:rgba(255,255,255,.12);color:rgba(255,255,255,.4);border:3px dashed rgba(255,255,255,.3)}
+.insignia--ganada{background:rgba(251,191,36,.16);border-color:var(--mango)}
+.insignia--ganada .insignia__disco{background:linear-gradient(150deg,#FDE68A,var(--mango),var(--tierra-hondo));
+  color:#3B1F02;border:3px solid #FFF;box-shadow:0 0 22px rgba(251,191,36,.75)}
+.insignia--ganada:active{transform:rotate(-4deg) scale(1.05)}
+.insignia__nombre{font-family:'Fredoka',sans-serif;font-size:.8rem;font-weight:600;line-height:1.2}
+.insignia__pista{font-size:.68rem;opacity:.75;line-height:1.25}
+
+/* ============================================================================
+   12. LOLA, LA VACA GUÍA · acompaña y comenta lo que hace el estudiante
+   ========================================================================== */
+.lola{display:flex;gap:.7rem;align-items:flex-start}
+.lola__svg{flex:0 0 62px;width:62px;animation:saltito 3.2s ease-in-out infinite}
+.lola__globo{position:relative;flex:1;background:rgba(255,255,255,.94);color:#1F2937;
+  border-radius:18px;padding:.7rem .9rem;font-weight:700;font-size:.9rem;line-height:1.4;
+  box-shadow:0 8px 20px -10px rgba(0,0,0,.8)}
+.lola__globo::before{content:'';position:absolute;left:-9px;top:20px;width:0;height:0;
+  border:9px solid transparent;border-right-color:rgba(255,255,255,.94);border-left:0}
+
+/* ============================================================================
+   13. PISTAS GRADUADAS (ZDP)
+   ========================================================================== */
+.pista{border-radius:var(--r-md);padding:.8rem .95rem;margin-bottom:.55rem;
+  background:rgba(255,255,255,.10);border-left:5px solid var(--cielo);font-size:.93rem;line-height:1.5}
+.pista--2{border-left-color:var(--mango)}
+.pista--3{border-left-color:var(--rojo)}
+.pista__etq{font-family:'Fredoka',sans-serif;font-size:.74rem;text-transform:uppercase;
+  letter-spacing:.8px;opacity:.9;display:block;margin-bottom:.2rem}
+
+/* ============================================================================
+   14. UTILIDADES Y ANIMACIONES DE ENTRADA
+   ========================================================================== */
+.vista{display:none;animation:entra .35s ease both}
+.vista--activa{display:block}
+@keyframes entra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.aparece{animation:entra .4s ease both}
+.contenedor{width:100%;max-width:760px;margin:0 auto;padding:0 1rem}
+.tenue{opacity:.78}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+hr.sep{border:none;border-top:1px solid rgba(255,255,255,.18);margin:1.1rem 0}
+.tabla-docente{width:100%;border-collapse:collapse;font-size:.78rem}
+.tabla-docente th,.tabla-docente td{border:1px solid rgba(255,255,255,.2);padding:.4rem .5rem;text-align:left;vertical-align:top}
+.tabla-docente th{background:rgba(255,255,255,.14);font-family:'Fredoka',sans-serif;position:sticky;top:0}
+
+
+/* ============================================================================
+   15. AJUSTES DE USABILIDAD INFANTIL
+   Resultado de la auditoría con criterio de uso autónomo por niños de 11 y 12
+   años que nunca han usado una aplicación así. Todo lo de abajo va al final de
+   la hoja de estilos para que prevalezca sobre las reglas anteriores.
+   ========================================================================== */
+
+/* 15.1 Letra más grande y fondos menos transparentes: la sala de informática
+   tiene ventanas grandes y el reflejo del sol borra el texto sobre vidrio. */
+body{font-size:17.5px}
+.glass{background:linear-gradient(rgba(255,255,255,.13),rgba(255,255,255,.06)),rgba(11,7,36,.55)}
+.glass-suave{background:linear-gradient(rgba(255,255,255,.10),rgba(255,255,255,.05)),rgba(11,7,36,.45)}
+.tenue{opacity:.88}
+
+/* 15.2 Todo lo que se toca mide al menos 48 px de alto */
+.ficha{font-size:1.02rem;padding:.85rem 1.05rem;min-height:54px;line-height:1.3}
+.opcion{font-size:1.04rem;padding:1rem;min-height:60px}
+.btn3d{min-height:54px;font-size:1.06rem}
+.btn3d--mini{min-height:46px;padding:.6rem 1rem;font-size:.95rem}
+.tarjeta-reto{padding:1rem;min-height:64px}
+.canasta{min-height:112px;padding:.85rem}
+
+/* 15.3 La ruta de Polya con nombre de niño arriba y nombre de la teoría abajo */
+.polya__paso{min-width:104px;padding:.6rem .45rem;text-transform:none;letter-spacing:0}
+.polya__paso b{display:block;font-family:'Fredoka',sans-serif;font-size:.94rem;font-weight:600;line-height:1.1}
+.polya__paso em{display:block;font-style:normal;font-size:.63rem;font-weight:800;opacity:.72;margin-top:.1rem}
+
+/* 15.4 Lola guía: dice en todo momento cuál es la siguiente acción */
+.guia{display:flex;align-items:center;gap:.7rem;padding:.75rem .9rem;margin-bottom:.9rem;
+  background:linear-gradient(rgba(251,191,36,.22),rgba(251,191,36,.10)),rgba(11,7,36,.55);
+  border:1px solid rgba(251,191,36,.55)}
+.guia__vaca{flex:0 0 46px;width:46px}
+.guia__texto{flex:1;font-weight:800;font-size:1rem;line-height:1.35}
+.guia__audio{flex:0 0 auto}
+
+/* 15.5 Números del enunciado resaltados: ayuda a ubicar los datos sin darlos */
+.dato-num{background:rgba(251,191,36,.30);border-bottom:2px solid var(--mango);
+  border-radius:6px;padding:0 .25rem;color:#FFF;font-weight:900}
+
+/* 15.6 Medidor de escritura en vez de contar caracteres */
+.medidor{height:12px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden;
+  border:1px solid rgba(255,255,255,.22);margin-top:.45rem}
+.medidor__relleno{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cielo),var(--pasto));
+  transition:width .3s ease}
+.medidor__txt{display:block;font-size:.86rem;font-weight:800;margin-top:.3rem}
+.medidor__txt--ok{color:#86EFAC}
+
+/* 15.7 Lista viva de lo que falta para poder seguir */
+.faltan{padding:.85rem 1rem;margin-bottom:.7rem;font-size:.95rem;line-height:1.6}
+.faltan__titulo{font-family:'Fredoka',sans-serif;font-size:.95rem;margin-bottom:.4rem;display:block}
+.faltan__item{display:flex;align-items:flex-start;gap:.5rem;padding:.15rem 0;font-weight:700}
+.faltan__item i{margin-top:.2rem}
+.faltan__item--ok{opacity:.65;text-decoration:line-through}
+
+/* 15.8 Teclado propio: en el celular el teclado del sistema tapa la pantalla y
+   muchos niños no encuentran el signo menos ni la coma decimal. */
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.8rem}
+.tecla{min-height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.28);
+  background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.10));
+  color:var(--leche);font-family:'Fredoka',sans-serif;font-size:1.35rem;font-weight:600;cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.35);transition:transform .07s ease,box-shadow .07s ease}
+.tecla:active{transform:translateY(4px);box-shadow:0 0 0 rgba(0,0,0,.35)}
+.tecla--accion{background:linear-gradient(180deg,var(--cielo),var(--cielo-hondo));color:#04202E;font-size:1.05rem}
+.tecla--borrar{background:linear-gradient(180deg,var(--rojo),var(--rojo-hondo));color:#FFF;font-size:1.05rem}
+.campo--num[readonly]{cursor:pointer}
+.campo--num.activo{border-color:var(--mango);box-shadow:0 0 0 4px rgba(251,191,36,.4)}
+
+/* 15.9 Contador de fichas en cada canasta */
+.canasta__cuenta{margin-left:auto;font-size:.8rem;font-weight:900;background:rgba(0,0,0,.35);
+  border-radius:99px;padding:.1rem .55rem}
+
+/* 15.10 Tutorial de la primera vez */
+.tuto{max-width:520px}
+.tuto__paso{font-size:.8rem;font-weight:900;letter-spacing:1px;opacity:.8;text-transform:uppercase}
+.tuto__arte{font-size:3rem;color:var(--mango);margin:.4rem 0 .2rem}
+.tuto__texto{font-size:1.02rem;line-height:1.6;text-align:left}
+
+/* Accesibilidad: respeta la preferencia de menos movimiento */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition-duration:.01ms !important}
+}
+/* Ajustes de la ventana modal de SweetAlert2 al lenguaje visual del recurso */
+.swal2-popup{border-radius:26px !important;font-family:'Nunito',sans-serif !important}
+.swal2-title{font-family:'Fredoka',sans-serif !important}
+.swal2-styled.swal2-confirm,.swal2-styled.swal2-cancel,.swal2-styled.swal2-deny{
+  border-radius:14px !important;font-family:'Fredoka',sans-serif !important;font-weight:600 !important}
+</style>
+</head>
+<body>
+<div id="fondo"></div>
+<div class="mancha m1"></div><div class="mancha m2"></div><div class="mancha m3"></div>
+
+<!-- ==========================================================================
+     A. PANTALLA DE ACCESO
+     Registra el nombre del estudiante. Es el primer observable del DCE:
+     permite asociar cada evidencia con su autor.
+     ======================================================================= -->
+<section id="acceso" class="contenedor" style="min-height:100dvh;display:grid;place-items:center;padding-top:2rem;padding-bottom:2rem">
+  <div class="glass aparece" style="padding:1.8rem 1.4rem;width:100%">
+
+    <div style="text-align:center">
+      <div style="font-size:3.2rem;line-height:1" aria-hidden="true">
+        <i class="fa-solid fa-cow fa-bounce" style="color:var(--mango)"></i>
+      </div>
+      <h1 style="font-size:2.05rem;margin:.5rem 0 .2rem;font-weight:700">
+        Matemá<span style="color:var(--mango)">TIC</span>as Rodania
+      </h1>
+      <p class="tenue" style="margin:0 0 .3rem;font-weight:700;font-size:.95rem">
+        Aprende matemáticas con la vida de la finca
+      </p>
+      <p class="tenue" style="margin:0;font-size:.8rem">
+        I. E. Rodania · Sahagún, Córdoba · Grado sexto
+      </p>
+    </div>
+
+    <hr class="sep">
+
+    <div class="lola" style="margin-bottom:1.1rem">
+      <div class="lola__svg" id="lolaAcceso"></div>
+      <div class="lola__globo">
+        ¡Qué bueno verte! Soy <b>Lola</b> y te voy a acompañar por los tres casos de la vereda.
+        Escribe tu nombre para empezar.
+      </div>
+    </div>
+
+    <label for="inNombre" style="display:block;font-family:'Fredoka';font-size:.95rem;margin-bottom:.4rem">
+      <i class="fa-solid fa-id-card" style="color:var(--mango)"></i> ¿Cómo te llamas?
+    </label>
+    <input id="inNombre" class="campo" type="text" maxlength="45" autocomplete="name"
+           placeholder="Escribe tu nombre y apellido">
+
+    <label for="inGrupo" style="display:block;font-family:'Fredoka';font-size:.95rem;margin:.9rem 0 .4rem">
+      <i class="fa-solid fa-users" style="color:var(--cielo)"></i> ¿En qué grupo estás?
+    </label>
+    <select id="inGrupo" class="campo">
+      <option value="6A">Sexto A</option>
+      <option value="6B">Sexto B</option>
+      <option value="Otro">Otro grupo</option>
+    </select>
+
+    <button id="btnEntrar" class="btn3d btn3d--bloque" style="margin-top:1.2rem">
+      <i class="fa-solid fa-play"></i> Entrar a la vereda
+    </button>
+
+    <p class="tenue" style="font-size:.72rem;text-align:center;margin:1rem 0 0;line-height:1.5">
+      Tu avance se guarda en este mismo dispositivo. Puedes trabajar sin internet.
+    </p>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     B. APLICACIÓN
+     ======================================================================= -->
+<main id="app" style="display:none;padding-bottom:3rem">
+
+  <!-- ---------- Encabezado permanente: identidad, rango y XP ---------- -->
+  <header class="contenedor" style="padding-top:1rem;position:sticky;top:0;z-index:40">
+    <div class="glass" style="padding:.8rem 1rem">
+      <div style="display:flex;align-items:center;gap:.7rem">
+        <div id="lolaMini" style="width:44px;flex:0 0 44px"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem">
+            <strong id="hNombre" class="tipo-titulo" style="font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></strong>
+            <span id="hXp" style="font-family:'Fredoka';font-size:.95rem;color:var(--mango);white-space:nowrap">0 puntos</span>
+          </div>
+          <div class="barra" style="margin:.35rem 0 .25rem"><div id="hBarra" class="barra__relleno" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:.7rem;font-weight:800;opacity:.85">
+            <span id="hRango">Aprendiz de la finca</span>
+            <span id="hFalta"></span>
+          </div>
+        </div>
+        <button id="btnDocente" class="btn3d btn3d--fantasma btn3d--mini" title="Panel del docente" aria-label="Panel del docente">
+          <i class="fa-solid fa-chalkboard-user"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ---------- B1. TABLERO: la ruta de la vereda ---------- -->
+  <section id="vistaTablero" class="vista vista--activa contenedor" style="padding-top:1rem">
+
+    <div class="glass" style="padding:1.1rem;margin-bottom:1rem">
+      <div class="lola">
+        <div class="lola__svg" id="lolaTablero"></div>
+        <div class="lola__globo" id="mensajeLola">Escoge un reto de la ruta y vamos a resolverlo paso a paso.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.1rem">
+      <div class="glass-suave" style="padding:.75rem .4rem;text-align:center">
+        <div style="font-size:1.3rem;color:var(--pasto)"><i class="fa-solid fa-flag-checkered"></i></div>
+        <div id="statRetos" style="font-family:'Fredoka';font-size:1.25rem">0/9</div>
+        <div style="font-size:.74rem;font-weight:800;opacity:.85">Retos</div>
+      </div>
+      <div class="glass-suave" style="padding:.75rem .4rem;text-align:center">
+        <div style="font-size:1.3rem;color:var(--mango)"><i class="fa-solid fa-medal"></i></div>
+        <div id="statInsignias" style="font-family:'Fredoka';font-size:1.25rem">0/9</div>
+        <div style="font-size:.74rem;font-weight:800;opacity:.85">Medallas</div>
+      </div>
+      <div class="glass-suave" style="padding:.75rem .4rem;text-align:center">
+        <div style="font-size:1.3rem;color:var(--cielo)"><i class="fa-solid fa-lightbulb"></i></div>
+        <div id="statPistas" style="font-family:'Fredoka';font-size:1.25rem">0</div>
+        <div style="font-size:.74rem;font-weight:800;opacity:.85">Pistas</div>
+      </div>
+    </div>
+
+    <h2 style="font-size:1.25rem;margin:0 0 .7rem;display:flex;align-items:center;gap:.5rem">
+      <i class="fa-solid fa-map-location-dot" style="color:var(--mango)"></i> La ruta de la vereda
+    </h2>
+
+    <div class="ruta">
+      <div class="ruta__linea" aria-hidden="true"></div>
+      <div id="listaCasos"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1.2rem">
+      <button id="btnVerInsignias" class="btn3d btn3d--uva">
+        <i class="fa-solid fa-award"></i> Insignias
+      </button>
+      <button id="btnAyuda" class="btn3d btn3d--fantasma">
+        <i class="fa-solid fa-circle-question"></i> ¿Cómo se juega?
+      </button>
+    </div>
+  </section>
+
+  <!-- ---------- B2. RETO: los cuatro pasos de Polya ---------- -->
+  <section id="vistaReto" class="vista contenedor" style="padding-top:1rem">
+
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
+      <button id="btnSalirReto" class="btn3d btn3d--fantasma btn3d--mini"><i class="fa-solid fa-arrow-left"></i> Ruta</button>
+      <div style="flex:1;min-width:0">
+        <div id="retoCaso" style="font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.6px;opacity:.8"></div>
+        <div id="retoTitulo" class="tipo-titulo" style="font-size:1.1rem;line-height:1.2"></div>
+      </div>
+      <span id="retoComp" class="pastilla"></span>
+    </div>
+
+    <!-- Guía permanente: siempre dice cuál es la siguiente acción -->
+    <div class="glass guia" id="guiaLola">
+      <div class="guia__vaca" id="guiaVaca"></div>
+      <div class="guia__texto" id="guiaTexto"></div>
+      <button id="btnGuiaAudio" class="btn3d btn3d--cielo btn3d--mini guia__audio" aria-label="Escuchar la instrucción">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+    </div>
+
+    <!-- Ruta de Polya -->
+    <div id="pasoIndicador" style="font-size:.86rem;font-weight:900;opacity:.9;margin-bottom:.3rem"></div>
+    <div class="polya" id="polya">
+      <div class="polya__paso" data-paso="1"><i class="fa-solid fa-book-open-reader"></i><b>1. Entiendo</b><em>Comprender</em></div>
+      <div class="polya__paso" data-paso="2"><i class="fa-solid fa-lightbulb"></i><b>2. Pienso</b><em>Concebir un plan</em></div>
+      <div class="polya__paso" data-paso="3"><i class="fa-solid fa-calculator"></i><b>3. Calculo</b><em>Ejecutar</em></div>
+      <div class="polya__paso" data-paso="4"><i class="fa-solid fa-comments"></i><b>4. Explico</b><em>Mirar hacia atrás</em></div>
+    </div>
+
+    <!-- Enunciado del caso, siempre visible -->
+    <div class="glass" style="padding:1rem 1.1rem;margin-bottom:.9rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem">
+        <i class="fa-solid fa-scroll" style="color:var(--mango)"></i>
+        <strong class="tipo-titulo" style="font-size:1rem;flex:1">Lo que pasó en la finca</strong>
+        <button id="btnLeerCaso" class="btn3d btn3d--cielo btn3d--mini">
+          <i class="fa-solid fa-headphones"></i> Escuchar
+        </button>
+      </div>
+      <p id="retoEnunciado" style="margin:0;font-size:1.02rem;line-height:1.65;font-weight:600"></p>
+      <p id="retoPregunta" style="margin:.8rem 0 0;font-size:1.02rem;line-height:1.55;font-weight:900;color:var(--mango)"></p>
+    </div>
+
+    <!-- PASO 1 · COMPRENDER -->
+    <div id="paso1" class="paso-contenido">
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-pen-fancy" style="color:var(--cielo)"></i> 1. Cuéntalo con tus palabras</h3>
+        <p class="tenue" style="margin:0 0 .7rem;font-size:.94rem">
+          No copies el texto. Imagina que le cuentas el problema a un amigo: qué está pasando y qué te preguntan.
+        </p>
+        <textarea id="inParafraseo" class="campo" rows="4"
+          placeholder="Ejemplo: en este problema me cuentan que... y me preguntan..."></textarea>
+        <div id="contParafraseo" class="contador">0 caracteres</div>
+      </div>
+
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-hand-pointer" style="color:var(--mango)"></i> 2. Guarda cada ficha en su canasta</h3>
+        <p class="tenue" style="margin:0 0 .7rem;font-size:.94rem">
+          Es de a dos toques: <b>toca la ficha</b> y después <b>toca la canasta</b>. Si te equivocas, toca la ficha otra vez y vuelve.
+        </p>
+
+        <div id="bandeja" style="margin-bottom:.9rem;min-height:52px"></div>
+
+        <div style="display:grid;gap:.6rem">
+          <div class="canasta" id="canastaSe" data-canasta="se">
+            <div class="canasta__titulo"><i class="fa-solid fa-circle-check" style="color:var(--pasto)"></i> Lo que el problema me cuenta <span class="canasta__cuenta" id="cuentaSe">0</span></div>
+            <div class="canasta__cuerpo"></div>
+          </div>
+          <div class="canasta" id="canastaBusco" data-canasta="busco">
+            <div class="canasta__titulo"><i class="fa-solid fa-magnifying-glass" style="color:var(--cielo)"></i> Lo que me preguntan <span class="canasta__cuenta" id="cuentaBusco">0</span></div>
+            <div class="canasta__cuerpo"></div>
+          </div>
+          <div class="canasta" id="canastaSobra" data-canasta="sobra">
+            <div class="canasta__titulo"><i class="fa-solid fa-trash-can" style="color:var(--rojo)"></i> No me sirve para responder <span class="canasta__cuenta" id="cuentaSobra">0</span></div>
+            <div class="canasta__cuerpo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2 · CONCEBIR UN PLAN -->
+    <div id="paso2" class="paso-contenido" style="display:none">
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-square-root-variable" style="color:var(--pasto)"></i> 1. ¿Qué vas a hacer con los datos?</h3>
+        <p class="tenue" style="margin:0 0 .7rem;font-size:.94rem">Marca todas las que vayas a usar. Si marcas una que no se necesita, te aviso.</p>
+        <div id="listaOperaciones"></div>
+      </div>
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-diagram-project" style="color:var(--uva)"></i> 2. ¿Cuál cuenta es la del problema?</h3>
+        <p class="tenue" style="margin:0 0 .7rem;font-size:.94rem">Todas se parecen. Escoge la que dice lo mismo que pasó en la finca.</p>
+        <div id="listaExpresiones"></div>
+      </div>
+    </div>
+
+    <!-- PASO 3 · EJECUTAR -->
+    <div id="paso3" class="paso-contenido" style="display:none">
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-calculator" style="color:var(--mango)"></i> Haz la cuenta en tu cuaderno</h3>
+        <p class="tenue" style="margin:0 0 .8rem;font-size:.94rem">Saca la cuenta en el cuaderno y escribe aquí solo el resultado. Usa los botones de abajo.</p>
+
+        <div id="cajaExpresionElegida" class="glass-suave expresion"
+             style="padding:.7rem;text-align:center;margin-bottom:.9rem"></div>
+
+        <div id="zonaRespuesta"></div>
+
+        <button id="btnVerificar" class="btn3d btn3d--verde btn3d--bloque" style="margin-top:.9rem">
+          <i class="fa-solid fa-check-double"></i> Comprobar mi respuesta
+        </button>
+        <div id="avisoIntentos" class="contador" style="text-align:center"></div>
+      </div>
+    </div>
+
+    <!-- PASO 4 · MIRAR HACIA ATRÁS -->
+    <div id="paso4" class="paso-contenido" style="display:none">
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-scale-balanced" style="color:var(--cielo)"></i> 1. ¿Tu respuesta tiene sentido?</h3>
+        <p id="txtVerificacion" class="tenue" style="margin:0 0 .7rem;font-size:.9rem;font-weight:700"></p>
+        <div id="listaVerificacion"></div>
+      </div>
+
+      <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.1rem"><i class="fa-solid fa-comments" style="color:var(--uva)"></i> 2. Explica cómo lo hiciste</h3>
+        <p class="tenue" style="margin:0 0 .7rem;font-size:.94rem">
+          Escribe como si le explicaras a un compañero que faltó a clase: qué cuenta hiciste, por qué esa, y por qué el resultado sirve en la finca.
+        </p>
+        <textarea id="inArgumento" class="campo" rows="5"
+          placeholder="Mi respuesta es correcta porque primero... y luego... Además el resultado tiene sentido porque..."></textarea>
+        <div id="contArgumento" class="contador">0 caracteres</div>
+
+        <div style="margin-top:.9rem">
+          <p style="font-size:.84rem;font-weight:900;margin:0 0 .5rem;opacity:.9">
+            <i class="fa-solid fa-list-check"></i> Lee lo que escribiste y marca lo que sí cumpliste:
+          </p>
+          <div id="listaAutoevaluacion"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pistas graduadas · ZDP -->
+    <div class="glass" style="padding:1rem 1.1rem;margin-bottom:.9rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem">
+        <strong class="tipo-titulo" style="font-size:1.02rem">
+          <i class="fa-solid fa-hand-holding-heart" style="color:var(--mango)"></i> ¿Te trancaste? Pídeme una pista
+        </strong>
+        <span id="costoPista" class="pastilla">La primera es gratis</span>
+      </div>
+      <div id="zonaPistas"></div>
+      <button id="btnPista" class="btn3d btn3d--cielo btn3d--bloque btn3d--mini">
+        <i class="fa-solid fa-lightbulb fa-beat"></i> <span id="txtBtnPista">Pedir la pista de lectura</span>
+      </button>
+    </div>
+
+    <!-- Lo que falta para poder seguir: se actualiza solo, sin tener que tocar nada -->
+    <div id="listaFaltan" class="glass-suave faltan"></div>
+
+    <!-- Navegación entre pasos -->
+    <div style="display:flex;gap:.6rem;margin-bottom:1rem">
+      <button id="btnAtras" class="btn3d btn3d--fantasma" style="flex:0 0 auto">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button id="btnSiguiente" class="btn3d" style="flex:1">
+        <span id="txtSiguiente">Continuar</span> <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ---------- B3. INSIGNIAS ---------- -->
+  <section id="vistaInsignias" class="vista contenedor" style="padding-top:1rem">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+      <button id="btnSalirInsignias" class="btn3d btn3d--fantasma btn3d--mini"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 style="font-size:1.3rem;margin:0"><i class="fa-solid fa-award" style="color:var(--mango)"></i> Mis insignias</h2>
+    </div>
+    <div id="gridInsignias" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.7rem"></div>
+  </section>
+
+  <!-- ---------- B4. PANEL DEL DOCENTE ---------- -->
+  <section id="vistaDocente" class="vista contenedor" style="padding-top:1rem">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+      <button id="btnSalirDocente" class="btn3d btn3d--fantasma btn3d--mini"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 style="font-size:1.25rem;margin:0"><i class="fa-solid fa-chalkboard-user" style="color:var(--cielo)"></i> Panel del docente</h2>
+    </div>
+
+    <div class="glass" style="padding:1.1rem;margin-bottom:.9rem">
+      <h3 style="margin:0 0 .5rem;font-size:1rem">Evidencias registradas</h3>
+      <p class="tenue" style="margin:0 0 .8rem;font-size:.84rem">
+        Cada fila es un observable del modelo de evidencia del DCE.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.9rem">
+        <button id="btnCsv" class="btn3d btn3d--verde btn3d--mini"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
+        <button id="btnJson" class="btn3d btn3d--uva btn3d--mini"><i class="fa-solid fa-code"></i> Descargar JSON</button>
+        <button id="btnUrl" class="btn3d btn3d--cielo btn3d--mini"><i class="fa-solid fa-cloud"></i> Enlace de envío</button>
+        <button id="btnCola" class="btn3d btn3d--mini"><i class="fa-solid fa-paper-plane"></i> Reenviar pendientes</button>
+      </div>
+      <div id="estadoCola" class="tenue" style="font-size:.78rem;margin-bottom:.8rem"></div>
+      <div style="max-height:340px;overflow:auto;border-radius:14px">
+        <table class="tabla-docente"><thead><tr>
+          <th>Estudiante</th><th>Reto</th><th>Parafraseo</th><th>Datos</th>
+          <th>Operaciones</th><th>Expresión</th><th>Resultado</th><th>Argumentación</th><th>Pistas</th><th>XP</th>
+        </tr></thead><tbody id="cuerpoTabla"></tbody></table>
+      </div>
+    </div>
+
+    <div class="glass" style="padding:1.1rem">
+      <h3 style="margin:0 0 .6rem;font-size:1rem">Mantenimiento</h3>
+      <button id="btnReiniciar" class="btn3d btn3d--rojo btn3d--bloque btn3d--mini">
+        <i class="fa-solid fa-trash"></i> Borrar el avance de este dispositivo
+      </button>
+    </div>
+  </section>
+
+  <footer class="contenedor" style="text-align:center;padding:1.6rem 1rem .5rem">
+    <p class="tenue" style="font-size:.72rem;line-height:1.6;margin:0">
+      REA <b>MatemáTICas Rodania</b> · Diseño Centrado en Evidencias · Aprendizaje Basado en Casos<br>
+      Institución Educativa Rodania, Sahagún (Córdoba) · Licencia Creative Commons BY-SA 4.0
+    </p>
+  </footer>
+</main>
+
+<script>
+/* ============================================================================================
+   PARTE 1 · CONFIGURACIÓN, RED DE SEGURIDAD Y MODELO DE TAREA
+   ========================================================================================== */
+
+/* ---- 1.1 Configuración editable -------------------------------------------------------- */
+const CONFIG = {
+  // Pega aquí la URL de tu implementación de Google Apps Script (termina en /exec).
+  // También puedes cargarla desde el panel del docente sin tocar el código.
+  URL_EVIDENCIAS : "",
+  PIN_DOCENTE    : "1620",
+  CLAVE_ESTADO   : "rodania_estado_v1",
+  CLAVE_EVIDENCIA: "rodania_evidencias_v1",
+  CLAVE_COLA     : "rodania_cola_v1",
+  CLAVE_URL      : "rodania_url_v1",
+  COSTO_PISTA    : 15,
+  BONO_SIN_PISTAS: 30,
+  BONO_PRIMER_INTENTO: 20,
+  MIN_PARAFRASEO : 35,
+  MIN_ARGUMENTO  : 45
+};
+
+/* ---- 1.2 Red de seguridad: si una librería del CDN no cargó (aula sin internet),
+        se reemplaza por una versión mínima para que el recurso nunca se caiga.
+        En ningún caso se usan alert(), prompt() ni confirm() nativos. --------------------- */
+(function redDeSeguridad(){
+  if (typeof window.confetti !== "function") window.confetti = function(){ /* sin efecto */ };
+  if (typeof window.Swal === "undefined") {
+    const caja = (op) => new Promise((resolve)=>{
+      const f = document.createElement("div");
+      f.setAttribute("role","dialog");
+      f.style.cssText = "position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(6,4,25,.72);padding:1rem";
+      const c = document.createElement("div");
+      c.className = "glass";
+      c.style.cssText = "padding:1.3rem;max-width:420px;width:100%;text-align:center";
+      c.innerHTML =
+        '<h3 class="tipo-titulo" style="margin:.2rem 0 .6rem;font-size:1.15rem">'+(op.title||"")+'</h3>'+
+        '<div style="font-size:.95rem;line-height:1.5">'+(op.html||op.text||"")+'</div>'+
+        (op.input==="text"||op.input==="password"
+            ? '<input id="swalFbIn" class="campo" type="'+op.input+'" style="margin-top:.9rem">' : '')+
+        '<div style="display:flex;gap:.5rem;margin-top:1rem">'+
+          (op.showCancelButton?'<button id="swalFbNo" class="btn3d btn3d--fantasma" style="flex:1">'+(op.cancelButtonText||"Cancelar")+'</button>':'')+
+          '<button id="swalFbSi" class="btn3d" style="flex:1">'+(op.confirmButtonText||"Listo")+'</button>'+
+        '</div>';
+      f.appendChild(c); document.body.appendChild(f);
+      const cerrar = (r)=>{ f.remove(); resolve(r); };
+      c.querySelector("#swalFbSi").onclick = ()=>{
+        const inp = c.querySelector("#swalFbIn");
+        cerrar({isConfirmed:true, value: inp ? inp.value : true});
+      };
+      const no = c.querySelector("#swalFbNo"); if (no) no.onclick = ()=>cerrar({isConfirmed:false,value:null});
+    });
+    window.Swal = { fire: caja, mixin: ()=>({fire:caja}) };
+  }
+})();
+
+/* ---- 1.3 Modelo de estudiante: rangos por experiencia ---------------------------------- */
+const RANGOS = [
+  { xp:0,    nombre:"Aprendiz de la finca",   icono:"fa-seedling" },
+  { xp:260,  nombre:"Ordeñador experto",      icono:"fa-cow" },
+  { xp:620,  nombre:"Maestro quesero",        icono:"fa-cheese" },
+  { xp:1020, nombre:"Comerciante de la vereda",icono:"fa-store" },
+  { xp:1450, nombre:"Leyenda de Rodania",     icono:"fa-crown" }
+];
+
+/* ---- 1.4 Competencias evaluadas (modelo de estudiante del DCE) ------------------------- */
+const COMPETENCIAS = {
+  interpretacion:{ etiqueta:"Interpretación", clase:"pastilla--interp", icono:"fa-book-open-reader" },
+  formulacion   :{ etiqueta:"Formulación",    clase:"pastilla--form",   icono:"fa-square-root-variable" },
+  argumentacion :{ etiqueta:"Argumentación",  clase:"pastilla--arg",    icono:"fa-comments" }
+};
+
+/* ---- 1.5 Rejilla de autoevaluación de la argumentación (paso 4 de Polya) ---------------- */
+const AUTOEVALUACION = [
+  "Conté qué operación usé y por qué la escogí",
+  "Usé los datos del problema en mi explicación",
+  "Dije por qué el resultado tiene sentido en la finca"
+];
+
+/* ============================================================================================
+   1.6 MODELO DE TAREA · TRES CASOS DE ENSEÑANZA DEL CONTEXTO GANADERO
+   Cada caso corresponde al Aprendizaje Basado en Casos descrito en la metodología.
+   ========================================================================================== */
+const CASOS = [
+  { id:1, titulo:"La finca lechera", icono:"fa-cow",
+    resumen:"El ordeño, la producción diaria y la libreta de la tienda veredal.",
+    presentacion:"En la finca La Esperanza, don Ramiro ordeña todos los días antes de que salga el sol. La leche se mide, se guarda y una parte se lleva en el camión. Vamos a entender los números que se mueven en ese ordeño." },
+  { id:2, titulo:"Del ordeño al queso", icono:"fa-cheese",
+    resumen:"La cuajada, las porciones del queso y el suero que sobra.",
+    presentacion:"Doña Nubia recibe la leche de varias fincas y hace el queso costeño que se vende en el pueblo. Cada kilo de queso tiene detrás una cuenta que hay que saber hacer." },
+  { id:3, titulo:"La venta de la leche, el queso y el suero", icono:"fa-store",
+    resumen:"Los precios, el transporte, las ganancias y el corral nuevo.",
+    presentacion:"El domingo es día de mercado. Hay que sacar cuentas de lo que entra, de lo que sale y de lo que conviene, para que el trabajo de toda la semana valga la pena." }
+];
+
+const RETOS = [
+/* ---------------------------- CASO 1 · LA FINCA LECHERA ---------------------------------- */
+{
+  id:"1.1", caso:1, sesion:"Sesiones 1 y 2", titulo:"El ordeño de la mañana",
+  competencia:"interpretacion", xp:100,
+  enunciado:"Don Ramiro ordeña sus vacas en la finca La Esperanza, en la vereda. En el ordeño de la mañana recogió 96 litros de leche y en el de la tarde recogió 78 litros. De toda la leche del día aparta 25 litros para el consumo de la casa. El resto lo lleva hasta la cantina del camión para venderlo.",
+  pregunta:"¿Cuántos litros de leche lleva don Ramiro a la cantina del camión?",
+  fichas:[
+    {t:"96 litros en el ordeño de la mañana", c:"se"},
+    {t:"78 litros en el ordeño de la tarde", c:"se"},
+    {t:"25 litros que se quedan en la casa", c:"se"},
+    {t:"Don Ramiro ordeña 14 vacas", c:"sobra"},
+    {t:"¿Cuántos litros lleva a la cantina?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Sumar", ok:true, i:"fa-plus"},
+    {t:"Restar", ok:true, i:"fa-minus"},
+    {t:"Multiplicar", ok:false, i:"fa-xmark"},
+    {t:"Dividir", ok:false, i:"fa-divide"}
+  ],
+  expresiones:[
+    {t:"(96 + 78) − 25", ok:true},
+    {t:"96 + 78 + 25", ok:false},
+    {t:"(96 − 78) + 25", ok:false},
+    {t:"(96 + 78) ÷ 14", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:149, unidad:"litros"},
+  verificacion:{
+    pregunta:"Si don Ramiro lleva 149 litros a la cantina, ¿ese número debe ser mayor o menor que los 174 litros que ordeñó en todo el día?",
+    opciones:[
+      {t:"Menor, porque apartó leche para la casa", ok:true},
+      {t:"Mayor, porque ordeñó dos veces", ok:false},
+      {t:"Igual, porque toda la leche se vende", ok:false}
+    ]
+  },
+  pistas:[
+    "Vuelve a leer despacio. La leche se recoge en dos momentos del día: la mañana y la tarde. Además, antes de vender, una parte se queda en la casa.",
+    "Primero junta la leche de la mañana con la de la tarde: eso es todo lo que se ordeñó. A ese total le tienes que quitar la que se queda en la casa.",
+    "Haz 96 + 78, que da 174 litros. Después haz 174 − 25. El número de vacas no se necesita para responder."
+  ]
+},
+{
+  id:"1.2", caso:1, sesion:"Sesión 2", titulo:"La libreta de la tienda",
+  competencia:"interpretacion", xp:110,
+  enunciado:"En la tienda de doña Nubia se fía y todo queda anotado en una libreta. Cuando la familia fía, se anota con signo negativo, y cuando abona se anota con signo positivo. Esta semana la familia de Yuli quedó así: el lunes fió 12.000 pesos, el martes abonó 5.000 pesos, el miércoles volvió a fiar 8.000 pesos y el sábado abonó 10.000 pesos.",
+  pregunta:"¿Con qué saldo termina la familia de Yuli el sábado en la noche?",
+  fichas:[
+    {t:"Lunes: −12.000 (fió)", c:"se"},
+    {t:"Martes: +5.000 (abonó)", c:"se"},
+    {t:"Miércoles: −8.000 (fió)", c:"se"},
+    {t:"Sábado: +10.000 (abonó)", c:"se"},
+    {t:"La tienda abre a las 6 de la mañana", c:"sobra"},
+    {t:"¿Cuál es el saldo del sábado?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Sumar números enteros", ok:true, i:"fa-plus-minus"},
+    {t:"Ubicar en la recta numérica", ok:true, i:"fa-ruler-horizontal"},
+    {t:"Multiplicar", ok:false, i:"fa-xmark"},
+    {t:"Sacar la mitad", ok:false, i:"fa-divide"}
+  ],
+  expresiones:[
+    {t:"(−12.000) + 5.000 + (−8.000) + 10.000", ok:true},
+    {t:"12.000 + 5.000 + 8.000 + 10.000", ok:false},
+    {t:"(12.000 + 8.000) + (5.000 + 10.000)", ok:false},
+    {t:"(−12.000) − 5.000 − (−8.000) − 10.000", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:-5000, unidad:"pesos", ayuda:"Escribe el signo si el saldo es negativo. Ejemplo: -3000"},
+  verificacion:{
+    pregunta:"El saldo que te dio, ¿qué significa para la familia de Yuli?",
+    opciones:[
+      {t:"Que todavía le debe 5.000 pesos a la tienda", ok:true},
+      {t:"Que la tienda le debe 5.000 pesos a la familia", ok:false},
+      {t:"Que la familia quedó a paz y salvo", ok:false}
+    ]
+  },
+  pistas:[
+    "Lee otra vez la regla de la libreta: fiar se anota negativo porque se debe, y abonar se anota positivo porque se paga.",
+    "Junta primero todo lo que se fió y luego todo lo que se abonó. Después compara cuál de los dos grupos es más grande.",
+    "Lo fiado suma 12.000 + 8.000 = 20.000 y lo abonado suma 5.000 + 10.000 = 15.000. Como se debe más de lo que se abonó, el saldo queda negativo: 15.000 − 20.000."
+  ]
+},
+{
+  id:"1.3", caso:1, sesion:"Sesión 3", titulo:"Las cantinas del camión",
+  competencia:"formulacion", xp:120,
+  enunciado:"El camión que pasa por la vereda recoge la leche en cantinas de 40 litros cada una. Hoy la finca La Esperanza entregó 285 litros. El conductor solo recibe cantinas completamente llenas, así que la leche que sobra se queda en la casa para hacer queso.",
+  pregunta:"¿Cuántas cantinas llenas se lleva el camión?",
+  fichas:[
+    {t:"285 litros entregados hoy", c:"se"},
+    {t:"Cada cantina lleva 40 litros", c:"se"},
+    {t:"Solo se reciben cantinas llenas", c:"se"},
+    {t:"El camión pasa a las 7 de la mañana", c:"sobra"},
+    {t:"¿Cuántas cantinas llenas se lleva?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Dividir", ok:true, i:"fa-divide"},
+    {t:"Mirar el residuo de la división", ok:true, i:"fa-arrows-split-up-and-left"},
+    {t:"Sumar", ok:false, i:"fa-plus"},
+    {t:"Restar", ok:false, i:"fa-minus"}
+  ],
+  expresiones:[
+    {t:"285 ÷ 40", ok:true},
+    {t:"285 × 40", ok:false},
+    {t:"285 − 40", ok:false},
+    {t:"40 ÷ 285", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:7, unidad:"cantinas llenas",
+    ayuda:"Ojo: la división no da exacta. Escribe solo las cantinas que van completamente llenas.",
+    trampa:{valor:7.125, msg:"Esa es la división completa, pero una cantina a medias no la recibe el conductor. Escribe solo las cantinas llenas."}},
+  verificacion:{
+    pregunta:"¿Cuántos litros quedan en la casa para hacer queso?",
+    opciones:[
+      {t:"5 litros", ok:true},
+      {t:"25 litros", ok:false},
+      {t:"40 litros", ok:false}
+    ]
+  },
+  pistas:[
+    "Fíjate en una frase clave: el conductor solo recibe cantinas completamente llenas. Eso quiere decir que una cantina a medias no cuenta.",
+    "Estás repartiendo 285 litros en grupos de 40. Eso se hace con una división. La respuesta es cuántos grupos completos alcanzan a formarse.",
+    "Haz 285 ÷ 40. Como 40 × 7 = 280, alcanzan 7 cantinas llenas y sobran 285 − 280 = 5 litros."
+  ]
+},
+
+/* ---------------------------- CASO 2 · DEL ORDEÑO AL QUESO ------------------------------- */
+{
+  id:"2.1", caso:2, sesion:"Sesión 4", titulo:"De la leche al queso",
+  competencia:"formulacion", xp:130,
+  enunciado:"En la vereda todos saben la misma regla: con cada 10 litros de leche sale 1 kilo de queso costeño. Hoy doña Nubia recibió 145 litros de leche de las fincas vecinas y quiere saber cuánto queso alcanza a sacar antes de que le llegue el pedido del pueblo.",
+  pregunta:"¿Cuántos kilos de queso salen de esos 145 litros de leche?",
+  fichas:[
+    {t:"Con 10 litros de leche sale 1 kilo de queso", c:"se"},
+    {t:"Hoy recibió 145 litros de leche", c:"se"},
+    {t:"El queso se sala con dos cucharadas", c:"sobra"},
+    {t:"¿Cuántos kilos de queso salen?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Dividir", ok:true, i:"fa-divide"},
+    {t:"Usar proporcionalidad", ok:true, i:"fa-scale-balanced"},
+    {t:"Sumar", ok:false, i:"fa-plus"},
+    {t:"Restar", ok:false, i:"fa-minus"}
+  ],
+  expresiones:[
+    {t:"145 ÷ 10", ok:true},
+    {t:"145 × 10", ok:false},
+    {t:"145 − 10", ok:false},
+    {t:"10 ÷ 145", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:14.5, unidad:"kilos de queso", ayuda:"Puedes escribir la coma o el punto: 14,5 o 14.5"},
+  verificacion:{
+    pregunta:"El resultado no dio un número exacto de kilos. ¿Qué significa eso en la quesera?",
+    opciones:[
+      {t:"Que sale un queso de medio kilo además de los 14 kilos", ok:true},
+      {t:"Que la cuenta está mala y hay que repetirla", ok:false},
+      {t:"Que sobraron 5 litros de leche sin usar", ok:false}
+    ]
+  },
+  pistas:[
+    "Lee de nuevo la regla de la vereda: cada 10 litros se convierten en 1 kilo. Piensa cuántos grupos de 10 litros hay en lo que recibió doña Nubia.",
+    "Si 10 litros dan 1 kilo, entonces 20 litros dan 2 kilos y 100 litros dan 10 kilos. Estás repartiendo los 145 litros en grupos de 10.",
+    "Haz la división 145 ÷ 10. Al dividir entre 10 la coma se corre un lugar hacia la izquierda: da 14,5 kilos."
+  ]
+},
+{
+  id:"2.2", caso:2, sesion:"Sesión 5", titulo:"El queso repartido",
+  competencia:"interpretacion", xp:140,
+  enunciado:"Doña Nubia hizo un queso grande y redondo. Le vendió una cuarta parte del queso a la tienda de la escuela, le regaló una octava parte a su comadre que le ayudó con el ordeño, y guardó todo lo demás para llevarlo al mercado del domingo.",
+  pregunta:"¿Qué fracción del queso guardó doña Nubia para el domingo?",
+  fichas:[
+    {t:"Vendió 1/4 del queso a la escuela", c:"se"},
+    {t:"Regaló 1/8 del queso a su comadre", c:"se"},
+    {t:"El queso completo es 1 entero", c:"se"},
+    {t:"El queso es redondo", c:"sobra"},
+    {t:"¿Qué fracción guardó para el domingo?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Sumar fracciones", ok:true, i:"fa-plus"},
+    {t:"Restar fracciones al entero", ok:true, i:"fa-minus"},
+    {t:"Buscar el común denominador", ok:true, i:"fa-equals"},
+    {t:"Multiplicar fracciones", ok:false, i:"fa-xmark"}
+  ],
+  expresiones:[
+    {t:"1 − (1/4 + 1/8)", ok:true},
+    {t:"1/4 + 1/8", ok:false},
+    {t:"1 − 1/4 × 1/8", ok:false},
+    {t:"(1/4 + 1/8) ÷ 2", ok:false}
+  ],
+  respuesta:{tipo:"fraccion", num:5, den:8, unidad:"del queso"},
+  verificacion:{
+    pregunta:"¿Cómo compruebas que tu fracción está bien?",
+    opciones:[
+      {t:"Porque 2/8 + 1/8 + 5/8 forman el queso completo", ok:true},
+      {t:"Porque 5/8 es mayor que 1/4", ok:false},
+      {t:"Porque 8 es el número más grande del problema", ok:false}
+    ]
+  },
+  pistas:[
+    "Lee otra vez qué pasó con el queso: una parte se vendió, otra se regaló y lo que sobró se guardó. El queso completo vale 1 entero.",
+    "Primero junta lo que salió del queso: la parte de la escuela y la de la comadre. Para sumarlas necesitas que tengan el mismo denominador. Piensa: ¿cuántos octavos son un cuarto?",
+    "Un cuarto es igual a 2/8. Entonces salieron 2/8 + 1/8 = 3/8. Como el queso completo es 8/8, lo que guardó es 8/8 − 3/8."
+  ]
+},
+{
+  id:"2.3", caso:2, sesion:"Sesión 6", titulo:"El suero que sobra",
+  competencia:"formulacion", xp:150,
+  enunciado:"Cuando se hace el queso siempre queda suero. En la quesera de doña Nubia, por cada 10 litros de leche que se cuajan quedan 8 litros de suero. Hoy se usaron 120 litros de leche para hacer queso. Todo el suero se envasa en botellas de 2 litros y cada botella se vende a 1.500 pesos en la tienda de la vereda.",
+  pregunta:"¿Cuánto dinero recibe doña Nubia por todo el suero de hoy?",
+  fichas:[
+    {t:"Se usaron 120 litros de leche", c:"se"},
+    {t:"Por cada 10 litros de leche quedan 8 de suero", c:"se"},
+    {t:"Cada botella lleva 2 litros", c:"se"},
+    {t:"Cada botella se vende a 1.500 pesos", c:"se"},
+    {t:"El suero se vende frío", c:"sobra"},
+    {t:"¿Cuánto dinero recibe por el suero?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Dividir", ok:true, i:"fa-divide"},
+    {t:"Multiplicar", ok:true, i:"fa-xmark"},
+    {t:"Usar proporcionalidad", ok:true, i:"fa-scale-balanced"},
+    {t:"Restar", ok:false, i:"fa-minus"}
+  ],
+  expresiones:[
+    {t:"(120 ÷ 10 × 8) ÷ 2 × 1.500", ok:true},
+    {t:"120 × 8 ÷ 2 × 1.500", ok:false},
+    {t:"(120 ÷ 2) × 1.500", ok:false},
+    {t:"120 ÷ 10 × 1.500", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:72000, unidad:"pesos"},
+  verificacion:{
+    pregunta:"Antes de responder, ¿cuántos litros de suero quedaron hoy?",
+    opciones:[
+      {t:"96 litros de suero", ok:true},
+      {t:"120 litros de suero", ok:false},
+      {t:"48 litros de suero", ok:false}
+    ]
+  },
+  pistas:[
+    "Este problema tiene varios pasos. Léelo por partes: primero cuánto suero queda, después en cuántas botellas cabe y por último cuánto dinero es.",
+    "Con 120 litros hay 12 grupos de 10 litros. Si cada grupo deja 8 litros de suero, multiplica. Luego reparte ese suero en botellas de 2 litros y por último multiplica por el precio.",
+    "Suero: 120 ÷ 10 = 12, y 12 × 8 = 96 litros. Botellas: 96 ÷ 2 = 48. Dinero: 48 × 1.500 pesos."
+  ]
+},
+
+/* ------------------- CASO 3 · LA VENTA DE LA LECHE, EL QUESO Y EL SUERO ------------------ */
+{
+  id:"3.1", caso:3, sesion:"Sesión 7", titulo:"El día de mercado",
+  competencia:"formulacion", xp:150,
+  enunciado:"El domingo doña Nubia bajó al mercado del pueblo. Vendió 12 kilos de queso a 14.000 pesos el kilo y 30 botellas de suero a 1.500 pesos cada una. Ese día pagó 25.000 pesos por el transporte en el carro de la vereda y 18.000 pesos por el puesto en la plaza.",
+  pregunta:"¿Cuánto dinero le quedó de ganancia a doña Nubia ese domingo?",
+  fichas:[
+    {t:"12 kilos de queso a 14.000 el kilo", c:"se"},
+    {t:"30 botellas de suero a 1.500 cada una", c:"se"},
+    {t:"25.000 pesos de transporte", c:"se"},
+    {t:"18.000 pesos del puesto en la plaza", c:"se"},
+    {t:"El mercado abre los domingos", c:"sobra"},
+    {t:"¿Cuánto le quedó de ganancia?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Multiplicar", ok:true, i:"fa-xmark"},
+    {t:"Sumar", ok:true, i:"fa-plus"},
+    {t:"Restar", ok:true, i:"fa-minus"},
+    {t:"Dividir", ok:false, i:"fa-divide"}
+  ],
+  expresiones:[
+    {t:"(12 × 14.000 + 30 × 1.500) − (25.000 + 18.000)", ok:true},
+    {t:"12 × 14.000 + 30 × 1.500 + 25.000 + 18.000", ok:false},
+    {t:"(12 + 30) × (14.000 + 1.500) − 43.000", ok:false},
+    {t:"12 × 14.000 − 30 × 1.500 − 25.000 − 18.000", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:170000, unidad:"pesos"},
+  verificacion:{
+    pregunta:"¿Por qué la ganancia no puede ser igual a todo lo que vendió?",
+    opciones:[
+      {t:"Porque del dinero vendido hay que descontar lo que gastó", ok:true},
+      {t:"Porque el queso vale más que el suero", ok:false},
+      {t:"Porque vendió en el pueblo y no en la vereda", ok:false}
+    ]
+  },
+  pistas:[
+    "Separa el problema en dos montones: el dinero que entró por las ventas y el dinero que salió por los gastos.",
+    "Para lo que entró, multiplica cantidad por precio en el queso y en el suero, y súmalos. Para lo que salió, suma el transporte y el puesto. La ganancia es lo que entró menos lo que salió.",
+    "Queso: 12 × 14.000 = 168.000. Suero: 30 × 1.500 = 45.000. Entró 213.000. Gastos: 25.000 + 18.000 = 43.000. Ahora resta."
+  ]
+},
+{
+  id:"3.2", caso:3, sesion:"Sesión 7", titulo:"¿A quién le vendo el queso?",
+  competencia:"argumentacion", xp:160,
+  enunciado:"A doña Nubia le hicieron dos ofertas por el queso de la semana. Don Efraín, el de la tienda del pueblo, le paga 84.000 pesos por 6 kilos y va a recogerlo. La cooperativa le paga 126.000 pesos por 9 kilos, pero le descuenta 9.000 pesos por el transporte hasta la bodega.",
+  pregunta:"Si le vende a la cooperativa, ¿cuánto dinero recibe realmente por cada kilo de queso?",
+  fichas:[
+    {t:"La cooperativa paga 126.000 por 9 kilos", c:"se"},
+    {t:"La cooperativa descuenta 9.000 de transporte", c:"se"},
+    {t:"Don Efraín paga 84.000 por 6 kilos", c:"se"},
+    {t:"Don Efraín tiene la tienda del pueblo", c:"sobra"},
+    {t:"¿Cuánto recibe por kilo en la cooperativa?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Restar", ok:true, i:"fa-minus"},
+    {t:"Dividir", ok:true, i:"fa-divide"},
+    {t:"Comparar dos resultados", ok:true, i:"fa-scale-unbalanced"},
+    {t:"Multiplicar", ok:false, i:"fa-xmark"}
+  ],
+  expresiones:[
+    {t:"(126.000 − 9.000) ÷ 9", ok:true},
+    {t:"126.000 ÷ 9 − 9.000", ok:false},
+    {t:"126.000 ÷ 9", ok:false},
+    {t:"(126.000 + 9.000) ÷ 9", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:13000, unidad:"pesos por kilo"},
+  verificacion:{
+    pregunta:"Don Efraín paga 14.000 por kilo. ¿Cuál oferta le conviene más a doña Nubia?",
+    opciones:[
+      {t:"La de don Efraín, porque le queda más por cada kilo", ok:true},
+      {t:"La de la cooperativa, porque le compra más kilos", ok:false},
+      {t:"Las dos son iguales", ok:false}
+    ]
+  },
+  pistas:[
+    "Fíjate bien: la cooperativa le compra más kilos y le da más dinero, pero le quita algo antes de pagarle. Lo justo es comparar cuánto queda por cada kilo.",
+    "Primero quítale el descuento del transporte a lo que ofrece la cooperativa. Con ese dinero limpio, reparte entre los 9 kilos para saber cuánto vale cada uno.",
+    "Dinero limpio: 126.000 − 9.000 = 117.000. Ahora divide 117.000 ÷ 9. Compara ese valor con los 14.000 de don Efraín (84.000 ÷ 6)."
+  ]
+},
+{
+  id:"3.3", caso:3, sesion:"Sesión 8 · Reto integrador", titulo:"El corral nuevo",
+  competencia:"argumentacion", xp:180,
+  enunciado:"Don Ramiro va a cercar un corral rectangular para las vacas paridas. El terreno mide 25 metros de largo y 18 metros de ancho. Piensa poner 4 vueltas de alambre alrededor de todo el corral para que ningún ternero se salga. En la tienda agropecuaria el rollo de alambre trae 100 metros y cuesta 95.000 pesos. Solo venden rollos completos.",
+  pregunta:"¿Cuántos rollos de alambre tiene que comprar don Ramiro?",
+  fichas:[
+    {t:"El corral mide 25 metros de largo", c:"se"},
+    {t:"El corral mide 18 metros de ancho", c:"se"},
+    {t:"Va a poner 4 vueltas de alambre", c:"se"},
+    {t:"Cada rollo trae 100 metros", c:"se"},
+    {t:"El rollo cuesta 95.000 pesos", c:"sobra"},
+    {t:"¿Cuántos rollos debe comprar?", c:"busco"}
+  ],
+  operaciones:[
+    {t:"Calcular el perímetro", ok:true, i:"fa-vector-square"},
+    {t:"Multiplicar", ok:true, i:"fa-xmark"},
+    {t:"Dividir", ok:true, i:"fa-divide"},
+    {t:"Calcular el área", ok:false, i:"fa-square"}
+  ],
+  expresiones:[
+    {t:"(2 × (25 + 18)) × 4 ÷ 100", ok:true},
+    {t:"(25 × 18) × 4 ÷ 100", ok:false},
+    {t:"(25 + 18) × 4 ÷ 100", ok:false},
+    {t:"(2 × 25 + 18) × 4 ÷ 100", ok:false}
+  ],
+  respuesta:{tipo:"numero", valor:4, unidad:"rollos de alambre",
+    ayuda:"Ojo: la división no da exacta y solo venden rollos completos. Escribe los rollos que debe comprar de verdad.",
+    trampa:{valor:3.44, msg:"Esa es la división exacta, pero no venden pedazos de rollo. Con 3 rollos el alambre no alcanza para las 4 vueltas."}},
+  verificacion:{
+    pregunta:"La división no dio un número exacto. ¿Qué debe hacer don Ramiro?",
+    opciones:[
+      {t:"Comprar un rollo más, porque no venden pedazos", ok:true},
+      {t:"Comprar menos rollos y dejar un lado sin cercar", ok:false},
+      {t:"Comprar la mitad de un rollo", ok:false}
+    ]
+  },
+  pistas:[
+    "El alambre va por el borde del corral, no por dentro. Eso que rodea la figura tiene un nombre en geometría, y no es el área.",
+    "Calcula primero cuánto mide todo el borde del rectángulo: dos veces el largo más dos veces el ancho. Luego multiplícalo por las vueltas de alambre y reparte entre los 100 metros del rollo.",
+    "Perímetro: 2 × (25 + 18) = 86 metros. Con 4 vueltas: 86 × 4 = 344 metros. Rollos: 344 ÷ 100 = 3,44. Como solo venden rollos completos, hay que redondear hacia arriba."
+  ]
+}
+];
+
+/* ---- 1.7 Insignias (modelo de gamificación) -------------------------------------------- */
+const INSIGNIAS = [
+  {id:"primer_ordeño", n:"Primer ordeño",       i:"fa-cow",            p:"Termina tu primer reto"},
+  {id:"lector",        n:"Buen lector",i:"fa-book-open-reader",p:"Cuenta 3 problemas con tus palabras"},
+  {id:"detective",     n:"Detective de datos",  i:"fa-magnifying-glass",p:"Guarda bien todas las fichas 3 veces"},
+  {id:"traductor",     n:"El que traduce",i:"fa-language",        p:"Escoge la cuenta correcta de una, 4 veces"},
+  {id:"solo",          n:"Camino sin pistas",   i:"fa-shoe-prints",     p:"Termina un reto sin pedir pistas"},
+  {id:"vocero",        n:"Vocero de la vereda", i:"fa-comments",        p:"Explica bien tu respuesta 5 veces"},
+  {id:"caso1",         n:"Dueño de la finca",   i:"fa-tractor",         p:"Completa el caso 1"},
+  {id:"caso2",         n:"Maestro quesero",     i:"fa-cheese",          p:"Completa el caso 2"},
+  {id:"caso3",         n:"Comerciante justo",   i:"fa-store",           p:"Completa el caso 3"}
+];
+
+/* ============================================================================================
+   PARTE 2 · ESTADO Y PERSISTENCIA (offline primero)
+   ========================================================================================== */
+let estado = {
+  nombre:"", grupo:"", xp:0,
+  completados:{},          // { "1.1": {intentos, pistas, xp, fecha} }
+  insignias:[],
+  contadores:{ parafraseos:0, clasificacionesPerfectas:0, expresionPrimerIntento:0, argumentaciones:0, pistasTotales:0 }
+};
+
+const $  = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+const leer  = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
+const guardar = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ console.warn("Sin almacenamiento local",e); } };
+const guardarEstado = ()=>guardar(CONFIG.CLAVE_ESTADO, estado);
+const urlEnvio = ()=> leer(CONFIG.CLAVE_URL, CONFIG.URL_EVIDENCIAS) || CONFIG.URL_EVIDENCIAS;
+
+const rangoDe = (xp)=>{ let r=RANGOS[0]; RANGOS.forEach(x=>{ if(xp>=x.xp) r=x; }); return r; };
+const siguienteRango = (xp)=> RANGOS.find(x=>x.xp>xp) || null;
+const retoPorId = (id)=> RETOS.find(r=>r.id===id);
+const retosDeCaso = (c)=> RETOS.filter(r=>r.caso===c);
+const casoCompleto = (c)=> retosDeCaso(c).every(r=>estado.completados[r.id]);
+const normalizaNumero = (t)=> parseFloat(String(t).replace(/\s|\.(?=\d{3}\b)/g,"").replace(",","."));
+
+/* ---- 2.1 Lectura en voz alta -----------------------------------------------------------
+   La dificultad de base del grupo es la comprensión lectora del enunciado. Poder escuchar
+   el problema mientras se lee permite trabajar solo, sin esperar a que el docente lea.     */
+const HAY_VOZ = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+let vozES = null;
+function cargarVoces(){
+  if (!HAY_VOZ) return;
+  const v = speechSynthesis.getVoices() || [];
+  vozES = v.find(x=>/es[-_]CO/i.test(x.lang)) || v.find(x=>/es[-_](MX|US|419|ES)/i.test(x.lang)) || v.find(x=>/^es/i.test(x.lang)) || null;
+}
+if (HAY_VOZ){ cargarVoces(); speechSynthesis.onvoiceschanged = cargarVoces; }
+function hablar(texto){
+  if (!HAY_VOZ || !texto) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(texto).replace(/\s+/g," ").trim());
+    u.lang = "es-CO"; if (vozES) u.voice = vozES;
+    u.rate = 0.92; u.pitch = 1.05;
+    speechSynthesis.speak(u);
+  }catch(e){ /* sin voz disponible: el recurso sigue funcionando igual */ }
+}
+function callar(){ if (HAY_VOZ) try{ speechSynthesis.cancel(); }catch(e){} }
+
+/* ---- 2.2 Resaltado de los números del enunciado ----------------------------------------
+   Marca las cantidades sin decir cuáles sirven: el estudiante sigue teniendo que decidir.  */
+function resaltarNumeros(t){
+  const seguro = String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return seguro.replace(/\d+(?:[.,]\d+)*(?:\/\d+)?/g, m=>'<span class="dato-num">'+m+'</span>');
+}
+
+/* Lola, la vaca guía: se dibuja en SVG para que funcione sin conexión */
+function svgLola(){
+  return `<svg viewBox="0 0 100 100" aria-hidden="true" style="width:100%;height:auto">
+    <ellipse cx="50" cy="88" rx="30" ry="6" fill="rgba(0,0,0,.28)"/>
+    <path d="M18 44c0-16 14-26 32-26s32 10 32 26-14 30-32 30S18 60 18 44z" fill="#FFF9F0" stroke="#1E1B4B" stroke-width="3"/>
+    <path d="M30 28c-6-8-16-9-19-4 4 8 12 11 19 8z" fill="#F5D0B0" stroke="#1E1B4B" stroke-width="3"/>
+    <path d="M70 28c6-8 16-9 19-4-4 8-12 11-19 8z" fill="#F5D0B0" stroke="#1E1B4B" stroke-width="3"/>
+    <path d="M33 24c-3-8 1-13 5-12 3 1 4 6 2 11z" fill="#FBBF24" stroke="#1E1B4B" stroke-width="2.5"/>
+    <path d="M67 24c3-8-1-13-5-12-3 1-4 6-2 11z" fill="#FBBF24" stroke="#1E1B4B" stroke-width="2.5"/>
+    <ellipse cx="34" cy="36" rx="9" ry="7" fill="#1E1B4B" opacity=".85"/>
+    <ellipse cx="69" cy="52" rx="7" ry="6" fill="#1E1B4B" opacity=".85"/>
+    <circle cx="40" cy="46" r="4.6" fill="#1E1B4B"/><circle cx="41.6" cy="44.6" r="1.7" fill="#FFF"/>
+    <circle cx="60" cy="46" r="4.6" fill="#1E1B4B"/><circle cx="61.6" cy="44.6" r="1.7" fill="#FFF"/>
+    <ellipse cx="50" cy="62" rx="19" ry="13" fill="#FBCFE8" stroke="#1E1B4B" stroke-width="3"/>
+    <ellipse cx="43" cy="59" rx="3" ry="4" fill="#1E1B4B"/><ellipse cx="57" cy="59" rx="3" ry="4" fill="#1E1B4B"/>
+    <path d="M43 68q7 6 14 0" stroke="#1E1B4B" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+
+/* ============================================================================================
+   PARTE 3 · INTERFAZ GENERAL
+   ========================================================================================== */
+function fiesta(fuerte){
+  const base = {particleCount: fuerte?170:90, spread: fuerte?110:70, origin:{y:.62},
+                colors:["#FBBF24","#34D399","#38BDF8","#A78BFA","#FB7185","#FFF9F0"]};
+  confetti(base);
+  if (fuerte){
+    setTimeout(()=>confetti({...base, angle:60, origin:{x:0,y:.7}}),180);
+    setTimeout(()=>confetti({...base, angle:120, origin:{x:1,y:.7}}),320);
+  }
+}
+
+const aviso = (icono,titulo,texto)=>Swal.fire({
+  icon:icono, title:titulo, html:texto,
+  confirmButtonText:"Entendido", confirmButtonColor:"#7C3AED",
+  background:"#241C4F", color:"#FFF9F0"
+});
+
+function toast(icono,titulo){
+  Swal.fire({ toast:true, position:"top", icon:icono, title:titulo,
+    showConfirmButton:false, timer:2200, timerProgressBar:true,
+    background:"#241C4F", color:"#FFF9F0" });
+}
+
+function mostrarVista(id){
+  $$(".vista").forEach(v=>v.classList.remove("vista--activa"));
+  $("#"+id).classList.add("vista--activa");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function pintarEncabezado(){
+  const r = rangoDe(estado.xp), sig = siguienteRango(estado.xp);
+  $("#hNombre").textContent = estado.nombre;
+  $("#hXp").textContent = estado.xp + " puntos";
+  $("#hRango").innerHTML = '<i class="fa-solid '+r.icono+'"></i> ' + r.nombre;
+  if (sig){
+    const tramo = sig.xp - r.xp, avance = estado.xp - r.xp;
+    $("#hBarra").style.width = Math.min(100, Math.round(avance/tramo*100)) + "%";
+    $("#hFalta").textContent = "Te faltan " + (sig.xp - estado.xp) + " puntos para " + sig.nombre;
+  } else {
+    $("#hBarra").style.width = "100%";
+    $("#hFalta").textContent = "¡Llegaste al último nivel!";
+  }
+}
+
+/* ---- Tablero: la ruta de la vereda ------------------------------------------------------ */
+function pintarTablero(){
+  pintarEncabezado();
+  const hechos = Object.keys(estado.completados).length;
+  $("#statRetos").textContent = hechos + "/" + RETOS.length;
+  $("#statInsignias").textContent = estado.insignias.length + "/" + INSIGNIAS.length;
+  $("#statPistas").textContent = estado.contadores.pistasTotales;
+
+  const mensajes = [
+    "Escoge un reto de la ruta y lo resolvemos paso a paso, sin afán.",
+    "Recuerda: primero se entiende el problema, después se hacen las cuentas.",
+    "Si te trancas, pídeme una pista. No te doy la respuesta, te doy el camino.",
+    "Ya llevas buen recorrido por la vereda. Sigue así.",
+    "El reto integrador te espera al final del camino."
+  ];
+  $("#mensajeLola").textContent = mensajes[Math.min(mensajes.length-1, Math.floor(hechos/2))];
+
+  $("#listaCasos").innerHTML = CASOS.map(caso=>{
+    const retos = retosDeCaso(caso.id);
+    const hechosCaso = retos.filter(r=>estado.completados[r.id]).length;
+    const anterior = caso.id===1 ? true : casoCompleto(caso.id-1);   // los casos siguen el orden de la secuencia didáctica
+    const clase = hechosCaso===retos.length ? "parada--hecha" : (anterior ? "parada--abierta" : "parada--cerrada");
+
+    const tarjetas = retos.map((r,i)=>{
+      const hecho = !!estado.completados[r.id];
+      const previo = i===0 ? anterior : !!estado.completados[retos[i-1].id];
+      const abierto = hecho || previo;
+      const comp = COMPETENCIAS[r.competencia];
+      return '<button class="tarjeta-reto '+(hecho?"tarjeta-reto--hecho":"")+' '+(abierto?"":"tarjeta-reto--cerrado")+'" '+
+             (abierto?'data-reto="'+r.id+'"':'disabled')+' style="margin-bottom:.5rem">'+
+               '<div style="display:flex;align-items:center;gap:.6rem">'+
+                 '<span style="font-size:1.1rem;width:26px;text-align:center">'+
+                   (hecho?'<i class="fa-solid fa-circle-check" style="color:#6EE7B7"></i>'
+                        :(abierto?'<i class="fa-solid fa-circle-play" style="color:var(--mango)"></i>'
+                                 :'<i class="fa-solid fa-lock" style="opacity:.6"></i>'))+
+                 '</span>'+
+                 '<span style="flex:1;min-width:0">'+
+                   '<span class="tipo-titulo" style="display:block;font-size:.98rem;line-height:1.2">'+r.titulo+'</span>'+
+                   '<span style="display:block;font-size:.72rem;opacity:.8;font-weight:800">'+r.sesion+' · '+r.xp+' puntos</span>'+
+                 '</span>'+
+                 '<span class="pastilla '+comp.clase+'" style="font-size:.62rem">'+comp.etiqueta+'</span>'+
+               '</div>'+
+             '</button>';
+    }).join("");
+
+    return '<article class="parada '+clase+'">'+
+      '<div class="parada__nodo"><div class="parada__circulo"><i class="fa-solid '+caso.icono+'"></i></div>'+
+        '<div style="font-size:.66rem;font-weight:900;margin-top:.35rem;opacity:.85">'+hechosCaso+'/'+retos.length+'</div></div>'+
+      '<div class="parada__cuerpo glass" style="padding:.9rem">'+
+        '<div style="font-size:.66rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;opacity:.8">Caso '+caso.id+'</div>'+
+        '<h3 style="margin:.1rem 0 .3rem;font-size:1.08rem;line-height:1.2">'+caso.titulo+'</h3>'+
+        '<p class="tenue" style="margin:0 0 .7rem;font-size:.82rem;line-height:1.4">'+caso.resumen+'</p>'+
+        tarjetas+
+      '</div></article>';
+  }).join("");
+
+  $$("[data-reto]").forEach(b=>b.onclick=()=>abrirReto(b.dataset.reto));
+}
+
+/* ---- Insignias -------------------------------------------------------------------------- */
+function pintarInsignias(){
+  $("#gridInsignias").innerHTML = INSIGNIAS.map(ins=>{
+    const ganada = estado.insignias.includes(ins.id);
+    return '<div class="insignia '+(ganada?"insignia--ganada":"")+'">'+
+      '<div class="insignia__disco"><i class="fa-solid '+ins.i+'"></i></div>'+
+      '<div class="insignia__nombre">'+ins.n+'</div>'+
+      '<div class="insignia__pista">'+(ganada?"¡Conseguida!":ins.p)+'</div>'+
+    '</div>';
+  }).join("");
+}
+
+function otorgar(id){
+  if (estado.insignias.includes(id)) return;
+  estado.insignias.push(id);
+  guardarEstado();
+  const ins = INSIGNIAS.find(x=>x.id===id);
+  fiesta(true);
+  Swal.fire({
+    title:"¡Nueva insignia!",
+    html:'<div style="font-size:3rem;color:#FBBF24;margin:.3rem 0"><i class="fa-solid '+ins.i+' fa-bounce"></i></div>'+
+         '<p style="font-family:Fredoka;font-size:1.25rem;margin:.2rem 0">'+ins.n+'</p>'+
+         '<p style="opacity:.8;font-size:.9rem;margin:0">'+ins.p+'</p>',
+    confirmButtonText:"¡Genial!", confirmButtonColor:"#D97706",
+    background:"#241C4F", color:"#FFF9F0"
+  });
+}
+
+function revisarInsignias(){
+  const c = estado.contadores;
+  if (Object.keys(estado.completados).length>=1) otorgar("primer_ordeño");
+  if (c.parafraseos>=3) otorgar("lector");
+  if (c.clasificacionesPerfectas>=3) otorgar("detective");
+  if (c.expresionPrimerIntento>=4) otorgar("traductor");
+  if (c.argumentaciones>=5) otorgar("vocero");
+  if (casoCompleto(1)) otorgar("caso1");
+  if (casoCompleto(2)) otorgar("caso2");
+  if (casoCompleto(3)) otorgar("caso3");
+}
+
+/* ============================================================================================
+   PARTE 4 · FLUJO DEL RETO (los cuatro pasos de Polya)
+   ========================================================================================== */
+let R = null;
+let S = null;   // sesión de trabajo del reto activo
+
+function abrirReto(id){
+  R = retoPorId(id);
+  S = { paso:1, inicio:Date.now(), ubic:{}, sel:null, clasifIntentos:0, clasifPerfecta:false,
+        ops:[], exp:null, expIntentos:0, intentos:0, resultado:null,
+        verif:null, auto:[], pistas:0 };
+
+  const caso = CASOS.find(c=>c.id===R.caso);
+  const comp = COMPETENCIAS[R.competencia];
+  $("#retoCaso").textContent = "Caso "+caso.id+" · "+caso.titulo+" · "+R.sesion;
+  $("#retoTitulo").textContent = R.titulo;
+  $("#retoComp").className = "pastilla "+comp.clase;
+  $("#retoComp").innerHTML = '<i class="fa-solid '+comp.icono+'"></i> '+comp.etiqueta;
+  $("#retoEnunciado").innerHTML = resaltarNumeros(R.enunciado);
+  $("#retoPregunta").innerHTML = '<i class="fa-solid fa-circle-question"></i> '+resaltarNumeros(R.pregunta);
+  $("#guiaVaca").innerHTML = svgLola();
+  $("#btnLeerCaso").style.display = HAY_VOZ ? "" : "none";
+  $("#btnGuiaAudio").style.display = HAY_VOZ ? "" : "none";
+
+  $("#inParafraseo").value = "";
+  $("#inArgumento").value = "";
+  $("#contParafraseo").textContent = "0 caracteres";
+  $("#contParafraseo").className = "contador";
+  $("#contArgumento").textContent = "0 caracteres";
+  $("#contArgumento").className = "contador";
+  $("#avisoIntentos").textContent = "";
+  $("#zonaPistas").innerHTML = "";
+  $("#costoPista").textContent = "La primera es gratis";
+
+  pintarFichas();
+  pintarOperaciones();
+  pintarExpresiones();
+  pintarRespuesta();
+  pintarVerificacion();
+  pintarAutoevaluacion();
+  actualizarPista();
+  irAPaso(1);
+  refrescar();
+  mostrarVista("vistaReto");
+
+  // Presentación del caso, tal como lo pide el Aprendizaje Basado en Casos
+  if (R.id.endsWith(".1")){
+    Swal.fire({
+      title:"Caso "+caso.id+": "+caso.titulo,
+      html:'<div style="font-size:2.4rem;color:#FBBF24;margin-bottom:.4rem"><i class="fa-solid '+caso.icono+'"></i></div>'+
+           '<p style="font-size:.95rem;line-height:1.55;text-align:left">'+caso.presentacion+'</p>',
+      confirmButtonText:"Empezar el caso", confirmButtonColor:"#059669",
+      background:"#241C4F", color:"#FFF9F0"
+    });
+  }
+}
+
+function irAPaso(n){
+  S.paso = n;
+  [1,2,3,4].forEach(i=>{ $("#paso"+i).style.display = (i===n)?"block":"none"; });
+  $$("#polya .polya__paso").forEach(p=>{
+    const i = +p.dataset.paso;
+    p.classList.toggle("polya__paso--activo", i===n);
+    p.classList.toggle("polya__paso--ok", i<n);
+  });
+  $("#btnAtras").disabled = (n===1);
+  $("#txtSiguiente").textContent = (n===4) ? "Terminar el reto" : "Continuar";
+  $("#btnSiguiente").className = (n===4) ? "btn3d btn3d--verde" : "btn3d";
+  $("#btnSiguiente").style.flex = "1";
+  const NOMBRES = ["Entiendo el problema","Pienso el plan","Hago la cuenta","Explico mi respuesta"];
+  $("#pasoIndicador").innerHTML = '<i class="fa-solid fa-shoe-prints" style="color:var(--mango)"></i> Paso '+n+' de 4 · '+NOMBRES[n-1];
+  if (n===3) $("#cajaExpresionElegida").innerHTML =
+    '<span style="font-size:.75rem;display:block;opacity:.85;font-family:Nunito;font-weight:900">LA CUENTA QUE ESCOGISTE</span>'+(S.exp||"");
+  refrescar();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ---- Guía viva: Lola dice en cada momento cuál es la siguiente acción -------------------
+   Es el corazón del uso autónomo: el estudiante nunca queda sin saber qué sigue.           */
+function requisitos(){
+  if (!R || !S) return {items:[], guia:""};
+  const par = $("#inParafraseo").value.trim();
+  const arg = $("#inArgumento").value.trim();
+  const puestas = Object.keys(S.ubic).length, total = R.fichas.length;
+
+  if (S.paso===1){
+    const items = [
+      {t:"Contar el problema con tus palabras", ok: par.length>=CONFIG.MIN_PARAFRASEO},
+      {t:"Guardar las "+total+" fichas en su canasta", ok: puestas===total}
+    ];
+    let g;
+    if (par.length < CONFIG.MIN_PARAFRASEO)
+      g = "Empieza por el cuadro de arriba: cuéntame el problema con tus palabras.";
+    else if (S.sel !== null && S.sel !== undefined)
+      g = "¡Bien! Ahora toca la canasta donde va esa ficha.";
+    else if (puestas < total)
+      g = "Toca una ficha de la bandeja. Te faltan " + (total-puestas) + ".";
+    else
+      g = "¡Ya está todo! Toca el botón verde de abajo para seguir.";
+    return {items, guia:g};
+  }
+
+  if (S.paso===2){
+    const items = [
+      {t:"Marcar qué operaciones vas a usar", ok: S.ops.length>0},
+      {t:"Escoger la cuenta del problema", ok: S.exp!==null && S.exp!==undefined}
+    ];
+    const g = !S.ops.length ? "Piensa: ¿vas a sumar, restar, multiplicar o dividir? Marca lo que necesites."
+            : (!S.exp ? "Ahora escoge la cuenta que dice lo mismo que pasó en la finca."
+                      : "Listo. Toca el botón de abajo para hacer la cuenta.");
+    return {items, guia:g};
+  }
+
+  if (S.paso===3){
+    const items = [{t:"Escribir el resultado y comprobarlo", ok: !!S.correcto}];
+    const g = S.correcto ? "¡Correcto! Toca el botón de abajo para explicar cómo lo hiciste."
+            : (S.intentos===0 ? "Saca la cuenta en el cuaderno y escribe el resultado con los botones de números."
+                              : "Revisa la cuenta y vuelve a intentar. Si quieres, pídeme una pista.");
+    return {items, guia:g};
+  }
+
+  const items = [
+    {t:"Responder si tu respuesta tiene sentido", ok: S.verif!==null},
+    {t:"Explicar cómo lo hiciste", ok: arg.length>=CONFIG.MIN_ARGUMENTO},
+    {t:"Marcar las 3 casillas de la lista", ok: S.auto.length===AUTOEVALUACION.length}
+  ];
+  const g = S.verif===null ? "Lee la pregunta y escoge una de las tres respuestas."
+          : (arg.length<CONFIG.MIN_ARGUMENTO ? "Ahora escribe cómo hiciste la cuenta y por qué te sirve."
+          : (S.auto.length<AUTOEVALUACION.length ? "Lee tu explicación y marca las casillas que sí cumpliste."
+          : "¡Terminaste! Toca el botón verde para guardar tu trabajo."));
+  return {items, guia:g};
+}
+
+let ultimaGuia = "";
+function refrescar(){
+  if (!R || !S) return;
+  const {items, guia} = requisitos();
+  $("#guiaTexto").textContent = guia;
+  ultimaGuia = guia;
+
+  const faltan = items.filter(i=>!i.ok).length;
+  $("#listaFaltan").innerHTML =
+    '<span class="faltan__titulo">'+
+      (faltan===0 ? '<i class="fa-solid fa-circle-check" style="color:#6EE7B7"></i> ¡Ya puedes seguir!'
+                  : '<i class="fa-solid fa-list-check" style="color:var(--mango)"></i> Para seguir te falta:')+
+    '</span>'+
+    items.map(i=>'<span class="faltan__item '+(i.ok?"faltan__item--ok":"")+'">'+
+      '<i class="fa-solid '+(i.ok?"fa-circle-check":"fa-circle")+'" style="color:'+(i.ok?"#6EE7B7":"rgba(255,255,255,.45)")+'"></i>'+
+      i.t+'</span>').join("");
+
+  const b = $("#btnSiguiente");
+  const listo = faltan===0;
+  b.className = listo ? (S.paso===4 ? "btn3d btn3d--verde" : "btn3d btn3d--verde") : "btn3d btn3d--fantasma";
+  b.style.flex = "1";
+  $("#txtSiguiente").innerHTML = (listo ? '' : '<i class="fa-solid fa-lock"></i> ') +
+    (S.paso===4 ? "Terminar el reto" : "Siguiente paso");
+}
+
+$("#btnGuiaAudio").onclick = ()=>hablar(ultimaGuia);
+$("#btnLeerCaso").onclick  = ()=>hablar(R ? (R.enunciado+" "+R.pregunta) : "");
+
+/* ---- Paso 1a · parafraseo --------------------------------------------------------------- */
+function contarTexto(idIn, idCont, minimo){
+  const t = $(idIn).value.trim();
+  const pct = Math.min(100, Math.round(t.length/minimo*100));
+  const listo = t.length>=minimo;
+  $(idCont).innerHTML =
+    '<div class="medidor"><div class="medidor__relleno" style="width:'+pct+'%"></div></div>'+
+    '<span class="medidor__txt'+(listo?" medidor__txt--ok":"")+'">'+
+      (listo ? '<i class="fa-solid fa-circle-check"></i> ¡Ya está! Puedes seguir.'
+             : (t.length===0 ? "Escribe aquí arriba para llenar la barra."
+                             : "Te falta un poquito más. Cuenta un detalle más."))+
+    '</span>';
+  $(idCont).className = "";
+}
+$("#inParafraseo").addEventListener("input", ()=>{ contarTexto("#inParafraseo","#contParafraseo",CONFIG.MIN_PARAFRASEO); refrescar(); });
+$("#inArgumento").addEventListener("input", ()=>{ contarTexto("#inArgumento","#contArgumento",CONFIG.MIN_ARGUMENTO); refrescar(); });
+
+/* ---- Paso 1b · clasificación de datos por toque (sin arrastrar) ------------------------- */
+function pintarFichas(){
+  const band = $("#bandeja");
+  band.innerHTML = '<div style="font-size:.78rem;font-weight:900;opacity:.85;margin-bottom:.35rem">'+
+                   '<i class="fa-solid fa-inbox"></i> Fichas por clasificar</div><div id="bandejaCuerpo"></div>';
+  $$(".canasta__cuerpo").forEach(c=>c.innerHTML="");
+  R.fichas.forEach((f,idx)=>{
+    const destino = S.ubic[idx];
+    const cont = destino ? $("#canasta"+({se:"Se",busco:"Busco",sobra:"Sobra"}[destino])).querySelector(".canasta__cuerpo")
+                         : $("#bandejaCuerpo");
+    const b = document.createElement("button");
+    b.className = "ficha";
+    b.dataset.idx = idx;
+    b.innerHTML = '<i class="fa-solid '+(destino?"fa-rotate-left":"fa-hand-pointer")+'" style="opacity:.55"></i> '+f.t;
+    b.onclick = ()=>tocarFicha(idx);
+    cont.appendChild(b);
+  });
+  if (!$("#bandejaCuerpo").children.length)
+    $("#bandejaCuerpo").innerHTML = '<span class="tenue" style="font-size:.95rem;font-weight:700"><i class="fa-solid fa-circle-check" style="color:#6EE7B7"></i> Guardaste todas las fichas. Si te equivocaste, toca una para devolverla.</span>';
+  ["se","busco","sobra"].forEach(c=>{
+    const n = Object.values(S.ubic).filter(x=>x===c).length;
+    const e = $("#cuenta"+({se:"Se",busco:"Busco",sobra:"Sobra"}[c]));
+    if (e) e.textContent = n;
+  });
+  resaltarCanastas();
+  refrescar();
+}
+
+function tocarFicha(idx){
+  if (S.ubic[idx]){                 // si ya está en una canasta, vuelve a la bandeja
+    delete S.ubic[idx]; S.sel = null; pintarFichas(); return;
+  }
+  S.sel = (S.sel===idx) ? null : idx;
+  $$("#bandejaCuerpo .ficha").forEach(f=>f.classList.toggle("ficha--activa", +f.dataset.idx===S.sel));
+  resaltarCanastas();
+  refrescar();
+}
+
+function resaltarCanastas(){
+  $$(".canasta").forEach(c=>c.classList.toggle("canasta--lista", S.sel!==null));
+}
+
+$$(".canasta").forEach(c=>{
+  c.addEventListener("click",(ev)=>{
+    if (ev.target.closest(".ficha")) return;
+    if (S===null || S.sel===null) return;
+    S.ubic[S.sel] = c.dataset.canasta;
+    S.sel = null;
+    pintarFichas();
+  });
+});
+
+function revisarClasificacion(){
+  const total = R.fichas.length;
+  if (Object.keys(S.ubic).length < total) return {ok:false, falta:true};
+  const malas = R.fichas.map((f,i)=> S.ubic[i]===f.c ? null : i).filter(i=>i!==null);
+  $$(".canasta .ficha").forEach(b=>{
+    const i = +b.dataset.idx;
+    b.classList.toggle("ficha--mal", malas.includes(i));
+    b.classList.toggle("ficha--ok", !malas.includes(i));
+  });
+  return {ok: malas.length===0, malas};
+}
+
+/* ---- Paso 2 · operaciones y expresión --------------------------------------------------- */
+function pintarOperaciones(){
+  $("#listaOperaciones").innerHTML = R.operaciones.map((o,i)=>
+    '<button class="opcion" data-op="'+i+'"><span class="opcion__marca"><i class="fa-solid fa-check"></i></span>'+
+    '<i class="fa-solid '+o.i+'" style="opacity:.85;width:20px"></i><span>'+o.t+'</span></button>').join("");
+  $$("[data-op]").forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.op;
+    if (S.ops.includes(i)) S.ops = S.ops.filter(x=>x!==i); else S.ops.push(i);
+    b.classList.toggle("opcion--sel", S.ops.includes(i));
+    b.classList.remove("opcion--ok","opcion--mal");
+    refrescar();
+  });
+}
+
+function pintarExpresiones(){
+  $("#listaExpresiones").innerHTML = R.expresiones.map((e,i)=>
+    '<button class="opcion" data-exp="'+i+'"><span class="opcion__marca"><i class="fa-solid fa-check"></i></span>'+
+    '<span class="expresion">'+e.t+'</span></button>').join("");
+  $$("[data-exp]").forEach(b=>b.onclick=()=>{
+    $$("[data-exp]").forEach(x=>x.classList.remove("opcion--sel","opcion--ok","opcion--mal"));
+    b.classList.add("opcion--sel");
+    S.exp = R.expresiones[+b.dataset.exp].t;
+    S.expIdx = +b.dataset.exp;
+    refrescar();
+  });
+}
+
+function revisarPlan(){
+  const correctas = R.operaciones.map((o,i)=>o.ok?i:null).filter(i=>i!==null);
+  const igual = correctas.length===S.ops.length && correctas.every(i=>S.ops.includes(i));
+  $$("[data-op]").forEach(b=>{
+    const i=+b.dataset.op;
+    if (S.ops.includes(i)) b.classList.add(R.operaciones[i].ok?"opcion--ok":"opcion--mal");
+  });
+  return igual;
+}
+
+/* ---- Paso 3 · ejecución ----------------------------------------------------------------- */
+let campoActivo = null;
+function activarCampo(el){
+  campoActivo = el;
+  $$(".campo--num").forEach(c=>c.classList.toggle("activo", c===el));
+}
+function teclado(conComa, conSigno){
+  const t = (v,txt,cls)=>'<button class="tecla '+(cls||"")+'" data-tecla="'+v+'">'+txt+'</button>';
+  return '<div class="teclado">'+
+    ["1","2","3","4","5","6","7","8","9"].map(n=>t(n,n)).join("")+
+    (conComa ? t(",",",","tecla--accion") : t("nada","","tecla--accion"))+
+    t("0","0")+
+    (conSigno ? t("signo","+ /","tecla--accion") : t("nada","","tecla--accion"))+
+    '</div>'+
+    '<button class="tecla tecla--borrar" data-tecla="del" style="width:100%;margin-top:.5rem">'+
+      '<i class="fa-solid fa-delete-left"></i> Borrar</button>';
+}
+function conectarTeclado(){
+  $$("[data-tecla]").forEach(b=>b.onclick=()=>{
+    if (!campoActivo) return;
+    const v = b.dataset.tecla;
+    if (v==="nada") return;
+    if (v==="del") campoActivo.value = campoActivo.value.slice(0,-1);
+    else if (v==="signo") campoActivo.value = campoActivo.value.startsWith("-")
+      ? campoActivo.value.slice(1) : "-"+campoActivo.value;
+    else campoActivo.value += v;
+    campoActivo.dispatchEvent(new Event("input",{bubbles:true}));
+  });
+  $$(".campo--num").forEach(c=>c.onclick=()=>activarCampo(c));
+}
+
+function pintarRespuesta(){
+  const z = $("#zonaRespuesta");
+  if (R.respuesta.tipo==="fraccion"){
+    z.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;gap:.9rem;flex-wrap:wrap">'+
+        '<div style="text-align:center">'+
+          '<div style="font-size:.8rem;font-weight:900;opacity:.85;margin-bottom:.25rem">arriba</div>'+
+          '<input id="inNum" class="campo campo--num" inputmode="none" style="width:108px" placeholder="?">'+
+          '<div style="height:5px;background:#FFF9F0;border-radius:9px;margin:.45rem 0"></div>'+
+          '<input id="inDen" class="campo campo--num" inputmode="none" style="width:108px" placeholder="?">'+
+          '<div style="font-size:.8rem;font-weight:900;opacity:.85;margin-top:.25rem">abajo</div>'+
+        '</div>'+
+        '<span style="font-family:Fredoka;font-size:1.05rem;opacity:.95">'+R.respuesta.unidad+'</span>'+
+      '</div>'+
+      '<p class="tenue" style="font-size:.88rem;margin:.7rem 0 0;text-align:center">Toca el cuadro de arriba o el de abajo y escribe con los botones.</p>'+
+      teclado(false,false);
+  } else {
+    const conComa  = String(R.respuesta.valor).includes(".");
+    const conSigno = R.respuesta.valor < 0;
+    z.innerHTML =
+      '<label for="inResp" style="display:block;font-size:.95rem;font-weight:900;margin-bottom:.4rem">Mi respuesta</label>'+
+      '<div style="display:flex;align-items:center;gap:.6rem">'+
+        '<input id="inResp" class="campo campo--num" inputmode="none" placeholder="0" style="flex:1">'+
+        '<span style="font-family:Fredoka;font-size:1rem;white-space:nowrap;opacity:.95">'+R.respuesta.unidad+'</span>'+
+      '</div>'+
+      (R.respuesta.ayuda?'<p class="tenue" style="font-size:.88rem;margin:.5rem 0 0">'+R.respuesta.ayuda+'</p>':"")+
+      teclado(conComa, conSigno);
+  }
+  conectarTeclado();
+  activarCampo($("#inNum") || $("#inResp"));
+}
+
+function respuestaCorrecta(){
+  if (R.respuesta.tipo==="fraccion"){
+    const n = parseInt($("#inNum").value,10), d = parseInt($("#inDen").value,10);
+    if (isNaN(n)||isNaN(d)||d===0) return {valida:false};
+    S.resultado = n+"/"+d;
+    return {valida:true, ok: n*R.respuesta.den === R.respuesta.num*d};
+  }
+  const v = normalizaNumero($("#inResp").value);
+  if (isNaN(v)) return {valida:false};
+  S.resultado = String(v);
+  return {valida:true, ok: Math.abs(v - R.respuesta.valor) < 0.001};
+}
+
+$("#btnVerificar").onclick = ()=>{
+  const r = respuestaCorrecta();
+  if (!r.valida){ toast("warning","Escribe un número para poder revisar"); return; }
+  S.intentos++;
+  if (r.ok){
+    fiesta(false);
+    $("#avisoIntentos").innerHTML = '<span style="color:#86EFAC">¡Correcto! Sigue al paso 4.</span>';
+    S.correcto = true;
+    refrescar();
+    aviso("success","¡Esa es!","Ahora explica cómo lo hiciste.");
+  } else {
+    S.correcto = false;
+    $("#avisoIntentos").innerHTML = '<span style="color:#FDA4AF">Intento '+S.intentos+'. Revisa tu cuenta.</span>';
+    const t = R.respuesta.trampa;
+    if (t && Math.abs(normalizaNumero($("#inResp").value) - t.valor) < 0.001){
+      aviso("info","Casi, pero falta pensarlo",t.msg);
+      return;
+    }
+    refrescar();
+    // A partir del segundo intento Lola ofrece la pista sin que el niño tenga que buscarla
+    if (S.intentos>=2 && S.pistas<3){
+      Swal.fire({
+        title:"¿Te ayudo?", html:"Vuelve a hacer la cuenta en el cuaderno, o te doy una pista.",
+        icon:"question", showCancelButton:true,
+        confirmButtonText:"Sí, dame una pista", cancelButtonText:"Lo intento otra vez",
+        confirmButtonColor:"#0284C7", cancelButtonColor:"#4B5563",
+        background:"#241C4F", color:"#FFF9F0"
+      }).then(rr=>{ if (rr.isConfirmed) $("#btnPista").click(); });
+      return;
+    }
+    aviso("error","Todavía no","Revisa la cuenta en tu cuaderno y vuelve a intentar.");
+  }
+};
+
+/* ---- Paso 4 · verificación, argumentación y autoevaluación ------------------------------ */
+function pintarVerificacion(){
+  $("#txtVerificacion").textContent = R.verificacion.pregunta;
+  $("#listaVerificacion").innerHTML = R.verificacion.opciones.map((o,i)=>
+    '<button class="opcion" data-ver="'+i+'"><span class="opcion__marca"><i class="fa-solid fa-check"></i></span><span>'+o.t+'</span></button>').join("");
+  $$("[data-ver]").forEach(b=>b.onclick=()=>{
+    $$("[data-ver]").forEach(x=>x.classList.remove("opcion--sel","opcion--ok","opcion--mal"));
+    b.classList.add("opcion--sel");
+    S.verif = +b.dataset.ver;
+    refrescar();
+  });
+}
+
+function pintarAutoevaluacion(){
+  $("#listaAutoevaluacion").innerHTML = AUTOEVALUACION.map((t,i)=>
+    '<button class="opcion" data-auto="'+i+'" style="font-size:.9rem;font-weight:700;padding:.7rem .85rem">'+
+    '<span class="opcion__marca"><i class="fa-solid fa-check"></i></span><span>'+t+'</span></button>').join("");
+  $$("[data-auto]").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.auto;
+    if (S.auto.includes(i)) S.auto=S.auto.filter(x=>x!==i); else S.auto.push(i);
+    b.classList.toggle("opcion--sel", S.auto.includes(i));
+    refrescar();
+  });
+}
+
+/* ---- Pistas graduadas · Zona de Desarrollo Próximo -------------------------------------- */
+const TITULOS_PISTA = ["Pista 1 · Lectura","Pista 2 · Traducción","Pista 3 · Procedimiento"];
+const BOTON_PISTA   = ["Pedir la pista de lectura","Pedir la pista de traducción","Pedir la pista de procedimiento","Ya viste todas las pistas"];
+
+function actualizarPista(){
+  $("#txtBtnPista").textContent = BOTON_PISTA[Math.min(S.pistas,3)];
+  $("#btnPista").disabled = S.pistas>=3;
+  $("#costoPista").textContent = S.pistas===0 ? "La primera es gratis" : "Cuesta "+CONFIG.COSTO_PISTA+" puntos";
+}
+
+$("#btnPista").onclick = async ()=>{
+  if (S.pistas>=3) return;
+  if (S.pistas>0){
+    const res = await Swal.fire({
+      title:"Otra pista", html:"Esta te cuesta <b>"+CONFIG.COSTO_PISTA+" puntos</b> de este reto.",
+      icon:"question", showCancelButton:true,
+      confirmButtonText:"Está bien", cancelButtonText:"Mejor no",
+      confirmButtonColor:"#0284C7", cancelButtonColor:"#4B5563",
+      background:"#241C4F", color:"#FFF9F0"
+    });
+    if (!res.isConfirmed) return;
+  }
+  const i = S.pistas;
+  const div = document.createElement("div");
+  div.className = "pista pista--"+(i+1)+" aparece";
+  div.innerHTML = '<span class="pista__etq"><i class="fa-solid fa-lightbulb"></i> '+TITULOS_PISTA[i]+
+    (HAY_VOZ?' <button class="btn3d btn3d--cielo btn3d--mini" data-pista="'+i+'" style="float:right;margin-top:-.2rem"><i class="fa-solid fa-volume-high"></i></button>':'')+
+    '</span>'+R.pistas[i];
+  $("#zonaPistas").appendChild(div);
+  const bp = div.querySelector("[data-pista]"); if (bp) bp.onclick = ()=>hablar(R.pistas[i]);
+  S.pistas++;
+  estado.contadores.pistasTotales++;
+  guardarEstado();
+  actualizarPista();
+};
+
+/* ---- Navegación entre pasos con validación de evidencias -------------------------------- */
+$("#btnAtras").onclick = ()=>{ if (S.paso>1) irAPaso(S.paso-1); };
+
+$("#btnSiguiente").onclick = ()=>{
+  if (S.paso===1){
+    const p = $("#inParafraseo").value.trim();
+    if (p.length < CONFIG.MIN_PARAFRASEO){
+      aviso("info","Falta contarlo","Escribe arriba de qué trata el problema, con tus palabras.");
+      return;
+    }
+    const c = revisarClasificacion();
+    if (c.falta){ aviso("info","Faltan fichas","Toca cada ficha y después toca su canasta."); return; }
+    S.clasifIntentos++;
+    if (!c.ok){
+      aviso("error","Mira las fichas rojas","Esas están en la canasta que no es. Tócalas y guárdalas en otra.");
+      return;
+    }
+    if (S.clasifIntentos===1 && !S.clasifPerfecta){
+      S.clasifPerfecta = true;
+      estado.contadores.clasificacionesPerfectas++;
+    }
+    if (!S.parafraseoContado){ estado.contadores.parafraseos++; S.parafraseoContado = true; }
+    guardarEstado();
+    fiesta(false);
+    irAPaso(2);
+    return;
+  }
+
+  if (S.paso===2){
+    if (!S.ops.length){ aviso("info","Falta escoger","¿Vas a sumar, restar, multiplicar o dividir? Marca lo que necesites."); return; }
+    if (!revisarPlan()){
+      aviso("error","Casi","Las rojas no se necesitan para responder. Quítalas y prueba otra vez.");
+      return;
+    }
+    if (S.exp===null || S.exp===undefined){ aviso("info","Falta la cuenta","Escoge cuál de las cuatro cuentas es la del problema."); return; }
+    S.expIntentos++;
+    const okExp = R.expresiones[S.expIdx].ok;
+    $$("[data-exp]").forEach(b=>{ if (+b.dataset.exp===S.expIdx) b.classList.add(okExp?"opcion--ok":"opcion--mal"); });
+    if (!okExp){
+      aviso("error","Esa no es","Lee otra vez el problema y fíjate en el orden de la cuenta.");
+      return;
+    }
+    if (S.expIntentos===1) estado.contadores.expresionPrimerIntento++;
+    guardarEstado();
+    fiesta(false);
+    irAPaso(3);
+    return;
+  }
+
+  if (S.paso===3){
+    if (!S.correcto){ aviso("info","Falta comprobar","Escribe el resultado y toca el botón verde de comprobar."); return; }
+    irAPaso(4);
+    return;
+  }
+
+  // Paso 4: cierre del reto
+  if (S.verif===null){ aviso("info","Falta una respuesta","Escoge una de las tres opciones de arriba."); return; }
+  if (!R.verificacion.opciones[S.verif].ok){
+    $$("[data-ver]").forEach(b=>{ if (+b.dataset.ver===S.verif) b.classList.add("opcion--mal"); });
+    aviso("error","Esa no es","Piensa qué significa tu número allá en la finca.");
+    return;
+  }
+  const arg = $("#inArgumento").value.trim();
+  if (arg.length < CONFIG.MIN_ARGUMENTO){
+    aviso("info","Falta explicar","Cuenta cómo hiciste la cuenta y por qué te sirve.");
+    return;
+  }
+  if (S.auto.length < AUTOEVALUACION.length){
+    aviso("info","Revisa la lista","Lee lo que escribiste y marca las tres casillas.");
+    return;
+  }
+  terminarReto(arg);
+};
+
+/* ---- Cierre del reto: XP, evidencias e insignias ---------------------------------------- */
+function terminarReto(argumento){
+  const yaEstaba = !!estado.completados[R.id];
+  let xp = R.xp - Math.max(0, S.pistas-1)*CONFIG.COSTO_PISTA;   // la primera pista no descuenta
+  if (S.pistas===0)   xp += CONFIG.BONO_SIN_PISTAS;
+  if (S.intentos===1) xp += CONFIG.BONO_PRIMER_INTENTO;
+  xp = Math.max(30, xp);
+  if (yaEstaba) xp = Math.round(xp*0.3);   // repetir un reto suma menos
+
+  estado.xp += xp;
+  estado.completados[R.id] = { intentos:S.intentos, pistas:S.pistas, xp:xp, fecha:new Date().toISOString() };
+  estado.contadores.argumentaciones++;
+  guardarEstado();
+
+  registrarEvidencia(argumento, xp);
+
+  if (S.pistas===0) otorgar("solo");
+  fiesta(true);
+
+  const comp = COMPETENCIAS[R.competencia];
+  Swal.fire({
+    title:"¡Reto resuelto!",
+    html:'<div style="font-size:2.6rem;color:#FBBF24"><i class="fa-solid fa-trophy fa-bounce"></i></div>'+
+         '<p style="font-family:Fredoka;font-size:1.7rem;margin:.4rem 0 .1rem;color:#FDE68A">+'+xp+' puntos</p>'+
+         '<p style="font-size:.92rem;margin:.2rem 0 .8rem;opacity:.9">'+R.titulo+' · '+comp.etiqueta+'</p>'+
+         '<div style="text-align:left;font-size:.85rem;line-height:1.6;background:rgba(255,255,255,.08);padding:.7rem .9rem;border-radius:14px">'+
+           '<b>Lo que guardaste:</b><br>Cómo contaste el problema, cómo separaste los datos, la cuenta que escogiste, el resultado y tu explicación.'+
+         '</div>',
+    confirmButtonText:"Volver a la ruta", confirmButtonColor:"#059669",
+    background:"#241C4F", color:"#FFF9F0"
+  }).then(()=>{
+    revisarInsignias();
+    pintarTablero(); pintarInsignias();
+    mostrarVista("vistaTablero");
+  });
+}
+
+/* ============================================================================================
+   PARTE 5 · MODELO DE EVIDENCIA · registro local y envío a Google Apps Script
+   ========================================================================================== */
+function registrarEvidencia(argumento, xp){
+  const etiqueta = (cat)=> R.fichas.filter((f,i)=>S.ubic[i]===cat).map(f=>f.t).join(" | ");
+  const ev = {
+    id: Date.now()+"-"+Math.random().toString(36).slice(2,7),
+    fecha: new Date().toISOString(),
+    estudiante: estado.nombre,
+    grupo: estado.grupo,
+    caso: "Caso "+R.caso+": "+CASOS.find(c=>c.id===R.caso).titulo,
+    reto: R.id+" · "+R.titulo,
+    sesion: R.sesion,
+    competencia: COMPETENCIAS[R.competencia].etiqueta,
+    parafraseo: $("#inParafraseo").value.trim(),
+    datos_lo_que_se: etiqueta("se"),
+    datos_lo_que_busco: etiqueta("busco"),
+    datos_descartados: etiqueta("sobra"),
+    clasificacion_primer_intento: S.clasifIntentos===1 ? "Sí" : "No",
+    operaciones: S.ops.map(i=>R.operaciones[i].t).join(" + "),
+    expresion: S.exp,
+    expresion_primer_intento: S.expIntentos===1 ? "Sí" : "No",
+    resultado: S.resultado,
+    unidad: R.respuesta.unidad,
+    intentos_resultado: S.intentos,
+    verificacion: R.verificacion.opciones[S.verif].t,
+    argumentacion: argumento,
+    autoevaluacion: S.auto.map(i=>AUTOEVALUACION[i]).join(" | "),
+    pistas_usadas: S.pistas,
+    tiempo_segundos: Math.round((Date.now()-S.inicio)/1000),
+    xp_obtenido: xp,
+    dispositivo: navigator.userAgent.slice(0,90)
+  };
+  const lista = leer(CONFIG.CLAVE_EVIDENCIA, []);
+  lista.push(ev);
+  guardar(CONFIG.CLAVE_EVIDENCIA, lista);
+  enviarEvidencia(ev);
+}
+
+/* Envío sin bloquear la clase: si no hay internet, la evidencia queda en cola local. */
+async function enviarEvidencia(ev){
+  const url = urlEnvio();
+  if (!url){ return; }
+  try{
+    await fetch(url, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify(ev)
+    });
+    // Con mode no-cors la respuesta es opaca: se asume enviada y se depura la cola.
+    const cola = leer(CONFIG.CLAVE_COLA, []).filter(x=>x.id!==ev.id);
+    guardar(CONFIG.CLAVE_COLA, cola);
+  } catch(e){
+    const cola = leer(CONFIG.CLAVE_COLA, []);
+    if (!cola.some(x=>x.id===ev.id)){ cola.push(ev); guardar(CONFIG.CLAVE_COLA, cola); }
+  }
+}
+
+async function reenviarCola(silencioso){
+  const cola = leer(CONFIG.CLAVE_COLA, []);
+  if (!cola.length){ if(!silencioso) toast("info","No hay evidencias pendientes"); return; }
+  if (!urlEnvio()){ if(!silencioso) toast("warning","Primero configura el enlace de envío"); return; }
+  for (const ev of [...cola]) await enviarEvidencia(ev);
+  if (!silencioso) toast("success","Se intentó enviar "+cola.length+" evidencia(s)");
+  pintarEstadoCola();
+}
+window.addEventListener("online", ()=>reenviarCola(true));
+
+/* ============================================================================================
+   PARTE 6 · PANEL DEL DOCENTE
+   ========================================================================================== */
+function pintarEstadoCola(){
+  const c = leer(CONFIG.CLAVE_COLA, []).length;
+  const u = urlEnvio();
+  $("#estadoCola").innerHTML =
+    (u ? '<i class="fa-solid fa-cloud" style="color:#6EE7B7"></i> Enlace de envío configurado.'
+       : '<i class="fa-solid fa-cloud-arrow-up" style="color:#FDA4AF"></i> Sin enlace de envío. Las evidencias solo se guardan en este dispositivo.')+
+    ' · Pendientes por enviar: <b>'+c+'</b>';
+}
+
+function pintarTablaDocente(){
+  const lista = leer(CONFIG.CLAVE_EVIDENCIA, []);
+  const corta = (t,n)=> !t ? "" : (String(t).length>n ? String(t).slice(0,n)+"…" : String(t));
+  $("#cuerpoTabla").innerHTML = lista.length ? lista.slice().reverse().map(e=>
+    "<tr>"+
+      "<td>"+e.estudiante+"<br><span style='opacity:.7'>"+e.grupo+"</span></td>"+
+      "<td>"+e.reto+"</td>"+
+      "<td>"+corta(e.parafraseo,90)+"</td>"+
+      "<td><b>Sé:</b> "+corta(e.datos_lo_que_se,60)+"<br><b>Busco:</b> "+corta(e.datos_lo_que_busco,50)+"</td>"+
+      "<td>"+e.operaciones+"</td>"+
+      "<td>"+e.expresion+"</td>"+
+      "<td>"+e.resultado+" "+e.unidad+"<br><span style='opacity:.7'>"+e.intentos_resultado+" intento(s)</span></td>"+
+      "<td>"+corta(e.argumentacion,110)+"</td>"+
+      "<td>"+e.pistas_usadas+"</td>"+
+      "<td>"+e.xp_obtenido+"</td>"+
+    "</tr>").join("")
+    : '<tr><td colspan="10" style="text-align:center;padding:1.2rem;opacity:.75">Todavía no hay evidencias registradas en este dispositivo.</td></tr>';
+  pintarEstadoCola();
+}
+
+function descargar(nombre, contenido, tipo){
+  const b = new Blob([contenido], {type:tipo});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+
+$("#btnCsv").onclick = ()=>{
+  const lista = leer(CONFIG.CLAVE_EVIDENCIA, []);
+  if (!lista.length){ toast("info","No hay evidencias para exportar"); return; }
+  const cols = Object.keys(lista[0]);
+  const esc = (v)=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const csv = "\ufeff" + cols.join(";") + "\n" + lista.map(f=>cols.map(c=>esc(f[c])).join(";")).join("\n");
+  descargar("evidencias_rodania.csv", csv, "text/csv;charset=utf-8;");
+};
+
+$("#btnJson").onclick = ()=>{
+  const lista = leer(CONFIG.CLAVE_EVIDENCIA, []);
+  if (!lista.length){ toast("info","No hay evidencias para exportar"); return; }
+  descargar("evidencias_rodania.json", JSON.stringify(lista,null,2), "application/json");
+};
+
+$("#btnUrl").onclick = async ()=>{
+  const r = await Swal.fire({
+    title:"Enlace de envío",
+    html:"Pega aquí la URL de tu aplicación web de Google Apps Script (termina en <b>/exec</b>). Déjalo vacío para trabajar solo sin conexión.",
+    input:"text", inputValue: urlEnvio(),
+    showCancelButton:true, confirmButtonText:"Guardar", cancelButtonText:"Cancelar",
+    confirmButtonColor:"#0284C7", background:"#241C4F", color:"#FFF9F0"
+  });
+  if (r.isConfirmed){
+    guardar(CONFIG.CLAVE_URL, (r.value||"").trim());
+    toast("success","Enlace guardado");
+    pintarEstadoCola();
+  }
+};
+
+$("#btnCola").onclick = ()=>reenviarCola(false);
+
+$("#btnReiniciar").onclick = async ()=>{
+  const r = await Swal.fire({
+    title:"¿Borrar todo el avance?",
+    html:"Se borran el perfil, el XP, las insignias y las evidencias guardadas <b>en este dispositivo</b>. Esta acción no se puede deshacer.",
+    icon:"warning", showCancelButton:true,
+    confirmButtonText:"Sí, borrar", cancelButtonText:"No, cancelar",
+    confirmButtonColor:"#E11D48", cancelButtonColor:"#4B5563",
+    background:"#241C4F", color:"#FFF9F0"
+  });
+  if (!r.isConfirmed) return;
+  [CONFIG.CLAVE_ESTADO, CONFIG.CLAVE_EVIDENCIA, CONFIG.CLAVE_COLA].forEach(k=>localStorage.removeItem(k));
+  location.reload();
+};
+
+$("#btnDocente").onclick = async ()=>{
+  const r = await Swal.fire({
+    title:"Panel del docente",
+    text:"Escribe la clave para ver las evidencias del grupo.",
+    input:"password", inputAttributes:{ inputmode:"numeric" },
+    showCancelButton:true, confirmButtonText:"Entrar", cancelButtonText:"Cancelar",
+    confirmButtonColor:"#0284C7", cancelButtonColor:"#4B5563",
+    background:"#241C4F", color:"#FFF9F0"
+  });
+  if (!r.isConfirmed) return;
+  if (String(r.value).trim() !== CONFIG.PIN_DOCENTE){ toast("error","Clave incorrecta"); return; }
+  pintarTablaDocente();
+  mostrarVista("vistaDocente");
+};
+
+/* ============================================================================================
+   PARTE 7 · NAVEGACIÓN GENERAL E INICIO
+   ========================================================================================== */
+$("#btnVerInsignias").onclick = ()=>{ pintarInsignias(); mostrarVista("vistaInsignias"); };
+$("#btnSalirInsignias").onclick = ()=>mostrarVista("vistaTablero");
+$("#btnSalirDocente").onclick  = ()=>mostrarVista("vistaTablero");
+
+$("#btnSalirReto").onclick = async ()=>{
+  const r = await Swal.fire({
+    title:"¿Salir del reto?",
+    text:"Lo que llevas escrito en este reto no se guarda si sales ahora.",
+    icon:"question", showCancelButton:true,
+    confirmButtonText:"Sí, salir", cancelButtonText:"Seguir aquí",
+    confirmButtonColor:"#E11D48", cancelButtonColor:"#4B5563",
+    background:"#241C4F", color:"#FFF9F0"
+  });
+  if (r.isConfirmed){ pintarTablero(); mostrarVista("vistaTablero"); }
+};
+
+/* ---- Tutorial de la primera vez ---------------------------------------------------------
+   Se muestra solo la primera vez que el estudiante entra, y queda disponible en el botón
+   de ayuda. Sin este recorrido, el niño no sabe que la clasificación es de a dos toques.  */
+const TUTORIAL = [
+  {i:"fa-cow",           t:"Hola, soy Lola",
+   x:"Te voy a acompañar por tres casos de la finca. En cada uno hay problemas de matemáticas con cosas que tú ya conoces: la leche, el queso y el mercado."},
+  {i:"fa-map-location-dot", t:"La ruta de la vereda",
+   x:"Los retos se abren de a uno. Cuando terminas el primero, se abre el siguiente. El candado quiere decir que todavía no llegas ahí."},
+  {i:"fa-shoe-prints",   t:"Cuatro pasos, siempre los mismos",
+   x:"1. Entiendo el problema. 2. Pienso qué cuenta hacer. 3. Hago la cuenta. 4. Explico cómo lo hice. Arriba siempre te digo en qué paso vas."},
+  {i:"fa-hand-pointer",  t:"Las fichas son de a dos toques",
+   x:"Primero tocas la ficha, y después tocas la canasta donde va. Si te equivocas, tocas la ficha otra vez y vuelve a la bandeja. Nada se daña."},
+  {i:"fa-headphones",    t:"Si te cuesta leer, escucha",
+   x:"El botón de audífonos te lee el problema en voz alta. Puedes oírlo las veces que quieras."},
+  {i:"fa-lightbulb",     t:"Si te trancas, pídeme una pista",
+   x:"La primera pista es gratis. Yo no te doy la respuesta: te muestro el camino para que la encuentres tú."},
+  {i:"fa-list-check",    t:"Nunca te vas a quedar perdido",
+   x:"Abajo siempre hay una lista que dice qué te falta para poder seguir. Cuando esté toda en verde, el botón se pone verde también."}
+];
+
+async function correrTutorial(){
+  guardar("rodania_tutorial_v1", true);   // se marca al abrirlo: no vuelve a salir solo
+  for (let k=0;k<TUTORIAL.length;k++){
+    const p = TUTORIAL[k];
+    const r = await Swal.fire({
+      html:'<div class="tuto">'+
+             '<div class="tuto__paso">'+(k+1)+' de '+TUTORIAL.length+'</div>'+
+             '<div class="tuto__arte"><i class="fa-solid '+p.i+' fa-bounce"></i></div>'+
+             '<h3 class="tipo-titulo" style="font-size:1.3rem;margin:.2rem 0 .5rem">'+p.t+'</h3>'+
+             '<p class="tuto__texto">'+p.x+'</p>'+
+           '</div>',
+      showCancelButton: k<TUTORIAL.length-1,
+      confirmButtonText: k===TUTORIAL.length-1 ? "¡Vamos a empezar!" : "Siguiente",
+      cancelButtonText:"Saltar",
+      confirmButtonColor:"#059669", cancelButtonColor:"#4B5563",
+      background:"#241C4F", color:"#FFF9F0", allowOutsideClick:false, width:"32rem"
+    });
+    if (!r.isConfirmed) break;
+  }
+}
+
+$("#btnAyuda").onclick = ()=>correrTutorial();
+
+
+function entrarApp(){
+  $("#acceso").style.display = "none";
+  $("#app").style.display = "block";
+  $("#lolaMini").innerHTML = svgLola();
+  $("#lolaTablero").innerHTML = svgLola();
+  pintarTablero();
+  pintarInsignias();
+  reenviarCola(true);
+  if (!leer("rodania_tutorial_v1", false)) setTimeout(correrTutorial, 400);
+}
+
+$("#btnEntrar").onclick = ()=>{
+  const n = $("#inNombre").value.trim();
+  if (n.length < 3){ toast("warning","Escribe tu nombre para continuar"); $("#inNombre").focus(); return; }
+  estado.nombre = n;
+  estado.grupo  = $("#inGrupo").value;
+  guardarEstado();
+  fiesta(true);
+  entrarApp();
+};
+$("#inNombre").addEventListener("keydown", e=>{ if (e.key==="Enter") $("#btnEntrar").click(); });
+
+(function iniciar(){
+  $("#lolaAcceso").innerHTML = svgLola();
+  const g = leer(CONFIG.CLAVE_ESTADO, null);
+  if (g && g.nombre){
+    estado = Object.assign(estado, g);
+    estado.contadores = Object.assign({parafraseos:0,clasificacionesPerfectas:0,expresionPrimerIntento:0,argumentaciones:0,pistasTotales:0}, g.contadores||{});
+    $("#inNombre").value = g.nombre;
+    if (g.grupo) $("#inGrupo").value = g.grupo;
+    entrarApp();
+  }
+})();
+</script>
+
+<!--
+============================================================================================
+  ANEXO · CÓDIGO PARA GOOGLE APPS SCRIPT (recepción de evidencias)
+
+  1. Crea una hoja de cálculo en Google Drive llamada "Evidencias Rodania".
+  2. Menú Extensiones > Apps Script y pega este código:
+
+     function doPost(e) {
+       var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+       var d = JSON.parse(e.postData.contents);
+       if (hoja.getLastRow() === 0) hoja.appendRow(Object.keys(d));
+       var enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+       hoja.appendRow(enc.map(function(k){ return d[k] === undefined ? "" : d[k]; }));
+       return ContentService.createTextOutput("ok");
+     }
+
+  3. Implementar > Nueva implementación > Aplicación web.
+     Ejecutar como: yo. Quién tiene acceso: cualquier usuario.
+  4. Copia la URL que termina en /exec y pégala en el panel del docente del recurso.
+
+  Nota sobre el uso sin conexión: si en la sala de informática no hay internet, descarga
+  tailwindcss, fontawesome, sweetalert2 y canvas-confetti a la misma carpeta del archivo y
+  cambia las rutas del <head> por rutas locales. El recurso ya está preparado para no
+  romperse si esas librerías no cargan.
+============================================================================================
+-->
+</body>
+</html>
