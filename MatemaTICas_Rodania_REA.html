@@ -211,6 +211,41 @@ footer a{color:var(--sol)}
 .nav-flotante button{border-radius:99px;padding:9px 15px;font-weight:800;font-size:.83rem;background:transparent;color:var(--gris);display:flex;gap:5px;align-items:center}
 .nav-flotante button.activa{background:var(--pasto);color:#fff}
 .oculto{display:none!important}
+
+/* ====== SESIÓN / EVIDENCIAS / INFORME ====== */
+.chip-sesion{background:var(--corral-cl);color:var(--corral);border-radius:99px;padding:2px 10px;font-size:.72rem;font-weight:800;white-space:nowrap}
+.aviso-alerta{background:var(--rojo-cl);border:2px solid var(--rojo);color:var(--rojo);border-radius:12px;padding:10px 14px;font-size:.88rem;margin-bottom:12px;text-align:left}
+.grafico{background:#fff;border-radius:var(--radius);box-shadow:var(--sombra);padding:14px;margin-bottom:16px;overflow-x:auto}
+.grafico svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.grafico .acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--crema);padding-top:10px}
+.grafico .acciones button{background:var(--crema);color:var(--corral);border-radius:10px;padding:7px 12px;font-weight:700;font-size:.82rem}
+select.selector{padding:10px;border:2px solid var(--pasto-cl);border-radius:12px;font-size:.95rem;font-family:var(--f-ui);background:#fff;max-width:100%}
+.tabla-obs td{vertical-align:top}
+.ficha[draggable="true"]{cursor:grab}
+.zona.drag-encima{background:var(--sol-cl);border-color:var(--sol)}
+body.captura .nav-flotante{display:none!important}
+body.captura header.escena .marca h1{text-shadow:0 2px 0 #fff}
+#zona-informe{display:none}
+body.imprimiendo #zona-informe{display:block;background:#fff;padding:20px}
+.hoja h1{font-family:var(--f-display);font-size:1.5rem;color:var(--pasto-osc);margin-bottom:6px}
+.hoja h2{font-family:var(--f-display);font-size:1.15rem;color:var(--pasto-osc);margin:22px 0 8px;border-bottom:2px solid var(--pasto-cl);padding-bottom:4px}
+.hoja .meta{font-size:.88rem;color:var(--gris);margin-bottom:10px}
+.hoja table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px}
+.hoja th,.hoja td{border:1px solid #cfd8d2;padding:5px 7px;text-align:left}
+.hoja th{background:var(--pasto-cl)}
+.hoja .nota{font-size:.78rem;color:var(--gris);margin-top:6px;font-style:italic}
+.hoja .fig{margin:16px 0;text-align:center}
+.hoja .fig svg{max-width:100%;height:auto}
+.hoja .pie{font-size:.8rem;color:var(--gris);margin-top:4px}
+.hoja .firma{margin-top:40px;font-size:.85rem}
+@media print{
+  body.imprimiendo header.escena,body.imprimiendo main,body.imprimiendo footer,
+  body.imprimiendo .nav-flotante,body.imprimiendo .modal-fondo{display:none!important}
+  body.imprimiendo #zona-informe{display:block}
+  .hoja .fig,.hoja tr{page-break-inside:avoid}
+  .hoja h2{page-break-after:avoid}
+  @page{margin:1.6cm}
+}
 </style>
 </head>
 <body>
@@ -263,6 +298,7 @@ footer a{color:var(--sol)}
   <!-- ============ PANTALLA: REGISTRO ============ -->
   <section id="p-registro" class="pantalla activa" aria-label="Registro de estudiante">
     <div class="tarjeta registro-form">
+      <div id="aviso-almacen" class="aviso-alerta oculto">⚠️ Este navegador no está guardando el avance (puede ser el modo incógnito o el navegador de WhatsApp). Abre el archivo con Chrome desde la galería de archivos para que tu progreso quede guardado.</div>
       <h2 class="titulo-seccion">¡Bienvenido a la finca!</h2>
       <p class="sub">Escribe tu nombre para guardar tu progreso en este equipo.</p>
       <input type="text" id="nombre-est" maxlength="40" placeholder="Tu nombre y apellido" autocomplete="off">
@@ -337,13 +373,71 @@ footer a{color:var(--sol)}
       <div class="kpis" id="doc-kpis"></div>
       <div class="tarjeta">
         <div class="botonera" style="margin:0 0 6px">
-          <button class="btn btn-p" id="btn-csv">⬇️ Exportar CSV</button>
-          <button class="btn btn-s" id="btn-json">⬇️ Exportar JSON</button>
-          <button class="btn btn-s" id="btn-borrar" style="color:var(--rojo)">🗑️ Borrar datos del equipo</button>
+          <button class="btn btn-p" id="btn-evidencias">📊 Gráficas y evidencias</button>
+          <button class="btn btn-p" id="btn-ficha">🧩 Ficha técnica (DCE y sesiones)</button>
+          <button class="btn btn-s" id="btn-captura">📸 Modo captura</button>
+        </div>
+        <div class="botonera" style="margin:0 0 6px">
+          <button class="btn btn-s" id="btn-csv">⬇️ CSV con nombres</button>
+          <button class="btn btn-s" id="btn-csv-anon">⬇️ CSV anonimizado (E01, E02…)</button>
+          <button class="btn btn-s" id="btn-json">⬇️ Copia de seguridad JSON</button>
+          <button class="btn btn-s" id="btn-importar">⬆️ Unir datos de otro equipo</button>
+          <input type="file" id="file-import" accept="application/json,.json" class="oculto">
+          <button class="btn btn-s" id="btn-borrar" style="color:var(--rojo)">🗑️ Borrar datos</button>
         </div>
         <p style="font-size:.82rem;color:var(--gris)">Cada fila es un observable registrado: estudiante, caso, actividad, competencia, evidencia, intentos, pistas usadas y respuesta.</p>
         <div class="scroll-tabla"><table class="tabla-obs" id="tabla-observables"><thead><tr><th>Fecha</th><th>Estudiante</th><th>Caso</th><th>Actividad</th><th>Competencia</th><th>Observable</th><th>Resultado</th><th>Int.</th><th>Pistas</th><th>Respuesta</th></tr></thead><tbody></tbody></table></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA: EVIDENCIAS ============ -->
+  <section id="p-evidencias" class="pantalla" aria-label="Gráficas y evidencias">
+    <div class="barra-caso"><button class="btn-volver" onclick="mostrar('p-docente')">← Panel</button><h2 class="titulo-seccion" style="margin:0">Gráficas y evidencias</h2></div>
+    <div class="tarjeta">
+      <p style="font-size:.9rem;color:var(--gris)">Estas figuras se construyen con los observables que el recurso registró durante las sesiones. Puedes descargarlas en PNG o SVG para insertarlas en el informe de investigación, o tomar el pantallazo directamente.</p>
+      <div class="botonera" style="margin-top:10px">
+        <select id="sel-estudiante" class="selector" onchange="filtroEst=this.value;pintarEvidencias()"></select>
+        <button class="btn btn-p" onclick="generarInforme()">🖨️ Informe imprimible (PDF)</button>
+      </div>
+    </div>
+    <div class="grafico"><div id="g-niveles"></div>
+      <div class="acciones"><button onclick="descargarPNG('g-niveles','figura_niveles_desempeno')">⬇️ PNG</button><button onclick="descargarSVG('g-niveles','figura_niveles_desempeno')">⬇️ SVG</button></div></div>
+    <div class="grafico"><div id="g-competencias"></div>
+      <div class="acciones"><button onclick="descargarPNG('g-competencias','figura_acierto_competencias')">⬇️ PNG</button><button onclick="descargarSVG('g-competencias','figura_acierto_competencias')">⬇️ SVG</button></div></div>
+    <div class="grafico"><div id="g-pistas"></div>
+      <div class="acciones"><button onclick="descargarPNG('g-pistas','figura_pistas_por_caso')">⬇️ PNG</button><button onclick="descargarSVG('g-pistas','figura_pistas_por_caso')">⬇️ SVG</button></div></div>
+    <div class="grafico"><div id="g-nube"></div>
+      <div class="acciones"><button onclick="descargarPNG('g-nube','figura_nube_palabras')">⬇️ PNG</button><button onclick="descargarSVG('g-nube','figura_nube_palabras')">⬇️ SVG</button></div></div>
+    <div class="tarjeta">
+      <h3 style="font-family:var(--f-display);color:var(--pasto-osc);margin-bottom:6px">Desempeño por participante</h3>
+      <div class="scroll-tabla"><table class="tabla-obs" id="tabla-desempeno">
+        <thead><tr><th>Participante</th><th>Actividades</th><th>Estrellas</th><th>%</th><th>Nivel</th><th>Insignias</th></tr></thead><tbody></tbody></table></div>
+      <p style="font-size:.8rem;color:var(--gris);margin-top:8px">Criterio: Bajo (menos de 40 %), Básico (40 a 59 %), Alto (60 a 79 %) y Superior (80 % o más) del total de estrellas posibles.</p>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA: FICHA TÉCNICA ============ -->
+  <section id="p-ficha" class="pantalla" aria-label="Ficha técnica del recurso">
+    <div class="barra-caso"><button class="btn-volver" onclick="mostrar('p-docente')">← Panel</button><h2 class="titulo-seccion" style="margin:0">Ficha técnica del REA</h2></div>
+    <div class="tarjeta">
+      <p><b>Nombre:</b> MatemáTICas Rodania · <b>Grado:</b> sexto · <b>Área:</b> Matemáticas</p>
+      <p><b>Institución:</b> I.E. Rodania, zona rural de Sahagún, Córdoba (Colombia)</p>
+      <p><b>Fundamento:</b> Diseño Centrado en Evidencias (modelo de estudiante, de tarea y de evidencia) y Aprendizaje Basado en Casos en sus cuatro etapas.</p>
+      <p><b>Formato:</b> aplicación web en un solo archivo HTML5, responsiva, funciona sin conexión a internet.</p>
+      <p><b>Licencia:</b> Creative Commons BY-SA 4.0 · <b>Versión:</b> 2.0 (2026)</p>
+      <p><b>Estructura:</b> 3 casos de enseñanza · 19 actividades · 8 sesiones de dos horas · 7 insignias · sistema de 3 pistas graduadas por actividad.</p>
+    </div>
+    <div class="tarjeta">
+      <h3 style="font-family:var(--f-display);color:var(--pasto-osc);margin-bottom:6px">Modelos del Diseño Centrado en Evidencias</h3>
+      <p style="font-size:.86rem;color:var(--gris)">Cada actividad articula el modelo de estudiante (la competencia), el modelo de tarea (la situación problema) y el modelo de evidencia (el observable que el recurso registra).</p>
+      <div class="scroll-tabla"><table class="tabla-obs" id="tabla-dce">
+        <thead><tr><th>Sesión</th><th>Caso</th><th>Tarea (actividad)</th><th>Modelo de estudiante</th><th>Modelo de evidencia (observable)</th><th>Tipo de interacción</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tarjeta">
+      <h3 style="font-family:var(--f-display);color:var(--pasto-osc);margin-bottom:6px">Secuencia didáctica de ocho sesiones</h3>
+      <div class="scroll-tabla"><table class="tabla-obs" id="tabla-sesiones">
+        <thead><tr><th>Sesión</th><th>Caso</th><th>Situación problema y contexto</th><th>Énfasis de competencia</th></tr></thead><tbody></tbody></table></div>
     </div>
   </section>
 </main>
@@ -361,6 +455,8 @@ footer a{color:var(--sol)}
     <button class="btn btn-p" style="margin-top:14px" onclick="cerrarModal()">¡Genial!</button>
   </div>
 </div>
+
+<section id="zona-informe" class="oculto" aria-hidden="true"></section>
 
 <footer>
   <p><b>MatemáTICas Rodania</b> — Recurso Educativo Abierto · Institución Educativa Rodania, zona rural de Sahagún, Córdoba (Colombia).</p>
@@ -528,7 +624,7 @@ const CASOS = [
   relato:[
    "Los sábados, la familia madruga para el mercado del pueblo: llevan cantinas de leche, quesos de doña Nubia y bolsas de suero costeño, que en Rodania nunca falta en la mesa.",
    "Este mes hay dos proyectos grandes: construir un corral nuevo para los terneros y organizar las cuentas del puesto del mercado para saber si el negocio deja ganancia.",
-   "En este último caso vas a medir el corral, leer los datos de las ventas y enfrentar el reto integrador: preguntas tipo prueba Saber donde no basta responder… ¡hay que argumentar como todo un comerciante!"
+   "En este último caso vas a medir el corral y la huerta escolar, leer los datos de las ventas y enfrentar el reto integrador: preguntas tipo prueba Saber donde no basta responder… ¡hay que argumentar como todo un comerciante!"
   ],
   video:{n:"Video de apoyo: Regla de 3 simple — súper fácil",u:"https://www.youtube.com/watch?v=Xphb-tzJj24"},
   acuerdos:["En las preguntas tipo Saber leo TODAS las opciones antes de escoger.","Mi justificación siempre dice el porqué con números, no solo “porque sí”.","Uso lo aprendido en los casos 1 y 2: enteros, fracciones y proporciones.","Celebro mis avances y los de mis compañeros: todos empezamos este periodo sabiendo menos que hoy."]
@@ -560,7 +656,7 @@ const CASOS = [
    pistas:["Verifica opción por opción con los números de la tabla, sin afán.","¿El doble de 5 es…? Compara jueves y viernes.","Suma el total: 6+4+7+5+10. ¿Da 30? ¿Y cuál fue de verdad el día de menos venta?"]},
   {id:"c3a5",tipo:"saber",comp:"arg",titulo:"RETO SABER 1 · La ganancia del sábado",
    observable:"Resuelve y argumenta una situación tipo Saber (formulación)",
-   enunciado:"El sábado el puesto recibió $96.000 por las ventas. Ese día la familia gastó $28.000 en transporte y $15.000 en bolsas y hielo. ¿Cuál fue la ganancia del día?",
+   enunciado:"El sábado el puesto recibió $96.000 por las ventas. Ese día la familia gastó $28.000 en el transporte veredal y $15.000 en bolsas y hielo. ¿Cuál fue la ganancia del día?",
    opciones:["$139.000","$53.000","$68.000","$43.000"],correcta:1,
    justifPrompt:"Explica cómo lo calculaste: ¿qué sumaste, qué restaste y por qué?",
    retroOk:"¡Correcto! Gastos: 28.000 + 15.000 = 43.000. Ganancia: 96.000 − 43.000 = $53.000. Lo que entra suma, lo que se gasta resta.",
@@ -597,7 +693,13 @@ const LS_KEY = "matematicas_rodania_v1";
 
 /* --- almacenamiento seguro (funciona aunque localStorage falle) --- */
 let memoria = {perfiles:{}, observables:[]};
+let ALMACEN_OK = true;
+function probarAlmacen(){
+  try{ localStorage.setItem("__prueba__","1"); localStorage.removeItem("__prueba__"); return true; }
+  catch(e){ return false; }
+}
 function cargar(){
+  ALMACEN_OK = probarAlmacen();
   try{ const d = localStorage.getItem(LS_KEY); if(d) memoria = JSON.parse(d); }catch(e){}
   if(!memoria.perfiles) memoria.perfiles = {};
   if(!memoria.observables) memoria.observables = [];
@@ -783,7 +885,7 @@ function pintarResolucion(cont){
     div.id = "act-"+a.id;
     div.innerHTML = `
       <div class="act-cab"><h4>${idx+1}. ${a.titulo} ${est.completa?"✔":""}</h4>
-        <div>${compEtiqueta(a.comp)} <span class="estrellas">${est.completa?estrellasHTML(est.estrellas):""}</span></div></div>
+        <div><span class="chip-sesion">Sesión ${SESION_DE[a.id]||"—"}</span> ${compEtiqueta(a.comp)} <span class="estrellas">${est.completa?estrellasHTML(est.estrellas):""}</span></div></div>
       <div class="enunciado">${a.enunciado}
         <div class="botonera" style="margin-top:8px">
           <button class="btn btn-audio" onclick="leer(${JSON.stringify(a.enunciado).replace(/"/g,"&quot;")})">🔊 Escuchar</button>
@@ -807,10 +909,12 @@ function pintarResolucion(cont){
 
 function pedirPista(id){
   const a = buscarAct(id), r = RUNTIME[id];
-  if(r.pistas < 3){ r.pistas++; }
+  const tope = r.pistas >= 3;
+  if(!tope) r.pistas++;
   const caja = $("pista-"+id);
   caja.classList.add("visible");
-  $("pista-nivel-"+id).textContent = ["Pista 1 · de lectura","Pista 2 · de traducción","Pista 3 · de procedimiento"][r.pistas-1];
+  $("pista-nivel-"+id).textContent = ["Pista 1 · de lectura","Pista 2 · de traducción","Pista 3 · de procedimiento"][r.pistas-1] +
+    (tope ? " (última pista)" : "");
   $("pista-texto-"+id).textContent = a.pistas[r.pistas-1];
 }
 function buscarAct(id){ for(const c of CASOS){ const a = c.actividades.find(x=>x.id===id); if(a) return a; } }
@@ -889,17 +993,21 @@ function enviarTexto(id){
 function cuerpoClasificar(a, est){
   const r = RUNTIME[a.id];
   if(!r.colocadas) r.colocadas = {};
+  /* si la actividad ya estaba resuelta en una sesión anterior, se reconstruye el resultado */
+  if(est.completa && est.detalle && !r.hidratada){ r.colocadas = Object.assign({}, est.detalle); r.hidratada = true; }
+  const bloq = est.completa ? "disabled" : "";
   const pendientes = a.fichas.map((f,i)=>({...f,i})).filter(f=>!(f.i in r.colocadas));
-  let html = `<p style="margin-top:8px;font-size:.9rem;color:var(--gris)">Toca una ficha y luego toca la caja donde va. Hay fichas que <b>sobran</b>.</p>
+  const enZona = z => a.fichas.map((f,i)=>({...f,i})).filter(f=>r.colocadas[f.i]===z)
+      .map(f=>`<button class="ficha" ${bloq} onclick="event.stopPropagation();devolverFicha('${a.id}',${f.i})" title="Tocar para devolver la ficha">${f.t}</button>`).join("");
+  return `<p style="margin-top:8px;font-size:.9rem;color:var(--gris)">Arrastra cada ficha a su caja, o tócala y luego toca la caja. Hay fichas que <b>sobran</b>.</p>
   <div class="fichas" id="fichas-${a.id}">` +
-    pendientes.map(f=>`<button class="ficha" data-i="${f.i}" onclick="selFicha('${a.id}',${f.i},this)" ${est.completa?"disabled":""}>${f.t}</button>`).join("") + `</div>
+    pendientes.map(f=>`<button class="ficha" data-i="${f.i}" draggable="${est.completa?"false":"true"}" ondragstart="arrastrarFicha(event,'${a.id}',${f.i})" onclick="selFicha('${a.id}',${f.i},this)" ${bloq}>${f.t}</button>`).join("") + `</div>
   <div class="clasificador">
-    <div class="zona se" onclick="soltarFicha('${a.id}','se')"><h5>✅ Lo que sé (datos útiles)</h5><div id="zona-se-${a.id}"></div></div>
-    <div class="zona busco" onclick="soltarFicha('${a.id}','busco')"><h5>❓ Lo que busco (la pregunta)</h5><div id="zona-busco-${a.id}"></div></div>
-    <div class="zona sobra" style="grid-column:1/-1" onclick="soltarFicha('${a.id}','sobra')"><h5>🗑️ Sobra (no lo necesito)</h5><div id="zona-sobra-${a.id}"></div></div>
+    <div class="zona se" ondragover="permitirSoltar(event,this)" ondragleave="this.classList.remove('drag-encima')" ondrop="soltarArrastre(event,'${a.id}','se',this)" onclick="soltarFicha('${a.id}','se')"><h5>✅ Lo que sé (datos útiles)</h5><div id="zona-se-${a.id}">${enZona("se")}</div></div>
+    <div class="zona busco" ondragover="permitirSoltar(event,this)" ondragleave="this.classList.remove('drag-encima')" ondrop="soltarArrastre(event,'${a.id}','busco',this)" onclick="soltarFicha('${a.id}','busco')"><h5>❓ Lo que busco (la pregunta)</h5><div id="zona-busco-${a.id}">${enZona("busco")}</div></div>
+    <div class="zona sobra" style="grid-column:1/-1" ondragover="permitirSoltar(event,this)" ondragleave="this.classList.remove('drag-encima')" ondrop="soltarArrastre(event,'${a.id}','sobra',this)" onclick="soltarFicha('${a.id}','sobra')"><h5>🗑️ Sobra (no lo necesito)</h5><div id="zona-sobra-${a.id}">${enZona("sobra")}</div></div>
   </div>
-  <div class="botonera"><button class="btn btn-p" onclick="revisarClasificar('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>`;
-  return html;
+  <div class="botonera"><button class="btn btn-p" onclick="revisarClasificar('${a.id}')" ${bloq}>Revisar</button></div>`;
 }
 function selFicha(id, i, btn){
   const r = RUNTIME[id];
@@ -907,32 +1015,36 @@ function selFicha(id, i, btn){
   document.querySelectorAll(`#fichas-${id} .ficha`).forEach(f=>f.classList.remove("sel"));
   btn.classList.add("sel");
 }
+function arrastrarFicha(ev, id, i){
+  RUNTIME[id].sel = i;
+  try{ ev.dataTransfer.setData("text/plain", String(i)); ev.dataTransfer.effectAllowed = "move"; }catch(e){}
+}
+function permitirSoltar(ev, zona){ ev.preventDefault(); zona.classList.add("drag-encima"); }
+function soltarArrastre(ev, id, zona, elem){
+  ev.preventDefault(); elem.classList.remove("drag-encima");
+  let i = null;
+  try{ i = parseInt(ev.dataTransfer.getData("text/plain"), 10); }catch(e){}
+  if(isNaN(i) || i===null) i = RUNTIME[id].sel;
+  RUNTIME[id].sel = i;
+  soltarFicha(id, zona);
+}
 function soltarFicha(id, zona){
-  const r = RUNTIME[id], a = buscarAct(id);
+  const r = RUNTIME[id];
+  if(EST.actividades[id] && EST.actividades[id].completa) return;
   if(r.sel===null || r.sel===undefined) return;
   r.colocadas[r.sel] = zona;
-  const f = a.fichas[r.sel];
-  const chip = document.createElement("button");
-  chip.className = "ficha"; chip.textContent = f.t;
-  chip.onclick = (ev)=>{ ev.stopPropagation(); delete r.colocadas[r.sel]; refrescarClasificar(id); };
-  const idx = r.sel;
-  chip.onclick = (ev)=>{ ev.stopPropagation(); delete r.colocadas[idx]; refrescarClasificar(id); };
-  $("zona-"+zona+"-"+id).appendChild(chip);
-  const orig = document.querySelector(`#fichas-${id} .ficha[data-i="${r.sel}"]`);
-  if(orig) orig.remove();
   r.sel = null;
+  refrescarClasificar(id);
+}
+function devolverFicha(id, i){
+  const r = RUNTIME[id];
+  if(EST.actividades[id] && EST.actividades[id].completa) return;
+  delete r.colocadas[i];
+  refrescarClasificar(id);
 }
 function refrescarClasificar(id){
   const a = buscarAct(id), est = EST.actividades[a.id]||{};
   $("cuerpo-"+id).innerHTML = cuerpoClasificar(a, est);
-  const r = RUNTIME[id];
-  Object.entries(r.colocadas).forEach(([i,z])=>{
-    const f = a.fichas[i];
-    const chip = document.createElement("button");
-    chip.className="ficha"; chip.textContent=f.t;
-    chip.onclick=(ev)=>{ev.stopPropagation(); delete r.colocadas[i]; refrescarClasificar(id);};
-    $("zona-"+z+"-"+id).appendChild(chip);
-  });
 }
 function revisarClasificar(id){
   const a = buscarAct(id), r = RUNTIME[id];
@@ -941,7 +1053,9 @@ function revisarClasificar(id){
   }
   const errores = a.fichas.filter((f,i)=>r.colocadas[i]!==f.z).length;
   if(errores===0){
+    (EST.actividades[a.id] = EST.actividades[a.id] || {}).detalle = Object.assign({}, r.colocadas);
     completar(a, r, JSON.stringify(r.colocadas));
+    refrescarClasificar(id);
     retro(id, "ok", "¡Detective de primera! Separaste los datos útiles, la pregunta y lo que sobra. Ese es el primer paso de todo buen problema.");
   } else {
     fallo(a, r, JSON.stringify(r.colocadas));
@@ -953,7 +1067,7 @@ function revisarClasificar(id){
 function cuerpoOpcion(a, est){
   const letras = ["A","B","C","D"];
   return `<div class="opciones">` + a.opciones.map((o,i)=>
-    `<button class="opcion" id="op-${a.id}-${i}" onclick="responderOpcion('${a.id}',${i})" ${est.completa?"disabled":""}>
+    `<button class="opcion ${est.completa && i===a.correcta ? "ok" : ""}" id="op-${a.id}-${i}" onclick="responderOpcion('${a.id}',${i})" ${est.completa?"disabled":""}>
       <span class="letra">${letras[i]}</span> ${o}</button>`).join("") + `</div>`;
 }
 function responderOpcion(id, i){
@@ -999,8 +1113,9 @@ function cuerpoRecta(a, est){
   const n = a.max - a.min;
   for(let v=a.min; v<=a.max; v++){
     const x = ((v-a.min)/n)*100;
+    const acertado = est.completa && est.detalle===v;
     puntos += `<div class="marca-n" style="left:${x}%"></div><div class="num" style="left:${x}%">${v}</div>
-      <button class="punto" style="left:${x}%" onclick="responderRecta('${a.id}',${v})" ${est.completa?"disabled":""} aria-label="Elegir ${v}" id="pt-${a.id}-${v}"></button>`;
+      <button class="punto ${acertado?'ok':''}" style="left:${x}%" onclick="responderRecta('${a.id}',${v})" ${est.completa?"disabled":""} aria-label="Elegir ${v}" id="pt-${a.id}-${v}">${acertado?v:""}</button>`;
   }
   return `<div class="recta-cont"><div class="recta"><div class="linea"></div>${puntos}</div></div>
    <p style="font-size:.85rem;color:var(--gris)">Toca el círculo sobre el número que responde la situación.</p>`;
@@ -1009,6 +1124,7 @@ function responderRecta(id, v){
   const a = buscarAct(id), r = RUNTIME[id];
   const btn = $("pt-"+id+"-"+v);
   if(v===a.respuesta){
+    (EST.actividades[a.id] = EST.actividades[a.id] || {}).detalle = v;
     btn.classList.add("ok"); btn.textContent = v;
     document.querySelectorAll(`[id^="pt-${id}-"]`).forEach(b=>b.disabled=true);
     completar(a, r, v); retro(id, "ok", a.retroOk);
@@ -1022,18 +1138,20 @@ function responderRecta(id, v){
 /* queso de fracciones */
 function cuerpoQueso(a, est){
   const r = RUNTIME[a.id]; if(!r.pintadas) r.pintadas = new Set();
+  if(est.completa && est.detalle && !r.hidratada){ r.pintadas = new Set(est.detalle); r.hidratada = true; }
   let sectores = "";
   for(let i=0;i<a.total;i++){
     const a0 = (i/a.total)*2*Math.PI - Math.PI/2, a1 = ((i+1)/a.total)*2*Math.PI - Math.PI/2;
     const x0 = 95+80*Math.cos(a0), y0 = 95+80*Math.sin(a0);
     const x1 = 95+80*Math.cos(a1), y1 = 95+80*Math.sin(a1);
     const vendida = i < a.vendidas;
+    const pintada = r.pintadas.has(i);
     sectores += `<path d="M95,95 L${x0.toFixed(1)},${y0.toFixed(1)} A80,80 0 0,1 ${x1.toFixed(1)},${y1.toFixed(1)} Z"
-      class="tajada ${vendida?'vendida':''}" id="tj-${a.id}-${i}" ${vendida?"":`onclick="tocarTajada('${a.id}',${i})"`}/>`;
+      class="tajada ${vendida?'vendida':''} ${pintada?'sel':''}" id="tj-${a.id}-${i}" ${vendida?"":`onclick="tocarTajada('${a.id}',${i})"`}/>`;
   }
   return `<div class="queso-wrap">
     <svg viewBox="0 0 190 190" role="img" aria-label="Queso partido en ${a.total} tajadas">${sectores}</svg>
-    <div><p class="marcador-frac"><span id="frac-num-${a.id}">0</span> / ${a.total}</p>
+    <div><p class="marcador-frac"><span id="frac-num-${a.id}">${r.pintadas.size}</span> / ${a.total}</p>
       <p style="font-size:.9rem;color:var(--gris)">tajadas pintadas (las punteadas ya se vendieron)</p>
       <div class="botonera"><button class="btn btn-p" onclick="revisarQueso('${a.id}')" ${est.completa?"disabled":""}>Revisar</button></div>
     </div></div>`;
@@ -1050,6 +1168,7 @@ function revisarQueso(id){
   const a = buscarAct(id), r = RUNTIME[id];
   const esperado = a.total - a.vendidas;
   if(r.pintadas.size===esperado && [...r.pintadas].every(i=>i>=a.vendidas)){
+    (EST.actividades[a.id] = EST.actividades[a.id] || {}).detalle = [...r.pintadas];
     completar(a, r, r.pintadas.size + "/" + a.total);
     retro(id, "ok", a.retroOk);
   } else {
@@ -1088,7 +1207,7 @@ function revisarTabla(id){
 function cuerpoSaber(a, est){
   const letras = ["A","B","C","D"];
   return `<div class="opciones">` + a.opciones.map((o,i)=>
-    `<button class="opcion" id="op-${a.id}-${i}" onclick="selSaber('${a.id}',${i})" ${est.completa?"disabled":""}>
+    `<button class="opcion ${est.completa && i===a.correcta ? "ok" : ""}" id="op-${a.id}-${i}" onclick="selSaber('${a.id}',${i})" ${est.completa?"disabled":""}>
       <span class="letra">${letras[i]}</span> ${o}</button>`).join("") + `</div>
    <p style="margin-top:12px;font-weight:700">✍️ ${a.justifPrompt}</p>
    <textarea class="texto-resp" id="just-${a.id}" placeholder="Mi justificación con números..." ${est.completa?"disabled":""}>${est.justif||""}</textarea>
@@ -1238,6 +1357,359 @@ function borrarDatos(){
   location.reload();
 }
 
+/* ================== SESIONES (Tabla 11 de la tesis) ================== */
+const SESION_DE = {c1a1:1, c1a2:2, c1a3:3, c1a4:3, c1a5:3, c1a6:3,
+                   c2a1:4, c2a2:4, c2a3:5, c2a4:5, c2a5:6, c2a6:6,
+                   c3a1:7, c3a2:7, c3a3:7, c3a4:7, c3a5:8, c3a6:8, c3a7:8};
+const SESIONES = [
+ {n:1, caso:"Caso 1 · La finca lechera", contenido:"Presentación del caso; exploración del REA y de la recta numérica con la producción de leche y las deudas de la tienda escolar", comp:"Interpretación y representación"},
+ {n:2, caso:"Caso 1 · La finca lechera", contenido:"Proceso de resolución: comprensión y parafraseo de enunciados sobre el ordeño y la vida veredal", comp:"Interpretación y representación"},
+ {n:3, caso:"Caso 1 · La finca lechera", contenido:"Traducción del lenguaje natural al matemático, números enteros y conclusiones metacognitivas del caso", comp:"Formulación y ejecución"},
+ {n:4, caso:"Caso 2 · Del ordeño al queso", contenido:"Presentación del caso; operaciones y representación de fracciones en la producción de la finca", comp:"Formulación y ejecución"},
+ {n:5, caso:"Caso 2 · Del ordeño al queso", contenido:"Proceso de resolución: fracciones en la elaboración y los repartos del queso", comp:"Interpretación y formulación"},
+ {n:6, caso:"Caso 2 · Del ordeño al queso", contenido:"Proporcionalidad en precios, cantidades y transporte de la leche; conclusiones del caso", comp:"Formulación y ejecución"},
+ {n:7, caso:"Caso 3 · La venta en el mercado", contenido:"Presentación del caso; medición y geometría en el corral y la huerta escolar; lectura de datos", comp:"Interpretación y argumentación"},
+ {n:8, caso:"Caso 3 · La venta en el mercado", contenido:"Proceso de resolución y cierre metacognitivo; reto integrador con situaciones tipo prueba Saber", comp:"Las tres competencias"}
+];
+const NOMBRE_COMP = {int:"Interpretación y representación", for:"Formulación y ejecución", arg:"Argumentación"};
+const PALETA = {int:"#2E86C1", for:"#F5B301", arg:"#C0442B", pasto:"#1F6B3C", pastocl:"#E4F2E4",
+                corral:"#7A4E2D", gris:"#6C7A70", tinta:"#26332B", rojo:"#C0442B", crema:"#F6F0DC"};
+
+/* ================== ANÁLISIS DE EVIDENCIAS ================== */
+function totalActs(){ return CASOS.reduce((n,c)=>n+c.actividades.length,0); }
+
+/* Consolida los observables por estudiante y actividad */
+function consolidar(){
+  const mapa = {};
+  memoria.observables.forEach(o=>{
+    if(String(o.actividad).startsWith("meta-")) return;
+    const k = o.estudiante+"|"+o.actividad;
+    if(!mapa[k]) mapa[k] = {estudiante:o.estudiante, actividad:o.actividad, competencia:o.competencia,
+                           caso:o.caso, fallos:0, pistas:0, logrado:false, intentosLogro:0};
+    const m = mapa[k];
+    if(o.resultado==="logrado"){ m.logrado = true; m.intentosLogro = o.intentos; m.pistas = Math.max(m.pistas, o.pistas); }
+    else { m.fallos++; m.pistas = Math.max(m.pistas, o.pistas); }
+  });
+  return Object.values(mapa);
+}
+
+/* Desempeño por estudiante a partir de las estrellas del perfil */
+function desempenoEstudiantes(){
+  const posibles = totalActs()*3;
+  return Object.values(memoria.perfiles).map(p=>{
+    const acts = Object.values(p.actividades||{}).filter(a=>a.completa);
+    const estrellas = acts.reduce((n,a)=>n+(a.estrellas||0),0);
+    const pct = Math.round(100*estrellas/posibles);
+    const nivel = pct<40?"Bajo":pct<60?"Básico":pct<80?"Alto":"Superior";
+    return {nombre:p.nombre, hechas:acts.length, total:totalActs(), estrellas, posibles, pct, nivel,
+            insignias:(p.insignias||[]).length};
+  }).sort((a,b)=>b.pct-a.pct);
+}
+
+/* Acierto por competencia: logradas en el primer intento / abordadas */
+function aciertoPorCompetencia(){
+  const c = consolidar(), r = {};
+  ["int","for","arg"].forEach(k=>{
+    const items = c.filter(x=>x.competencia===k);
+    const primeras = items.filter(x=>x.logrado && x.fallos===0).length;
+    r[k] = {abordadas:items.length, primeras, pct: items.length? Math.round(100*primeras/items.length) : 0};
+  });
+  return r;
+}
+
+/* Promedio de pistas solicitadas por caso */
+function pistasPorCaso(){
+  const c = consolidar();
+  return CASOS.map(caso=>{
+    const items = c.filter(x=>x.actividad.startsWith(caso.id));
+    const prom = items.length ? (items.reduce((n,x)=>n+x.pistas,0)/items.length) : 0;
+    return {caso:caso.titulo.split("·")[0].trim(), nombre:caso.titulo, prom:Math.round(prom*10)/10, n:items.length};
+  });
+}
+
+/* Textos abiertos de los estudiantes (parafraseos, justificaciones, metacognición) */
+function textosAbiertos(filtro){
+  return memoria.observables
+    .filter(o=>(!filtro||o.estudiante===filtro) && String(o.respuesta||"").length>15 && !/^opción \d+$/.test(o.respuesta))
+    .map(o=>String(o.respuesta));
+}
+const STOPWORDS = new Set(("de la que el en y a los del se las por un para con no una su al lo como mas pero sus le ya o "+
+ "este si porque esta entre cuando muy sin sobre tambien me hasta hay donde quien desde todo nos durante todos uno les "+
+ "ni contra otros ese eso ante ellos esto antes algunos unos yo otro otras otra tanto esa estos mucho quienes nada muchos "+
+ "cual poco ella estar estas algunas algo nosotros mi mis tu tus ellas eran era son fue ser fui esta estan ha he han hemos "+
+ "asi cada tiene tienen tener hacer hace hizo dice decir ahora entonces despues luego bien mismo cosa cosas parte partes "+
+ "opcion correcta").split(/\s+/));
+function frecuenciaPalabras(textos, tope){
+  const f = {};
+  textos.join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-zñ\s]/g," ").split(/\s+/)
+    .filter(w=>w.length>3 && !STOPWORDS.has(w))
+    .forEach(w=>f[w]=(f[w]||0)+1);
+  return Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0, tope||34);
+}
+
+/* ================== GENERADORES DE GRÁFICAS SVG ================== */
+function svgEnvoltura(w,h,inner){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" font-family="Segoe UI, Arial, sans-serif">`+
+         `<rect width="${w}" height="${h}" fill="#FFFFFF"/>${inner}</svg>`;
+}
+function gBarrasVert(datos, titulo, subtitulo, opts){
+  opts = opts || {};
+  const W=640, H=380, base=H-70, izq=60, ancho=(W-izq-30)/datos.length;
+  const entero = opts.entero !== false;
+  const bruto = Math.max(...datos.map(d=>d.v), 0);
+  const maxV = opts.tope ? opts.tope : (entero ? Math.max(1, Math.ceil(bruto)) : Math.max(1, Math.ceil(bruto*2)/2));
+  const marcas = entero ? Math.min(4, maxV) : 4;
+  const fmt = v => entero ? String(Math.round(v)) : (Math.round(v*10)/10).toFixed(1);
+  let s = `<text x="${W/2}" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="${PALETA.tinta}">${titulo}</text>`;
+  if(subtitulo) s += `<text x="${W/2}" y="46" text-anchor="middle" font-size="12" fill="${PALETA.gris}">${subtitulo}</text>`;
+  for(let i=0;i<=marcas;i++){
+    const y = base - (base-70)*i/marcas, val = maxV*i/marcas;
+    s += `<line x1="${izq}" y1="${y}" x2="${W-20}" y2="${y}" stroke="#E4E9E5"/>`+
+         `<text x="${izq-8}" y="${y+4}" text-anchor="end" font-size="11" fill="${PALETA.gris}">${fmt(val)}</text>`;
+  }
+  datos.forEach((d,i)=>{
+    const alto = (base-70)*Math.min(d.v,maxV)/maxV, x = izq + i*ancho + ancho*0.18, w = ancho*0.64;
+    s += `<rect x="${x.toFixed(1)}" y="${(base-alto).toFixed(1)}" width="${w.toFixed(1)}" height="${alto.toFixed(1)}" fill="${d.c}" rx="5"/>`+
+         `<text x="${(x+w/2).toFixed(1)}" y="${(base-alto-8).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${PALETA.tinta}">${d.etq!==undefined?d.etq:d.v}</text>`+
+         `<text x="${(x+w/2).toFixed(1)}" y="${base+20}" text-anchor="middle" font-size="12" fill="${PALETA.tinta}">${d.n}</text>`;
+    if(d.n2) s += `<text x="${(x+w/2).toFixed(1)}" y="${base+36}" text-anchor="middle" font-size="10.5" fill="${PALETA.gris}">${d.n2}</text>`;
+  });
+  s += `<line x1="${izq}" y1="${base}" x2="${W-20}" y2="${base}" stroke="${PALETA.tinta}" stroke-width="2"/>`;
+  return svgEnvoltura(W,H,s);
+}
+function gBarrasHoriz(datos, titulo, subtitulo){
+  const W=640, H=120+datos.length*62, izq=210;
+  let s = `<text x="${W/2}" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="${PALETA.tinta}">${titulo}</text>`;
+  if(subtitulo) s += `<text x="${W/2}" y="46" text-anchor="middle" font-size="12" fill="${PALETA.gris}">${subtitulo}</text>`;
+  const maxV = Math.max(1, ...datos.map(d=>d.v));
+  datos.forEach((d,i)=>{
+    const y = 74+i*62, largo = (W-izq-70)*d.v/maxV;
+    s += `<text x="${izq-10}" y="${y+22}" text-anchor="end" font-size="12.5" fill="${PALETA.tinta}">${d.n}</text>`+
+         `<rect x="${izq}" y="${y}" width="${(W-izq-70)}" height="30" fill="#EFF3F0" rx="6"/>`+
+         `<rect x="${izq}" y="${y}" width="${largo.toFixed(1)}" height="30" fill="${d.c}" rx="6"/>`+
+         `<text x="${(izq+largo+10).toFixed(1)}" y="${y+21}" font-size="13" font-weight="700" fill="${PALETA.tinta}">${d.etq!==undefined?d.etq:d.v}</text>`;
+  });
+  return svgEnvoltura(W,H,s);
+}
+function gNube(pares, titulo, subtitulo){
+  const W=640;
+  if(!pares.length) return svgEnvoltura(W,140,`<text x="${W/2}" y="70" text-anchor="middle" font-size="14" fill="${PALETA.gris}">Aún no hay respuestas escritas suficientes para construir la nube.</text>`);
+  const maxF = pares[0][1], minF = pares[pares.length-1][1];
+  const cols = [PALETA.pasto, PALETA.int, PALETA.corral, "#8a6a00", PALETA.arg];
+  const items = pares.map(([w,f],i)=>{
+    const t = maxF===minF?1:(f-minF)/(maxF-minF);
+    const fs = 14 + Math.round(t*30);
+    return {w, f, fs, ancho: w.length*fs*0.56 + 20, col: cols[i%cols.length]};
+  });
+  const filas=[]; let fila=[], ancho=0;
+  items.forEach(it=>{ if(ancho+it.ancho > W-40 && fila.length){ filas.push(fila); fila=[]; ancho=0; } fila.push(it); ancho+=it.ancho; });
+  if(fila.length) filas.push(fila);
+  let y = 78, s = `<text x="${W/2}" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="${PALETA.tinta}">${titulo}</text>`;
+  if(subtitulo) s += `<text x="${W/2}" y="46" text-anchor="middle" font-size="12" fill="${PALETA.gris}">${subtitulo}</text>`;
+  filas.forEach(f=>{
+    const total = f.reduce((n,i)=>n+i.ancho,0), altoFila = Math.max(...f.map(i=>i.fs))+12;
+    let x = (W-total)/2;
+    f.forEach(it=>{ s += `<text x="${(x+it.ancho/2).toFixed(1)}" y="${(y+altoFila*0.72).toFixed(1)}" text-anchor="middle" font-size="${it.fs}" font-weight="700" fill="${it.col}"><title>${it.w}: ${it.f} menciones</title>${it.w}</text>`; x += it.ancho; });
+    y += altoFila;
+  });
+  return svgEnvoltura(W, y+24, s);
+}
+
+/* ================== DESCARGA DE FIGURAS ================== */
+function svgDe(idCaja){ const c = $(idCaja); return c ? c.innerHTML.trim() : ""; }
+function descargarSVG(idCaja, nombre){
+  const s = svgDe(idCaja);
+  if(!s) return alert("Todavía no hay figura para descargar.");
+  descargar(nombre+".svg", '<?xml version="1.0" encoding="UTF-8"?>\n'+s, "image/svg+xml;charset=utf-8");
+}
+function descargarPNG(idCaja, nombre){
+  const s = svgDe(idCaja);
+  if(!s) return alert("Todavía no hay figura para descargar.");
+  try{
+    const svg = $(idCaja).querySelector("svg");
+    const w = +svg.getAttribute("width") || 640, h = +svg.getAttribute("height") || 400;
+    const img = new Image();
+    img.onload = function(){
+      try{
+        const cv = document.createElement("canvas");
+        cv.width = w*2; cv.height = h*2;
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,cv.width,cv.height);
+        ctx.drawImage(img,0,0,cv.width,cv.height);
+        cv.toBlob(function(b){
+          if(!b) return descargarSVG(idCaja, nombre);
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(b); a.download = nombre+".png";
+          document.body.appendChild(a); a.click();
+          setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 400);
+        }, "image/png");
+      }catch(e){ descargarSVG(idCaja, nombre); }
+    };
+    img.onerror = function(){ descargarSVG(idCaja, nombre); };
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(s)));
+  }catch(e){ descargarSVG(idCaja, nombre); }
+}
+
+/* ================== PANTALLA DE EVIDENCIAS ================== */
+let filtroEst = "";
+function irEvidencias(){ pintarEvidencias(); mostrar("p-evidencias"); }
+function pintarEvidencias(){
+  const nombres = Object.keys(memoria.perfiles);
+  $("sel-estudiante").innerHTML = `<option value="">Todo el grupo (${nombres.length} estudiantes)</option>` +
+    nombres.map(n=>`<option value="${escapar(n)}" ${filtroEst===n?"selected":""}>${escapar(n)}</option>`).join("");
+
+  const desemp = desempenoEstudiantes().filter(d=>!filtroEst || d.nombre===filtroEst);
+  const niveles = ["Bajo","Básico","Alto","Superior"];
+  const colores = {Bajo:PALETA.rojo, "Básico":"#E08A2E", Alto:"#4E9E4E", Superior:PALETA.pasto};
+  const conteo = niveles.map(n=>({n, v:desemp.filter(d=>d.nivel===n).length,
+                                  c:colores[n], n2:desemp.length?Math.round(100*desemp.filter(d=>d.nivel===n).length/desemp.length)+" %":""}));
+  $("g-niveles").innerHTML = gBarrasVert(conteo, "Distribución de los participantes por nivel de desempeño",
+    "Desempeño registrado por el REA MatemáTICas Rodania (n = "+desemp.length+")");
+
+  const ac = aciertoPorCompetencia();
+  $("g-competencias").innerHTML = gBarrasHoriz([
+    {n:"Interpretación y representación", v:ac.int.pct, etq:ac.int.pct+" %", c:PALETA.int},
+    {n:"Formulación y ejecución",         v:ac.for.pct, etq:ac.for.pct+" %", c:PALETA.for},
+    {n:"Argumentación",                   v:ac.arg.pct, etq:ac.arg.pct+" %", c:PALETA.arg}
+  ], "Acierto por competencia", "Actividades resueltas en el primer intento sobre el total de actividades abordadas");
+
+  const pc = pistasPorCaso();
+  $("g-pistas").innerHTML = gBarrasVert(pc.map((p,i)=>({n:p.caso, v:p.prom, etq:p.prom.toFixed(1),
+      c:[PALETA.pasto,"#8a6a00",PALETA.int][i]})), "Promedio de pistas graduadas solicitadas por caso",
+      "Andamiaje del recurso: pista de lectura, de traducción y de procedimiento (máximo 3 por actividad)",
+      {entero:false, tope:3});
+
+  $("g-nube").innerHTML = gNube(frecuenciaPalabras(textosAbiertos(filtroEst)),
+    "Palabras más frecuentes en las respuestas abiertas",
+    "Parafraseos, justificaciones y reflexiones metacognitivas registradas por el recurso");
+
+  const filas = desemp.map(d=>`<tr><td>${escapar(d.nombre)}</td><td>${d.hechas}/${d.total}</td><td>${d.estrellas}/${d.posibles}</td><td>${d.pct} %</td><td>${d.nivel}</td><td>${d.insignias}/7</td></tr>`).join("");
+  $("tabla-desempeno").querySelector("tbody").innerHTML = filas || `<tr><td colspan="6">Todavía no hay estudiantes registrados en este equipo.</td></tr>`;
+}
+
+/* ================== INFORME IMPRIMIBLE ================== */
+function generarInforme(){
+  const hoy = new Date().toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"});
+  const desemp = desempenoEstudiantes().filter(d=>!filtroEst || d.nombre===filtroEst);
+  const ac = aciertoPorCompetencia();
+  const obs = memoria.observables.filter(o=>!filtroEst || o.estudiante===filtroEst);
+  const alcance = filtroEst ? "Estudiante: "+escapar(filtroEst) : "Grupo completo registrado en este equipo";
+  $("zona-informe").innerHTML = `
+    <div class="hoja">
+      <h1>Informe de evidencias · MatemáTICas Rodania</h1>
+      <p class="meta">Recurso Educativo Abierto fundamentado en el Diseño Centrado en Evidencias<br>
+      Institución Educativa Rodania · zona rural de Sahagún, Córdoba · Grado sexto<br>
+      ${alcance} · Fecha de generación: ${hoy}</p>
+
+      <h2>1. Desempeño por participante</h2>
+      <table><thead><tr><th>Participante</th><th>Actividades</th><th>Estrellas</th><th>Porcentaje</th><th>Nivel</th></tr></thead>
+      <tbody>${desemp.map(d=>`<tr><td>${escapar(d.nombre)}</td><td>${d.hechas}/${d.total}</td><td>${d.estrellas}/${d.posibles}</td><td>${d.pct} %</td><td>${d.nivel}</td></tr>`).join("")||`<tr><td colspan="5">Sin registros</td></tr>`}</tbody></table>
+      <p class="nota">Nota. Criterio de nivel: Bajo (menos de 40 %), Básico (40 % a 59 %), Alto (60 % a 79 %) y Superior (80 % o más) del total de estrellas posibles. Las estrellas se otorgan según los intentos y las pistas utilizadas en cada actividad.</p>
+
+      <h2>2. Acierto por competencia</h2>
+      <table><thead><tr><th>Competencia</th><th>Actividades abordadas</th><th>Resueltas en el primer intento</th><th>Porcentaje de acierto</th></tr></thead><tbody>
+      ${["int","for","arg"].map(k=>`<tr><td>${NOMBRE_COMP[k]}</td><td>${ac[k].abordadas}</td><td>${ac[k].primeras}</td><td>${ac[k].pct} %</td></tr>`).join("")}
+      </tbody></table>
+      <p class="nota">Nota. Elaboración propia a partir de los observables registrados automáticamente por el recurso.</p>
+
+      <h2>3. Figuras</h2>
+      <div class="fig">${$("g-niveles").innerHTML}<p class="pie">Figura A. Distribución de los participantes por nivel de desempeño. Elaboración propia.</p></div>
+      <div class="fig">${$("g-competencias").innerHTML}<p class="pie">Figura B. Acierto por competencia. Elaboración propia.</p></div>
+      <div class="fig">${$("g-pistas").innerHTML}<p class="pie">Figura C. Promedio de pistas graduadas solicitadas por caso. Elaboración propia.</p></div>
+      <div class="fig">${$("g-nube").innerHTML}<p class="pie">Figura D. Palabras más frecuentes en las respuestas abiertas de los participantes. Elaboración propia.</p></div>
+
+      <h2>4. Registro de observables (Diseño Centrado en Evidencias)</h2>
+      <table class="obs"><thead><tr><th>Fecha</th><th>Participante</th><th>Sesión</th><th>Actividad</th><th>Competencia</th><th>Observable</th><th>Resultado</th><th>Int.</th><th>Pistas</th></tr></thead><tbody>
+      ${obs.map(o=>`<tr><td>${o.fecha.slice(0,16).replace("T"," ")}</td><td>${escapar(o.estudiante)}</td><td>${SESION_DE[o.actividad]||"—"}</td><td>${o.actividad}</td><td>${NOMBRE_COMP[o.competencia]||o.competencia}</td><td>${escapar(o.observable)}</td><td>${o.resultado}</td><td>${o.intentos}</td><td>${o.pistas}</td></tr>`).join("")||`<tr><td colspan="9">Sin registros</td></tr>`}
+      </tbody></table>
+      <p class="firma">_______________________________<br>Docente investigadora</p>
+    </div>`;
+  $("zona-informe").classList.remove("oculto");
+  document.body.classList.add("imprimiendo");
+  setTimeout(()=>{ window.print(); }, 250);
+}
+window.addEventListener("afterprint", ()=>{
+  document.body.classList.remove("imprimiendo");
+  $("zona-informe").classList.add("oculto");
+});
+
+/* ================== FICHA TÉCNICA (DCE + secuencia) ================== */
+function irFicha(){ pintarFicha(); mostrar("p-ficha"); }
+function pintarFicha(){
+  const filas = [];
+  CASOS.forEach(c=>c.actividades.forEach(a=>{
+    filas.push(`<tr><td>${SESION_DE[a.id]||"—"}</td><td>${c.titulo.split("·")[1].trim()}</td><td>${a.titulo}</td>
+      <td>${NOMBRE_COMP[a.comp]}</td><td>${a.observable}</td><td>${tipoLegible(a.tipo)}</td></tr>`);
+  }));
+  $("tabla-dce").querySelector("tbody").innerHTML = filas.join("");
+  $("tabla-sesiones").querySelector("tbody").innerHTML = SESIONES.map(s=>
+    `<tr><td>${s.n}</td><td>${s.caso}</td><td>${s.contenido}</td><td>${s.comp}</td></tr>`).join("");
+}
+function tipoLegible(t){
+  return {parafraseo:"Escritura: parafraseo del enunciado", clasificar:"Clasificación de datos (lo que sé / lo que busco)",
+   recta:"Ubicación en la recta numérica", opcion:"Selección de respuesta", numero:"Respuesta numérica abierta",
+   queso:"Representación gráfica de fracciones", tabla:"Completar tabla de proporcionalidad",
+   justificar:"Escenario proyectivo con argumentación escrita", saber:"Ítem tipo Saber con justificación obligatoria"}[t]||t;
+}
+
+/* ================== EXPORTACIÓN E IMPORTACIÓN ================== */
+function codigosAnonimos(){
+  const nombres = Object.keys(memoria.perfiles).sort();
+  const mapa = {};
+  nombres.forEach((n,i)=>mapa[n] = "E"+String(i+1).padStart(2,"0"));
+  memoria.observables.forEach(o=>{ if(!mapa[o.estudiante]) mapa[o.estudiante] = "E"+String(Object.keys(mapa).length+1).padStart(2,"0"); });
+  return mapa;
+}
+function exportarCSVAnonimo(){
+  const mapa = codigosAnonimos();
+  const cab = ["fecha","codigo","sesion","caso","actividad","competencia","observable","resultado","intentos","pistas","respuesta"];
+  const filas = memoria.observables.map(o=>{
+    const fila = {fecha:o.fecha, codigo:mapa[o.estudiante]||"E??", sesion:SESION_DE[o.actividad]||"", caso:o.caso,
+      actividad:o.actividad, competencia:NOMBRE_COMP[o.competencia]||o.competencia, observable:o.observable,
+      resultado:o.resultado, intentos:o.intentos, pistas:o.pistas, respuesta:o.respuesta};
+    return cab.map(k=>`"${String(fila[k]??"").replace(/"/g,'""')}"`).join(";");
+  });
+  descargar("observables_anonimizados_rodania.csv", "\uFEFF"+cab.join(";")+"\n"+filas.join("\n"), "text/csv;charset=utf-8");
+  alert("Listo. Los nombres se reemplazaron por códigos E01, E02, E03… tal como se citan los participantes en el informe de investigación.");
+}
+function importarJSON(archivo){
+  const lector = new FileReader();
+  lector.onload = e=>{
+    try{
+      const d = JSON.parse(e.target.result);
+      if(!d || !d.perfiles || !d.observables) throw new Error("formato");
+      let nuevosP = 0, nuevosO = 0;
+      Object.entries(d.perfiles).forEach(([n,p])=>{
+        const actual = memoria.perfiles[n];
+        const hechasN = Object.values(p.actividades||{}).filter(a=>a.completa).length;
+        const hechasA = actual ? Object.values(actual.actividades||{}).filter(a=>a.completa).length : -1;
+        if(hechasN > hechasA){ memoria.perfiles[n] = p; nuevosP++; }
+      });
+      const clave = o=>o.fecha+"|"+o.estudiante+"|"+o.actividad+"|"+o.resultado;
+      const existentes = new Set(memoria.observables.map(clave));
+      d.observables.forEach(o=>{ if(!existentes.has(clave(o))){ memoria.observables.push(o); nuevosO++; } });
+      memoria.observables.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+      guardar(); pintarDocente();
+      alert(`Unión completada.\nPerfiles actualizados: ${nuevosP}\nObservables nuevos: ${nuevosO}\nTotal de observables en este equipo: ${memoria.observables.length}`);
+    }catch(err){ alert("El archivo no tiene el formato esperado. Debe ser un JSON exportado desde este mismo recurso."); }
+  };
+  lector.readAsText(archivo);
+}
+
+/* ================== MODO CAPTURA ================== */
+function alternarCaptura(){
+  document.body.classList.toggle("captura");
+  const on = document.body.classList.contains("captura");
+  $("btn-captura").textContent = on ? "📸 Salir del modo captura" : "📸 Modo captura";
+  if(on) alert("Modo captura activado: se ocultó la barra flotante para que los pantallazos salgan limpios.\n\nEn el computador toma la captura con la tecla Impr Pant (o Windows + Shift + S). En el celular, con los botones de encendido y volumen abajo.");
+}
+
+/* ================== UTILIDADES ================== */
+function escapar(t){
+  return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 /* ================== INICIO Y REGISTRO ================== */
 function entrar(nombre){
   nombre = nombre.trim().replace(/\s+/g," ");
@@ -1252,17 +1724,25 @@ function init(){
   const nombres = Object.keys(memoria.perfiles);
   if(nombres.length){
     $("perfiles-previos").innerHTML = "<p style='width:100%;font-size:.85rem;color:var(--gris)'>O toca tu nombre si ya habías entrado:</p>" +
-      nombres.map(n=>`<button class="perfil-btn" onclick="entrar('${n.replace(/'/g,"\\'")}')">${n}</button>`).join("");
+      nombres.map(n=>`<button class="perfil-btn" data-n="${escapar(n)}">${escapar(n)}</button>`).join("");
+    $("perfiles-previos").querySelectorAll(".perfil-btn").forEach(b=>b.onclick = ()=>entrar(b.dataset.n));
   }
   $("btn-entrar").onclick = ()=>entrar($("nombre-est").value);
   $("nombre-est").addEventListener("keydown", e=>{ if(e.key==="Enter") entrar($("nombre-est").value); });
   $("btn-recursos").onclick = irRecursos;
-  $("btn-docente").onclick = ()=>mostrar("p-docente");
+  $("btn-docente").onclick = ()=>{ mostrar("p-docente"); if(!$("docente-panel").classList.contains("oculto")) pintarDocente(); };
   $("btn-clave").onclick = entrarDocente;
   $("clave-doc").addEventListener("keydown", e=>{ if(e.key==="Enter") entrarDocente(); });
   $("btn-csv").onclick = exportarCSV;
+  $("btn-csv-anon").onclick = exportarCSVAnonimo;
   $("btn-json").onclick = exportarJSON;
   $("btn-borrar").onclick = borrarDatos;
+  $("btn-evidencias").onclick = irEvidencias;
+  $("btn-ficha").onclick = irFicha;
+  $("btn-captura").onclick = alternarCaptura;
+  $("btn-importar").onclick = ()=>$("file-import").click();
+  $("file-import").onchange = e=>{ if(e.target.files[0]) importarJSON(e.target.files[0]); e.target.value=""; };
+  if(!ALMACEN_OK) $("aviso-almacen").classList.remove("oculto");
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
